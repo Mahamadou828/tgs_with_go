@@ -1,0 +1,16 @@
+version: '0.1'
+services:
+  db:
+    container_name: go-database
+    image: postgres:14-alpine
+    restart: always
+    volumes:
+      - ./init:/docker-entrypoint-initdb.d
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+
+
+    ports:
+      - 5432:5432
