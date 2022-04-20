@@ -1,13 +1,25 @@
 package main
 
-import "github.com/Mahamadou828/tgs_with_golang/foundation/logger"
+import (
+	"fmt"
+	"github.com/Mahamadou828/tgs_with_golang/foundation/logger"
+	"os"
+)
 
 func main() {
-	log, err := logger.NewLogger("tgs-api")
+	_, err := logger.NewLogger("tgs-api")
+
+	n, err := os.Stdin.Write([]byte("Try to write to stdin"))
 
 	if err != nil {
 		panic(err)
 	}
 
-	log.Info("Testing the logger package")
+	fmt.Println(n)
+
+	if err != nil {
+		panic(err)
+	}
+
+	//log.Info("Testing the logger package")
 }

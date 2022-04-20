@@ -5,10 +5,8 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-//NewLogger creates a new instance of zap.Logger
-//For now it's creating a production level logger
-//Next step is to pass the env param and depending on him
-//Construct the appropriate logger
+//NewLogger create an instance of the logger use throughout
+//the application providing human-readable log messages
 func NewLogger(service string) (*zap.Logger, error) {
 	config := zap.NewProductionConfig()
 
@@ -25,8 +23,6 @@ func NewLogger(service string) (*zap.Logger, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	log.Info("Logs Construct")
 
 	return log, nil
 }
