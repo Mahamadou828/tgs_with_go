@@ -1,12 +1,10 @@
 package config
 
 /**
-Comment parser un struc avec des flags
-comment lire les commands line argument
-@todo ajouter le support pour les string, int, bool, time.Duration
-@todo refacto pour improve readability
 @todo ajouter les flags suivant: -, required
 @todo ajouter le message help
+@todo ajouter le support pour le versionning
+@todo ajouter le support de le faire disparetre des logs
 */
 
 import (
@@ -14,7 +12,9 @@ import (
 	"fmt"
 	"os"
 	"reflect"
+	"strconv"
 	"strings"
+	"time"
 )
 
 var (
@@ -24,11 +24,14 @@ var (
 
 type Flag struct {
 	isBool bool
-	value  any
-	key    string
+	value  string
+	name   string
 }
 
-//@todo explorer ce que ca fait si on avait laisser *interface{}
+type Tag struct {
+	value string
+	name  string
+}
 
 func Parse(cfg interface{}, ssmSecrets map[string]string, prefix string) error {
 	v := reflect.ValueOf(cfg)
@@ -43,7 +46,7 @@ func Parse(cfg interface{}, ssmSecrets map[string]string, prefix string) error {
 		flags[key] = Flag{
 			isBool: false,
 			value:  secret,
-			key:    key,
+			name:   key,
 		}
 	}
 
@@ -62,11 +65,12 @@ func Parse(cfg interface{}, ssmSecrets map[string]string, prefix string) error {
 		}
 	}
 
-	parseStruct(v.Elem(), flags)
+	err = parseStruct(v.Elem(), flags)
 
-	return nil
+	return err
 }
 
+//parseOsArgs parses given command line arguments
 func parseOsArgs(flags map[string]Flag) error {
 	args := os.Args[1:]
 
@@ -84,7 +88,7 @@ func parseOsArgs(flags map[string]Flag) error {
 		if s[1] == '-' {
 			numMinuses++
 
-			if len(s) == '2' { // "--" terminates the flags
+			if len(s) == 2 { // "--" terminates the flags
 				continue
 			}
 		}
@@ -95,7 +99,7 @@ func parseOsArgs(flags map[string]Flag) error {
 			return fmt.Errorf("bad flag syntax: %s", s)
 		}
 
-		isBool, value := true, ""
+		isBool, value := true, "true"
 
 		//Searching for the flag name and value
 		for i := 1; i < len(name); i++ {
@@ -122,7 +126,7 @@ func parseOsArgs(flags map[string]Flag) error {
 		flags[name] = Flag{
 			isBool: isBool,
 			value:  value,
-			key:    name,
+			name:   name,
 		}
 
 	}
@@ -160,7 +164,7 @@ func parseEnvArgs(flags map[string]Flag, prefix string) error {
 		flags[key] = Flag{
 			isBool: false,
 			value:  value,
-			key:    key,
+			name:   key,
 		}
 	}
 
@@ -168,73 +172,111 @@ func parseEnvArgs(flags map[string]Flag, prefix string) error {
 }
 
 //parseStruct parses configuration into the specified struct
-func parseStruct(v reflect.Value, flags map[string]Flag) error {
-	for i := 0; i < v.NumField(); i++ {
-		typ := v.Type().Field(i).Type
+func parseStruct(s reflect.Value, flags map[string]Flag) error {
+	for i := 0; i < s.NumField(); i++ {
+		field := s.Field(i)
+		kind := field.Kind()
+		typ := field.Type()
+		strField := s.Type().Field(i)
 
-		//If the type is a struct, we should recursively
-		//explore him
-		if typ.Kind() == reflect.Struct {
-			nv := v.Field(i)
-			parseStruct(nv, flags)
+		if kind == reflect.Struct {
+			nv := s.Field(i)
+			if err := parseStruct(nv, flags); err != nil {
+				return err
+			}
 			continue
 		}
 
-		sf := v.Type().Field(i)
-		s, ok := sf.Tag.Lookup("conf")
-		if !ok {
-			return fmt.Errorf("no tag present for the field: %s", sf.Name)
+		if !field.IsValid() || !field.CanSet() {
+			return fmt.Errorf("can't set the value of field %s", field.String())
 		}
 
-		name, defVal := "", ""
-		for i := 0; i < len(s); i++ {
-			if s[i] == ':' {
-				name = s[0:i]
-				defVal = s[i+1:]
-			}
+		//Extract the tag for the given field
+		tag, err := extractTag(strField)
+		if err != nil {
+			return err
 		}
+		//The value of the struct field is equal by default to
+		//the tag value
+		value, fieldName := tag.value, strings.ToLower(strField.Name)
 
-		flgVal, ok := flags[name]
+		//Extract a flag value that is associated with the given field
+		flag, ok := flags[fieldName]
+
+		//If a flag is present, his value will  override the
+		//default value
 		if ok {
-			field := v.Field(i)
-
-			switch field.Kind() {
-			case reflect.String:
-				break
-			case reflect.Bool:
-				break
-			case reflect.Int:
-				break
-			}
-
+			value = flag.value
 		}
 
+		switch kind {
+		case reflect.String:
+			field.SetString(value)
+		case reflect.Int, reflect.Int64, reflect.Int16, reflect.Int8:
+			var (
+				val int64
+				err error
+			)
+
+			if field.Kind() == reflect.Int64 && field.Type().PkgPath() == "time" && typ.Name() == "Duration" {
+				var d time.Duration
+
+				d, err = time.ParseDuration(value)
+
+				val = int64(d)
+			} else {
+				val, err = strconv.ParseInt(value, 0, typ.Bits())
+			}
+
+			if err != nil {
+				return err
+			}
+
+			if field.OverflowInt(val) {
+				return fmt.Errorf("given int %v overflows the field %s", val, field.Type().Name())
+			}
+
+			field.SetInt(val)
+		case reflect.Bool:
+			val, err := strconv.ParseBool(value)
+
+			if err != nil {
+				return err
+			}
+
+			field.SetBool(val)
+		}
 	}
 
 	return nil
 }
 
-func processStringField(field reflect.Value, flag Flag) error {
-	name, defVal, err := processField(field)
+//extractTag extract the tag of a given struct field and return
+//a tag value. If there's no tag on the field the function will return an error.
+func extractTag(structField reflect.StructField) (Tag, error) {
+	//Extract the tag value
+	tag, ok := structField.Tag.Lookup("conf")
+	//Extract the tag type
 
-	if err != nil {
-		return err
-	}
-}
+	val, name := "", ""
 
-//@todo to refacto
-func processField(field reflect.StructField) (name string, defVal string, err error) {
-	s, ok := field.Tag.Lookup("conf")
-	if !ok {
-		return "", "", fmt.Errorf("no tag present for the field: %s", field.Name)
-	}
-
-	for i := 0; i < len(s); i++ {
-		if s[i] == ':' {
-			name = s[0:i]
-			defVal = s[i+1:]
+	for i := 0; i < len(tag); i++ {
+		if tag[i] == ':' {
+			name = tag[0:i]
+			val = tag[i+1:]
+			break
 		}
 	}
 
-	return
+	//if there is no tag on the struct return an error
+	if !ok {
+		return Tag{}, fmt.Errorf("no tag for the struct field %s", structField.Name)
+	}
+
+	if name != "default" {
+		return Tag{}, fmt.Errorf("unknown tag %s for the struct field %s", name, structField.Name)
+	}
+
+	//return the tag
+	return Tag{value: val, name: name}, nil
 }
