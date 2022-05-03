@@ -9,3 +9,6 @@ docker-down:
 tidy:
 	go mod tidy
 	go mod vendor
+
+run-api:
+	go run app/service/api/main.go | go run app/tools/logfmt/main.go
