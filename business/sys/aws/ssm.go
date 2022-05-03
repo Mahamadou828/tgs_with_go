@@ -1,8 +1,4 @@
-//Package ssm provide an interface to access the aws simple secret manager service
-//For more details, see: https://docs.aws.amazon.com/sdk-for-go/api/
-package ssm
-
-//@todo pass the session in params
+package aws
 
 import (
 	"fmt"
@@ -10,22 +6,27 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
+	"go.uber.org/zap"
 )
 
-//ListSecrets Retrieve all secrets bound to that specific account
-//and filter them based on the service pass and the build.
-func ListSecrets(service string, build string) (map[string]string, error) {
-	//Initiate a new aws session
-	sess, err := session.NewSession(&aws.Config{
-		Region: aws.String("eu-west-1"),
-	})
+// Ssm provide an api to interact with the
+//aws simple secret manager
+type Ssm struct {
+	svc    *secretsmanager.SecretsManager
+	logger *zap.Logger
+}
 
-	if err != nil {
-		return nil, err
-	}
-
+func NewSsm(logger *zap.Logger, sess *session.Session) *Ssm {
 	svc := secretsmanager.New(sess)
+	return &Ssm{
+		svc:    svc,
+		logger: logger,
+	}
+}
 
+//ListSecrets Retrieve all secrets store in the aws account
+//and filter them based on the service pass and the build.
+func (s *Ssm) ListSecrets(service, build string) (map[string]string, error) {
 	input := &secretsmanager.ListSecretsInput{
 		Filters: []*secretsmanager.Filter{
 			{
@@ -39,7 +40,11 @@ func ListSecrets(service string, build string) (map[string]string, error) {
 		},
 	}
 
-	result, err := svc.ListSecrets(input)
+	result, err := s.svc.ListSecrets(input)
+
+	if err != nil {
+		return nil, err
+	}
 
 	secrets := make(map[string]string)
 
@@ -48,7 +53,7 @@ func ListSecrets(service string, build string) (map[string]string, error) {
 			SecretId: value.Name,
 		}
 
-		result, err := svc.GetSecretValue(input)
+		result, err := s.svc.GetSecretValue(input)
 
 		if err != nil {
 			if aerr, ok := err.(awserr.Error); ok {
@@ -74,25 +79,12 @@ func ListSecrets(service string, build string) (map[string]string, error) {
 		}
 
 		secrets[*result.Name] = *result.SecretString
-
 	}
 
 	return secrets, nil
 }
 
-//CreateSecret creates a new secret and host it inside the aws ssm service
-func CreateSecret(name string, value string, service string, build string, desc string) error {
-	sess, err := session.NewSession(&aws.Config{
-		Region: aws.String("eu-west-1"),
-	})
-
-	if err != nil {
-		//@todo handle the error
-		panic(err)
-	}
-
-	svc := secretsmanager.New(sess)
-
+func (s *Ssm) CreateSecret(name, value, service, build, desc string) error {
 	input := &secretsmanager.CreateSecretInput{
 		Description: aws.String(desc),
 		Name:        aws.String(name),
@@ -109,7 +101,7 @@ func CreateSecret(name string, value string, service string, build string, desc 
 		SecretString: aws.String(value),
 	}
 
-	_, err = svc.CreateSecret(input)
+	_, err := s.svc.CreateSecret(input)
 
 	if err != nil {
 		if aerr, ok := err.(awserr.Error); ok {
