@@ -7,6 +7,7 @@ import (
 	"github.com/Mahamadou828/tgs_with_golang/app/service/api/handlers/v1/testroutes"
 	"github.com/Mahamadou828/tgs_with_golang/business/web/v1/middleware"
 	"github.com/Mahamadou828/tgs_with_golang/foundation/web"
+	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"
 	"net/http"
 	"net/http/pprof"
@@ -41,12 +42,13 @@ func v1(app *web.App, cfg web.AppConfig) {
 	app.Handle(http.MethodGet, "/test/fail", trt.TestFail)
 }
 
-func DebugMux(build string, log *zap.SugaredLogger) *http.ServeMux {
+func DebugMux(build string, log *zap.SugaredLogger, db *sqlx.DB) *http.ServeMux {
 	mux := DebugStandardLibraryMux()
 
 	handlers := checkroutes.Handler{
 		Build:  build,
 		Logger: log,
+		DB:     db,
 	}
 
 	mux.HandleFunc("/debug/readiness", handlers.Readiness)

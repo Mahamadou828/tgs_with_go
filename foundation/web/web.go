@@ -5,6 +5,7 @@ package web
 import (
 	"context"
 	"fmt"
+	"github.com/jmoiron/sqlx"
 	"net/http"
 	"os"
 	"syscall"
@@ -12,6 +13,7 @@ import (
 
 	"github.com/Mahamadou828/tgs_with_golang/business/sys/aws"
 	"github.com/dimfeld/httptreemux"
+	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
 
@@ -26,6 +28,7 @@ type AppConfig struct {
 	Version    string
 	Service    string
 	CorsOrigin string
+	DB         *sqlx.DB
 }
 
 // App is the entrypoint into our application and what configures our context
@@ -69,7 +72,7 @@ func (a *App) Handle(method, path string, handler Handler, mw ...Middleware) {
 
 		//For now let's use a false traceID
 		//@todo generate a unique traceid for sentry logs
-		span := "0000000000000000"
+		span := uuid.NewString()
 
 		v := RequestTrace{
 			ID:  span,

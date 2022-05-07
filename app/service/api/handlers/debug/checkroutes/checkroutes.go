@@ -3,6 +3,8 @@ package checkroutes
 
 import (
 	"context"
+	"github.com/Mahamadou828/tgs_with_golang/business/sys/database"
+	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"
 	"net/http"
 	"os"
@@ -20,13 +22,14 @@ import (
 type Handler struct {
 	Build  string
 	Logger *zap.SugaredLogger
+	DB     *sqlx.DB
 }
 
 // Readiness checks if the service is ready and if not will return a 500 status.
 // Do not respond by just returning an error because further up in the call
 // stack it will interpret that as a non-trusted error.
 func (h Handler) Readiness(w http.ResponseWriter, r *http.Request) {
-	_, cancel := context.WithTimeout(r.Context(), time.Second)
+	ctx, cancel := context.WithTimeout(r.Context(), time.Second)
 	defer cancel()
 
 	status := "ok"
@@ -36,6 +39,11 @@ func (h Handler) Readiness(w http.ResponseWriter, r *http.Request) {
 		Status string `json:"status"`
 	}{
 		Status: status,
+	}
+
+	if err := database.StatusCheck(ctx, h.DB); err != nil {
+		status = "not ok"
+		statusCode = http.StatusInternalServerError
 	}
 
 	w.Header().Set("Content-Type", "application/json")

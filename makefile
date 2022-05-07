@@ -52,7 +52,7 @@ kind-status-db:
 	kubectl get pods -o wide --watch --namespace=database-system
 
 kind-logs:
-	kubectl logs -l app=sales --all-containers=true -f --tail=100 | go run app/tooling/logfmt/main.go
+	kubectl logs -l app=tgs --all-containers=true -f --tail=100 | go run app/tools/logfmt/main.go
 
 kind-restart:
 	kubetcl rollout restart deployment tgs-pod
@@ -60,7 +60,7 @@ kind-restart:
 kind-update: tgs-api kind-load kind-restart
 
 kind-describe:
-	kubectl describe pod -l app=sales
+	kubectl describe pod -l app=tgs
 
 kind-update-apply: tgs-api kind-load kind-apply
 
