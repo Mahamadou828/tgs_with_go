@@ -6,6 +6,7 @@ import (
 	"expvar"
 	"fmt"
 	"github.com/Mahamadou828/tgs_with_golang/business/sys/aws"
+	"github.com/Mahamadou828/tgs_with_golang/business/sys/database"
 	"github.com/Mahamadou828/tgs_with_golang/foundation/web"
 	"net/http"
 	"os"
@@ -73,6 +74,15 @@ func run(log *zap.SugaredLogger) error {
 			ShutdownTimeout time.Duration `conf:"default:20s"`
 			CorsOrigin      string        `conf:"default:*"`
 		}
+		DB struct {
+			User         string `conf:"default:postgres"`
+			Password     string `conf:"default:postgres"`
+			Host         string `conf:"default:0.0.0.0:5432"`
+			Name         string `conf:"default:postgres"`
+			MaxIdleConns int    `conf:"default:0"`
+			MaxOpenConns int    `conf:"default:0"`
+			DisableTLS   bool   `conf:"default:true"`
+		}
 	}{
 		Version: config.Version{
 			Build: build,
@@ -98,12 +108,27 @@ func run(log *zap.SugaredLogger) error {
 
 	expvar.NewString("build").Set(build)
 	expvar.NewString("service").Set(prefix)
+	//===========================
+	//Open a database connection
+	db, err := database.Open(database.Config{
+		User:         cfg.DB.User,
+		Password:     cfg.DB.Password,
+		Host:         cfg.DB.Host,
+		Name:         cfg.DB.Name,
+		MaxIdleConns: cfg.DB.MaxIdleConns,
+		MaxOpenConns: cfg.DB.MaxOpenConns,
+		DisableTLS:   cfg.DB.DisableTLS,
+	})
+
+	if err != nil {
+		return err
+	}
 
 	//==========================================================================
 	//Start The Debug Server
 	log.Infow("startup", "status", "debug router started", "host", cfg.Web.DebugHost)
 
-	debugMux := handlers.DebugMux(build, log)
+	debugMux := handlers.DebugMux(build, log, db)
 
 	go func() {
 		if err := http.ListenAndServe(cfg.Web.DebugHost, debugMux); err != nil {
@@ -128,6 +153,7 @@ func run(log *zap.SugaredLogger) error {
 		Version:    build,
 		Service:    "api",
 		CorsOrigin: cfg.Web.CorsOrigin,
+		DB:         db,
 	})
 
 	// Construct a server to service the requests against the mux.
