@@ -23,3 +23,21 @@ spec:
               cpu: "2000m" # Up to 2 full cores
             requests:
               cpu: "1000m" # Use 1 ful32
+          livenessProbe:
+            httpGet:
+              path: /debug/liveness
+              port: 4000
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 2
+          readinessProbe:
+            httpGet:
+              path: /debug/readiness
+              port: 4000
+            initialDelaySeconds: 15
+            periodSeconds: 15
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 2
