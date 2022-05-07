@@ -22,9 +22,16 @@ import (
 	"go.uber.org/zap"
 )
 
-//The build represent the environment that the current program is running
+//The build represent the current version of the api
+var build = "1.0"
+
+//The env represent the environment that the current program is running
 //for this specific program we have 3 stages: dev, staging, prod
-var build = "dev"
+var env = "development"
+
+type ConfParser struct {
+	secrets map[string]string
+}
 
 func main() {
 	log, err := logger.New("TGS_API")
@@ -57,7 +64,7 @@ func run(log *zap.SugaredLogger) error {
 	//Init a new aws session
 	sesAws, err := aws.New(log)
 
-	if err != nil {
+	if err != nil || sesAws == nil {
 		return fmt.Errorf("can't init an aws session: %w", err)
 	}
 
@@ -87,11 +94,28 @@ func run(log *zap.SugaredLogger) error {
 		Version: config.Version{
 			Build: build,
 			Desc:  "TGS api",
+			Env:   env,
 		},
 	}
 
 	const prefix = "TGS_API"
-	help, err := config.Parse(&cfg, prefix, nil)
+	help, err := "", nil
+
+	log.Infow("startup", "status", "parsing config struct", "env", env)
+
+	if env == "production" || env == "staging" {
+		secrets, err := sesAws.Ssm.ListSecrets(prefix, env)
+
+		if err != nil {
+			return err
+		}
+
+		help, err = config.Parse(&cfg, prefix, ConfParser{secrets: secrets})
+	}
+
+	if env == "development" {
+		help, err = config.Parse(&cfg, prefix)
+	}
 
 	if err != nil {
 		if errors.Is(err, config.ErrHelpWanted) {
@@ -150,7 +174,7 @@ func run(log *zap.SugaredLogger) error {
 		Log:        log,
 		Build:      build,
 		AWS:        sesAws,
-		Version:    build,
+		Env:        env,
 		Service:    "api",
 		CorsOrigin: cfg.Web.CorsOrigin,
 		DB:         db,
@@ -193,4 +217,27 @@ func run(log *zap.SugaredLogger) error {
 	}
 
 	return nil
+}
+
+func (cp ConfParser) Parse(field config.Field) error {
+	//The value of the field is equal by default to the tag value
+	defaultVal := field.Options.DefaultVal
+
+	fmt.Println("CONFIG ===========================")
+
+	val, ok := cp.secrets[field.Name]
+
+	//If the secret was not found
+	if !ok {
+		//And the secret is required we want to terminate the program
+		if field.Options.Required {
+			return fmt.Errorf("require field %q not present in aws ssm", field.Name)
+		}
+		//If the secret is not required than we can use the default value
+		if !field.Options.Required {
+			val = defaultVal
+		}
+	}
+
+	return config.SetFieldValue(field, val)
 }

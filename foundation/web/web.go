@@ -25,7 +25,7 @@ type AppConfig struct {
 	Log        *zap.SugaredLogger
 	Build      string
 	AWS        *aws.AWS
-	Version    string
+	Env        string
 	Service    string
 	CorsOrigin string
 	DB         *sqlx.DB

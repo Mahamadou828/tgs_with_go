@@ -36,6 +36,7 @@ func v1(app *web.App, cfg web.AppConfig) {
 	trt := testroutes.Handler{
 		Logger: cfg.Log,
 		Build:  cfg.Build,
+		Env:    cfg.Env,
 	}
 
 	app.Handle(http.MethodGet, "/test", trt.Test)

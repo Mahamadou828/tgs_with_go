@@ -11,13 +11,18 @@ import (
 type Handler struct {
 	Logger *zap.SugaredLogger
 	Build  string
+	Env    string
 }
 
 func (h Handler) Test(ctx context.Context, w http.ResponseWriter, r *http.Request) *web.RequestError {
 	resp := struct {
 		Status string `json:"status"`
+		Build  string `json:"build"`
+		Env    string `json:"env"`
 	}{
 		Status: "Ok",
+		Build:  h.Build,
+		Env:    h.Env,
 	}
 
 	if err := web.Response(ctx, w, http.StatusOK, resp); err != nil {

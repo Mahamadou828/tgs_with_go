@@ -1,14 +1,19 @@
+##@todo make kind-update didn't work
 SHELL := /bin/bash
 KIND_CLUSTER := tgs-cluster
+ENV := development
 
 #Vendor all the project dependencies.
 tidy:
 	go mod tidy
 	go mod vendor
 
-#Run the tgs api as a simple go application. Usefull for debugging in local
+#Run the tgs api as a simple go application. Useful for debugging in local
+#If you want to start different environments use the following command:
+#make ENV="env" run-api
+#Be aware that the migration is run automatically so be careful when running another env than development
 run-api:
-	go run app/service/api/main.go | go run app/tools/logfmt/main.go
+	go run -ldflags "-X main.build=${ENV}" app/service/api/main.go | go run app/tools/logfmt/main.go
 
 VERSION := 1.0
 
@@ -16,11 +21,15 @@ VERSION := 1.0
 kind-start: tgs-api kind-up kind-load kind-apply
 
 #Build the docker image for the tgs api
+#By default, the api run on development env
+#to set the env use
+#make ENV='env' tgs-api
 tgs-api:
 	docker build \
 		-f config/docker/tgs-api.dockerfile \
 		-t tgs_api_amd64:$(VERSION) \
 		--build-arg BUILD_REF=$(VERSION) \
+		--build-arg ENV=$(ENV) \
 		--build-arg BUILD_DATE=`date -u +"%Y-%m-%dT%H:%M:%SZ"` \
 		.
 
@@ -55,7 +64,7 @@ kind-logs:
 	kubectl logs -l app=tgs --all-containers=true -f --tail=100 | go run app/tools/logfmt/main.go
 
 kind-restart:
-	kubetcl rollout restart deployment tgs-pod
+	kubetcl rollout restart deployment tgs-system
 
 kind-update: tgs-api kind-load kind-restart
 
