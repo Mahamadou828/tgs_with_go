@@ -5,6 +5,8 @@ import (
 	"errors"
 	"expvar"
 	"fmt"
+	"github.com/Mahamadou828/tgs_with_golang/business/sys/aws"
+	"github.com/Mahamadou828/tgs_with_golang/foundation/web"
 	"net/http"
 	"os"
 	"os/signal"
@@ -20,7 +22,7 @@ import (
 )
 
 //The build represent the environment that the current program is running
-//for this specific programm we have 3 stages: dev, staging, prod
+//for this specific program we have 3 stages: dev, staging, prod
 var build = "dev"
 
 func main() {
@@ -51,6 +53,14 @@ func run(log *zap.SugaredLogger) error {
 	log.Info("startup", "GOMAXPROCS", runtime.GOMAXPROCS(0))
 
 	//===========================
+	//Init a new aws session
+	sesAws, err := aws.New(log)
+
+	if err != nil {
+		return fmt.Errorf("can't init an aws session: %w", err)
+	}
+
+	//===========================
 	//Configuration
 	cfg := struct {
 		config.Version
@@ -61,6 +71,7 @@ func run(log *zap.SugaredLogger) error {
 			WriteTimeout    time.Duration `conf:"default:10s"`
 			IdleTimeout     time.Duration `conf:"default:120s"`
 			ShutdownTimeout time.Duration `conf:"default:20s"`
+			CorsOrigin      string        `conf:"default:*"`
 		}
 	}{
 		Version: config.Version{
@@ -104,12 +115,21 @@ func run(log *zap.SugaredLogger) error {
 	//Start The Api Server
 	log.Infow("initializing", "initializing", "api service starting", "host", cfg.Web.ApiHost)
 
-	apiMux := handlers.ApiMux(build, log)
-
 	// Make a channel to listen for an interrupt or terminate signal from the OS.
 	// Use a buffered channel because the signal package requires it.
 	shutdown := make(chan os.Signal, 1)
 	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)
+
+	apiMux := handlers.APIMux(web.AppConfig{
+		Shutdown:   shutdown,
+		Log:        log,
+		Build:      build,
+		AWS:        sesAws,
+		Version:    build,
+		Service:    "api",
+		CorsOrigin: cfg.Web.CorsOrigin,
+	})
+
 	// Construct a server to service the requests against the mux.
 	api := http.Server{
 		Addr:         cfg.Web.ApiHost,

@@ -8,12 +8,12 @@ import (
 )
 
 type AWS struct {
-	logger *zap.Logger
+	logger *zap.SugaredLogger
 	sess   *session.Session
 	Ssm    *Ssm
 }
 
-func New(logger *zap.Logger) (*AWS, error) {
+func New(logger *zap.SugaredLogger) (*AWS, error) {
 	//Initiate a new aws session
 	sess, err := session.NewSession(&aws.Config{
 		Region: aws.String("eu-west-1"),
