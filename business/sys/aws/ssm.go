@@ -13,10 +13,10 @@ import (
 //aws simple secret manager
 type Ssm struct {
 	svc    *secretsmanager.SecretsManager
-	logger *zap.Logger
+	logger *zap.SugaredLogger
 }
 
-func NewSsm(logger *zap.Logger, sess *session.Session) *Ssm {
+func NewSsm(logger *zap.SugaredLogger, sess *session.Session) *Ssm {
 	svc := secretsmanager.New(sess)
 	return &Ssm{
 		svc:    svc,

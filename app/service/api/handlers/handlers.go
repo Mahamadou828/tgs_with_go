@@ -5,22 +5,40 @@ import (
 	"expvar"
 	"github.com/Mahamadou828/tgs_with_golang/app/service/api/handlers/debug/checkroutes"
 	"github.com/Mahamadou828/tgs_with_golang/app/service/api/handlers/v1/testroutes"
+	"github.com/Mahamadou828/tgs_with_golang/business/web/v1/middleware"
+	"github.com/Mahamadou828/tgs_with_golang/foundation/web"
 	"go.uber.org/zap"
 	"net/http"
 	"net/http/pprof"
 )
 
-func ApiMux(build string, log *zap.SugaredLogger) *http.ServeMux {
-	mux := http.NewServeMux()
+func APIMux(cfg web.AppConfig) *web.App {
+	const version = "v1"
+	//Create a new app instance
+	app := web.NewApp(
+		cfg,
+		version,
+		middleware.Logger(cfg.Log),
+		middleware.Errors(cfg.Log),
+		middleware.Metrics(),
+		middleware.Cors(cfg.CorsOrigin),
+		middleware.Panic(),
+	)
 
-	handlers := testroutes.Handler{
-		Logger: log,
-		Build:  build,
+	//Load the v1 route
+	v1(app, cfg)
+
+	return app
+}
+
+func v1(app *web.App, cfg web.AppConfig) {
+	trt := testroutes.Handler{
+		Logger: cfg.Log,
+		Build:  cfg.Build,
 	}
 
-	mux.HandleFunc("/api/test", handlers.Test)
-
-	return mux
+	app.Handle(http.MethodGet, "/test", trt.Test)
+	app.Handle(http.MethodGet, "/test/fail", trt.TestFail)
 }
 
 func DebugMux(build string, log *zap.SugaredLogger) *http.ServeMux {
