@@ -63,3 +63,8 @@ kind-describe:
 	kubectl describe pod -l app=sales
 
 kind-update-apply: tgs-api kind-load kind-apply
+
+##Use the expvarmon at https://github.com/divan/expvarmon to have local monitoring enabled
+##To install expvarmon run: go install github.com/divan/expvarmon@latest
+expvarmon:
+	expvarmon -ports="4000" -vars="build,requests,gorountines,errors,panics,mem:memstats.Alloc"
