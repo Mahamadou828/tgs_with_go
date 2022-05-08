@@ -4,6 +4,7 @@ FROM golang:1.18 as tgs_api
 ENV CGO_ENABLED 0
 #Backed to the main build variable
 ARG BUILD_REF
+ARG ENV
 # Create app directory and use it as the working directory
 RUN mkdir -p /service
 #Copy the source code into the container
@@ -11,7 +12,7 @@ COPY . /service
 
 #Build the service binary
 WORKDIR /service/app/service/api
-RUN go build -ldflags "-X main.build=${BUILD_REF}"
+RUN go build -ldflags "-X main.build=${BUILD_REF}" -ldflags "-X main.env=${ENV}"
 #@todo later we will have to build the admin binary
 #@todo Later here we will have to build the processor binary
 
