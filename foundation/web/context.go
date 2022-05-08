@@ -3,6 +3,7 @@ package web
 import (
 	"context"
 	"errors"
+	"github.com/getsentry/sentry-go"
 	"time"
 )
 
@@ -19,6 +20,7 @@ type RequestTrace struct {
 	ID         string
 	Now        time.Time
 	StatusCode int
+	Hub        *sentry.Hub
 }
 
 // GetRequestTrace returns the values from the context.

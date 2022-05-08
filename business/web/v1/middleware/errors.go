@@ -33,6 +33,8 @@ func Errors(log *zap.SugaredLogger) web.Middleware {
 					TraceID: v.ID,
 				}
 
+				//@todo Here we should send the error to sentry
+
 				if err := web.Response(ctx, w, rqsErr.Status, rsp); err != nil {
 					return &web.RequestError{
 						Message: fmt.Errorf("can't send http response: %v", err),
