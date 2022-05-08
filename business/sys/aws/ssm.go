@@ -84,7 +84,7 @@ func (s *Ssm) ListSecrets(service, build string) (map[string]string, error) {
 	return secrets, nil
 }
 
-func (s *Ssm) CreateSecret(name, value, service, build, desc string) error {
+func (s *Ssm) CreateSecret(name, value, service, env, desc string) error {
 	input := &secretsmanager.CreateSecretInput{
 		Description: aws.String(desc),
 		Name:        aws.String(name),
@@ -95,7 +95,7 @@ func (s *Ssm) CreateSecret(name, value, service, build, desc string) error {
 			},
 			{
 				Key:   aws.String("build"),
-				Value: aws.String(build),
+				Value: aws.String(env),
 			},
 		},
 		SecretString: aws.String(value),

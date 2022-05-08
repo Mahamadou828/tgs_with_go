@@ -29,8 +29,10 @@ var build = "1.0"
 //for this specific program we have 3 stages: dev, staging, prod
 var env = "development"
 
+const service = "TGS_API"
+
 type ConfParser struct {
-	secrets map[string]string
+	Secrets map[string]string
 }
 
 func main() {
@@ -49,6 +51,7 @@ func main() {
 }
 
 func run(log *zap.SugaredLogger) error {
+
 	//===========================
 	//GOMAXPROCS
 
@@ -98,23 +101,22 @@ func run(log *zap.SugaredLogger) error {
 		},
 	}
 
-	const prefix = "TGS_API"
 	help, err := "", nil
 
 	log.Infow("startup", "status", "parsing config struct", "env", env)
 
 	if env == "production" || env == "staging" {
-		secrets, err := sesAws.Ssm.ListSecrets(prefix, env)
+		secrets, err := sesAws.Ssm.ListSecrets(service, env)
 
 		if err != nil {
 			return err
 		}
 
-		help, err = config.Parse(&cfg, prefix, ConfParser{secrets: secrets})
+		help, err = config.Parse(&cfg, service, ConfParser{Secrets: secrets})
 	}
 
 	if env == "development" {
-		help, err = config.Parse(&cfg, prefix)
+		help, err = config.Parse(&cfg, service)
 	}
 
 	if err != nil {
@@ -128,10 +130,10 @@ func run(log *zap.SugaredLogger) error {
 	//App Starting
 	log.Infow("starting service", "version", build)
 	log.Infow("configuration env", "config", cfg)
-	defer log.Infow("shutting down service", "shutting down service", prefix)
+	defer log.Infow("shutting down service", "shutting down service", service)
 
 	expvar.NewString("build").Set(build)
-	expvar.NewString("service").Set(prefix)
+	expvar.NewString("service").Set(service)
 	//===========================
 	//Open a database connection
 	db, err := database.Open(database.Config{
@@ -211,7 +213,9 @@ func run(log *zap.SugaredLogger) error {
 
 		// Asking listener to shut down and shed load.
 		if err := api.Shutdown(ctx); err != nil {
-			api.Close()
+			if err := api.Close(); err != nil {
+				return err
+			}
 			return fmt.Errorf("could not stop server gracefully: %w", err)
 		}
 	}
@@ -223,9 +227,7 @@ func (cp ConfParser) Parse(field config.Field) error {
 	//The value of the field is equal by default to the tag value
 	defaultVal := field.Options.DefaultVal
 
-	fmt.Println("CONFIG ===========================")
-
-	val, ok := cp.secrets[field.Name]
+	val, ok := cp.Secrets[field.Name]
 
 	//If the secret was not found
 	if !ok {
