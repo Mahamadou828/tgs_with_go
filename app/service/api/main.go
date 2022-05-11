@@ -1,3 +1,6 @@
+/**
+@todo add the userPoolID and ClientID inside aws ssm and create a parser to use it
+*/
 package main
 
 import (
@@ -64,14 +67,6 @@ func run(log *zap.SugaredLogger) error {
 	log.Info("startup", "GOMAXPROCS", runtime.GOMAXPROCS(0))
 
 	//===========================
-	//Init a new aws session
-	sesAws, err := aws.New(log)
-
-	if err != nil || sesAws == nil {
-		return fmt.Errorf("can't init an aws session: %w", err)
-	}
-
-	//===========================
 	//Configuration
 	cfg := struct {
 		config.Version
@@ -93,12 +88,28 @@ func run(log *zap.SugaredLogger) error {
 			MaxOpenConns int    `conf:"default:0"`
 			DisableTLS   bool   `conf:"default:true"`
 		}
+		AWS struct {
+			Account           string `conf:"default:formation"`
+			CognitoClientID   string `conf:"default:eu-west-1_ASRFp9I1b"`
+			CognitoUserPoolID string `conf:"default:3bg263m34e4k3jd8hce48imsls"`
+		}
 	}{
 		Version: config.Version{
 			Build: build,
 			Desc:  "TGS api",
 			Env:   env,
 		},
+	}
+
+	//===========================
+	//Init a new aws session
+	sesAws, err := aws.New(log, aws.Config{
+		CognitoClientID:   cfg.AWS.CognitoClientID,
+		CognitoUserPoolID: cfg.AWS.CognitoUserPoolID,
+	})
+
+	if err != nil || sesAws == nil {
+		return fmt.Errorf("can't init an aws session: %w", err)
 	}
 
 	help, err := "", nil

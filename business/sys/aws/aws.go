@@ -8,12 +8,18 @@ import (
 )
 
 type AWS struct {
-	logger *zap.SugaredLogger
-	sess   *session.Session
-	Ssm    *Ssm
+	logger  *zap.SugaredLogger
+	sess    *session.Session
+	Ssm     *Ssm
+	Cognito *Cognito
 }
 
-func New(logger *zap.SugaredLogger) (*AWS, error) {
+type Config struct {
+	CognitoClientID   string
+	CognitoUserPoolID string
+}
+
+func New(logger *zap.SugaredLogger, cfg Config) (*AWS, error) {
 	//Initiate a new aws session
 	sess, err := session.NewSession(&aws.Config{
 		Region: aws.String("eu-west-1"),
@@ -24,8 +30,9 @@ func New(logger *zap.SugaredLogger) (*AWS, error) {
 	}
 
 	return &AWS{
-		logger: logger,
-		sess:   sess,
-		Ssm:    NewSsm(logger, sess),
+		logger:  logger,
+		sess:    sess,
+		Ssm:     NewSsm(logger, sess),
+		Cognito: NewCognito(logger, sess, cfg.CognitoClientID, cfg.CognitoUserPoolID),
 	}, nil
 }
