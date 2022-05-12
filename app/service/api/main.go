@@ -88,10 +88,6 @@ func run(log *zap.SugaredLogger) error {
 			MaxOpenConns int    `conf:"default:0"`
 			DisableTLS   bool   `conf:"default:true"`
 		}
-		AWS struct {
-			AppClientID string `conf:"-"`
-			UserPoolID  string `conf:"-"`
-		}
 	}{
 		Version: config.Version{
 			Build: build,
