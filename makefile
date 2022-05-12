@@ -1,4 +1,3 @@
-##@todo make kind-update didn't work
 ##@todo when launching the api in other env than dev, the app can't connect to the aws service because we should mount the local .aws file to a volume inside the kluster
 SHELL := /bin/bash
 KIND_CLUSTER := tgs-cluster
@@ -15,6 +14,8 @@ tidy:
 #make ENV="env" run-api
 #Be aware that the migration is run automatically so be careful when running another env than development
 run-api:
+	docker stop postgres-db || true && docker rm postgres-db || true
+	docker run --name postgres-db -e POSTGRES_PASSWORD=postgres -p 5432:5432 -d postgres
 	go run -ldflags "-X main.build=${VERSION}" -ldflags "-X main.env=${ENV}" app/service/api/main.go | go run app/tools/logfmt/main.go
 
 
@@ -69,7 +70,7 @@ kind-logs:
 	kubectl logs -l app=tgs --all-containers=true -f --tail=100 | go run app/tools/logfmt/main.go
 
 kind-restart:
-	kubectl rollout restart deployment tgs-system
+	kubectl rollout restart deployment tgs-pod
 
 kind-update: tgs-api kind-load kind-restart
 

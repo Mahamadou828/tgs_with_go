@@ -1,3 +1,6 @@
+/**
+@todo add the userPoolID and ClientID inside aws ssm and create a parser to use it
+*/
 package main
 
 import (
@@ -5,9 +8,6 @@ import (
 	"errors"
 	"expvar"
 	"fmt"
-	"github.com/Mahamadou828/tgs_with_golang/business/sys/aws"
-	"github.com/Mahamadou828/tgs_with_golang/business/sys/database"
-	"github.com/Mahamadou828/tgs_with_golang/foundation/web"
 	"net/http"
 	"os"
 	"os/signal"
@@ -17,7 +17,10 @@ import (
 
 	"github.com/Mahamadou828/tgs_with_golang/app/service/api/handlers"
 	"github.com/Mahamadou828/tgs_with_golang/app/tools/config"
+	"github.com/Mahamadou828/tgs_with_golang/business/sys/aws"
+	"github.com/Mahamadou828/tgs_with_golang/business/sys/database"
 	"github.com/Mahamadou828/tgs_with_golang/foundation/logger"
+	"github.com/Mahamadou828/tgs_with_golang/foundation/web"
 	"go.uber.org/automaxprocs/maxprocs"
 	"go.uber.org/zap"
 )
@@ -31,7 +34,7 @@ var env = "development"
 
 const service = "TGS_API"
 
-type ConfParser struct {
+type Parser struct {
 	Secrets map[string]string
 }
 
@@ -64,14 +67,6 @@ func run(log *zap.SugaredLogger) error {
 	log.Info("startup", "GOMAXPROCS", runtime.GOMAXPROCS(0))
 
 	//===========================
-	//Init a new aws session
-	sesAws, err := aws.New(log)
-
-	if err != nil || sesAws == nil {
-		return fmt.Errorf("can't init an aws session: %w", err)
-	}
-
-	//===========================
 	//Configuration
 	cfg := struct {
 		config.Version
@@ -101,29 +96,42 @@ func run(log *zap.SugaredLogger) error {
 		},
 	}
 
-	help, err := "", nil
+	//===========================
+	//Init a new aws session
+	sesAws, err := aws.New(log, aws.Config{
+		Account: "formation",
+		Service: service,
+		Env:     env,
+	})
+	//
+	if err != nil {
+		return fmt.Errorf("can't init an aws session: %w", err)
+	}
 
 	log.Infow("startup", "status", "parsing config struct", "env", env)
 
-	if env == "production" || env == "staging" {
+	if env == "staging" || env == "production" {
 		secrets, err := sesAws.Ssm.ListSecrets(service, env)
 
 		if err != nil {
 			return err
 		}
 
-		help, err = config.Parse(&cfg, service, ConfParser{Secrets: secrets})
+		if help, err := config.Parse(&cfg, service, Parser{Secrets: secrets}); err != nil {
+			if errors.Is(err, config.ErrHelpWanted) {
+				fmt.Println(help)
+			}
+			return err
+		}
 	}
 
 	if env == "development" {
-		help, err = config.Parse(&cfg, service)
-	}
-
-	if err != nil {
-		if errors.Is(err, config.ErrHelpWanted) {
-			fmt.Println(help)
+		if help, err := config.Parse(&cfg, service); err != nil {
+			if errors.Is(err, config.ErrHelpWanted) {
+				fmt.Println(help)
+			}
+			return err
 		}
-		return err
 	}
 
 	//===========================
@@ -223,11 +231,11 @@ func run(log *zap.SugaredLogger) error {
 	return nil
 }
 
-func (cp ConfParser) Parse(field config.Field) error {
+func (p Parser) Parse(field config.Field) error {
 	//The value of the field is equal by default to the tag value
 	defaultVal := field.Options.DefaultVal
 
-	val, ok := cp.Secrets[field.Name]
+	val, ok := p.Secrets[field.Name]
 
 	//If the secret was not found
 	if !ok {
