@@ -8,9 +8,6 @@ import (
 	"errors"
 	"expvar"
 	"fmt"
-	"github.com/Mahamadou828/tgs_with_golang/business/sys/aws"
-	"github.com/Mahamadou828/tgs_with_golang/business/sys/database"
-	"github.com/Mahamadou828/tgs_with_golang/foundation/web"
 	"net/http"
 	"os"
 	"os/signal"
@@ -20,7 +17,10 @@ import (
 
 	"github.com/Mahamadou828/tgs_with_golang/app/service/api/handlers"
 	"github.com/Mahamadou828/tgs_with_golang/app/tools/config"
+	"github.com/Mahamadou828/tgs_with_golang/business/sys/aws"
+	"github.com/Mahamadou828/tgs_with_golang/business/sys/database"
 	"github.com/Mahamadou828/tgs_with_golang/foundation/logger"
+	"github.com/Mahamadou828/tgs_with_golang/foundation/web"
 	"go.uber.org/automaxprocs/maxprocs"
 	"go.uber.org/zap"
 )
@@ -34,7 +34,7 @@ var env = "development"
 
 const service = "TGS_API"
 
-type ConfParser struct {
+type Parser struct {
 	Secrets map[string]string
 }
 
@@ -89,9 +89,8 @@ func run(log *zap.SugaredLogger) error {
 			DisableTLS   bool   `conf:"default:true"`
 		}
 		AWS struct {
-			Account           string `conf:"default:formation"`
-			CognitoClientID   string `conf:"default:eu-west-1_ASRFp9I1b"`
-			CognitoUserPoolID string `conf:"default:3bg263m34e4k3jd8hce48imsls"`
+			AppClientID string `conf:"-"`
+			UserPoolID  string `conf:"-"`
 		}
 	}{
 		Version: config.Version{
@@ -104,37 +103,39 @@ func run(log *zap.SugaredLogger) error {
 	//===========================
 	//Init a new aws session
 	sesAws, err := aws.New(log, aws.Config{
-		CognitoClientID:   cfg.AWS.CognitoClientID,
-		CognitoUserPoolID: cfg.AWS.CognitoUserPoolID,
+		Account: "formation",
+		Service: service,
+		Env:     env,
 	})
-
-	if err != nil || sesAws == nil {
+	//
+	if err != nil {
 		return fmt.Errorf("can't init an aws session: %w", err)
 	}
 
-	help, err := "", nil
-
 	log.Infow("startup", "status", "parsing config struct", "env", env)
 
-	if env == "production" || env == "staging" {
+	if env == "staging" || env == "production" {
 		secrets, err := sesAws.Ssm.ListSecrets(service, env)
 
 		if err != nil {
 			return err
 		}
 
-		help, err = config.Parse(&cfg, service, ConfParser{Secrets: secrets})
+		if help, err := config.Parse(&cfg, service, Parser{Secrets: secrets}); err != nil {
+			if errors.Is(err, config.ErrHelpWanted) {
+				fmt.Println(help)
+			}
+			return err
+		}
 	}
 
 	if env == "development" {
-		help, err = config.Parse(&cfg, service)
-	}
-
-	if err != nil {
-		if errors.Is(err, config.ErrHelpWanted) {
-			fmt.Println(help)
+		if help, err := config.Parse(&cfg, service); err != nil {
+			if errors.Is(err, config.ErrHelpWanted) {
+				fmt.Println(help)
+			}
+			return err
 		}
-		return err
 	}
 
 	//===========================
@@ -234,11 +235,11 @@ func run(log *zap.SugaredLogger) error {
 	return nil
 }
 
-func (cp ConfParser) Parse(field config.Field) error {
+func (p Parser) Parse(field config.Field) error {
 	//The value of the field is equal by default to the tag value
 	defaultVal := field.Options.DefaultVal
 
-	val, ok := cp.Secrets[field.Name]
+	val, ok := p.Secrets[field.Name]
 
 	//If the secret was not found
 	if !ok {

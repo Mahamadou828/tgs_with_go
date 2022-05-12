@@ -26,16 +26,16 @@ func NewSsm(logger *zap.SugaredLogger, sess *session.Session) *Ssm {
 
 //ListSecrets Retrieve all secrets store in the aws account
 //and filter them based on the service pass and the build.
-func (s *Ssm) ListSecrets(service, build string) (map[string]string, error) {
+func (s *Ssm) ListSecrets(service, env string) (map[string]string, error) {
 	input := &secretsmanager.ListSecretsInput{
 		Filters: []*secretsmanager.Filter{
 			{
 				Key:    aws.String(secretsmanager.FilterNameStringTypeTagKey),
-				Values: []*string{aws.String("service"), aws.String("build")},
+				Values: []*string{aws.String("service"), aws.String("env")},
 			},
 			{
 				Key:    aws.String(secretsmanager.FilterNameStringTypeTagValue),
-				Values: []*string{aws.String(service), aws.String(build)},
+				Values: []*string{aws.String(service), aws.String(env)},
 			},
 		},
 	}
@@ -94,7 +94,7 @@ func (s *Ssm) CreateSecret(name, value, service, env, desc string) error {
 				Value: aws.String(service),
 			},
 			{
-				Key:   aws.String("build"),
+				Key:   aws.String("env"),
 				Value: aws.String(env),
 			},
 		},

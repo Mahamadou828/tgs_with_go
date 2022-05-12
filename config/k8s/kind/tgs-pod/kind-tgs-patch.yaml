@@ -23,6 +23,9 @@ spec:
               cpu: "2000m" # Up to 2 full cores
             requests:
               cpu: "1000m" # Use 1 ful32
+          volumeMounts:
+            - mountPath: /root/.aws
+              name: aws-credentials
           livenessProbe:
             httpGet:
               path: /debug/liveliness
@@ -41,3 +44,7 @@ spec:
             timeoutSeconds: 5
             successThreshold: 1
             failureThreshold: 2
+      volumes:
+        - name: aws-credentials
+          hostPath:
+            path: /Users/opmad/.aws
