@@ -3,6 +3,7 @@ SHELL := /bin/bash
 KIND_CLUSTER := tgs-cluster
 ENV := development
 VERSION := 1.0
+AWS_ACCOUNT := formation
 
 #Vendor all the project dependencies.
 tidy:
@@ -83,3 +84,16 @@ kind-update-apply: tgs-api kind-load kind-apply
 ##To install expvarmon run: go install github.com/divan/expvarmon@latest
 expvarmon:
 	expvarmon -ports="3000" -vars="build,requests,gorountines,errors,panics,mem:memstats.Alloc"
+
+#Destroy the local postgres sql database
+db-destroy:
+	docker stop postgres-db || true && docker rm postgres-db || true
+
+#Create a local postgresql database
+db-up:
+	docker run --name postgres-db -e POSTGRES_PASSWORD=postgres -p 5432:5432 -d postgres
+
+#Migrate the database schemas to use the command you should provide the MIGRATE_VERSION:
+#make db-migration MIGRATE_VERSION=v1
+db-migration:
+	go run app/tools/admin/main.go --commands=migrate --version=$(MIGRATE_VERSION) --env=$(ENV) --awsaccount=$(AWS_ACCOUNT)
