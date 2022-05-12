@@ -15,16 +15,22 @@ type AWS struct {
 	sess    *session.Session
 	Ssm     *Ssm
 	Cognito *Cognito
+	S3      *S3
 }
 
 type Config struct {
 	Account string
 	Service string
 	Env     string
+	//UnsafeIgnoreSecrets skip secrets validation for other aws service
+	//this is an unsafe parameter because it can lead to malfunctioning of
+	//aws service due to bad configuration
+	UnsafeIgnoreSecrets bool
 }
 
 type parser struct {
-	Secrets map[string]string
+	Secrets   map[string]string
+	SkipCheck bool
 }
 
 func New(logger *zap.SugaredLogger, config Config) (*AWS, error) {
@@ -48,12 +54,12 @@ func New(logger *zap.SugaredLogger, config Config) (*AWS, error) {
 
 	cfg := struct {
 		Cognito struct {
-			UserPoolID string `conf:"required"`
-			ClientID   string `conf:"required"`
+			UserPoolID string
+			ClientID   string
 		}
 	}{}
 
-	if err := extractConfigFromSecrets(ssm, config.Service, config.Env, &cfg); err != nil {
+	if err := extractConfigFromSecrets(ssm, config.Service, config.Env, config.UnsafeIgnoreSecrets, &cfg); err != nil {
 		return nil, err
 	}
 
@@ -62,19 +68,20 @@ func New(logger *zap.SugaredLogger, config Config) (*AWS, error) {
 		sess:    sess,
 		Ssm:     NewSsm(logger, sess),
 		Cognito: NewCognito(logger, sess, cfg.Cognito.ClientID, cfg.Cognito.UserPoolID),
+		S3:      NewS3(logger, sess),
 	}, nil
 }
 
 //extractConfigFromSecrets Use ssm to extract all config needed to
 //start other aws services ( cognito, s3 etc )
-func extractConfigFromSecrets(ssm *Ssm, service, env string, cfg any) error {
+func extractConfigFromSecrets(ssm *Ssm, service, env string, skipParserCheck bool, cfg any) error {
 	secrets, err := ssm.ListSecrets(service, env)
 
 	if err != nil {
 		return err
 	}
 
-	if _, err := config.Parse(cfg, service, parser{Secrets: secrets}); err != nil {
+	if _, err := config.Parse(cfg, service, parser{Secrets: secrets, SkipCheck: skipParserCheck}); err != nil {
 		return err
 	}
 
@@ -84,9 +91,12 @@ func extractConfigFromSecrets(ssm *Ssm, service, env string, cfg any) error {
 func (p parser) Parse(field config.Field) error {
 	val, ok := p.Secrets[field.Name]
 
-	if !ok {
-		return fmt.Errorf("can't find configuration for aws service. Missing secrets for: %s", field.Name)
-	}
+	if !p.SkipCheck {
+		if !ok {
+			return fmt.Errorf("can't find configuration for aws service. Missing secrets for: %s", field.Name)
+		}
 
+	}
+	
 	return config.SetFieldValue(field, val)
 }

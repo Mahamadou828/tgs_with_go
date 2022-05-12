@@ -129,6 +129,10 @@ func Parse(cfg interface{}, prefix string, parsers ...Parsers) (string, error) {
 			value = osVal
 		}
 
+		if value == "" && field.Options.Required {
+			return "", fmt.Errorf("invalue value for field %s, field mark as required but value=%q", field.Name, value)
+		}
+
 		if err := SetFieldValue(field, value); err != nil {
 			return "", err
 		}
@@ -144,6 +148,19 @@ func SetFieldValue(field Field, value string) error {
 	switch field.Field.Kind() {
 	case reflect.String:
 		field.Field.SetString(value)
+	case reflect.Slice:
+		vals := append([]string{}, strings.Split(value, ";")...)
+		sl := reflect.MakeSlice(field.Field.Type(), len(vals), len(vals))
+
+		for i, val := range vals {
+
+			if err := SetFieldValue(Field{Field: sl.Index(i)}, val); err != nil {
+				return err
+			}
+		}
+
+		field.Field.Set(sl)
+		return nil
 	case reflect.Int, reflect.Int64, reflect.Int16, reflect.Int8:
 		var (
 			val int64
@@ -297,7 +314,7 @@ func UsageInfo(prefix string, cfg interface{}) (string, error) {
 	}
 
 	w := new(tabwriter.Writer)
-	w.Init(&sb, 0, 4, 2, ' ', tabwriter.TabIndent)
+	w.Init(&sb, 0, 6, 2, ' ', tabwriter.TabIndent)
 
 	for _, field := range fields {
 		_, err := fmt.Fprintf(w, "  %s", flagUsage(field.FlagKey))
