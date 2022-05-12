@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -39,7 +40,13 @@ func NewCognito(log *zap.SugaredLogger, sess *session.Session, clientID, userPoo
 //skipPhoneCheck indicate if we should verify the provided phone number
 //by sending sms code or if we should skip the verification and make the
 //account active right away
-func (c *Cognito) CreateUser(password, sub, email, aggregator, phoneNumber string, skipPhoneCheck bool) error {
+func (c *Cognito) CreateUser(email, phoneNumber, password, aggregator string, skipPhoneCheck bool) (string, error) {
+	sub, err := c.GenerateSub(email, phoneNumber, aggregator)
+
+	if err != nil {
+		return "", fmt.Errorf("error generating user sub: %v", err)
+	}
+
 	inp := cognitoidentityprovider.SignUpInput{
 		ClientId: aws.String(c.clientID),
 		Password: aws.String(password),
@@ -65,10 +72,10 @@ func (c *Cognito) CreateUser(password, sub, email, aggregator, phoneNumber strin
 	}
 
 	if _, err := c.identityProvider.SignUp(&inp); err != nil {
-		return err
+		return "", err
 	}
 
-	return nil
+	return sub, nil
 }
 
 //ConfirmSignUp validate a newly create account
