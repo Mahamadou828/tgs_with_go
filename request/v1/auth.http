@@ -1,0 +1,15 @@
+### Create a new user
+POST {{BASE_URL_V1}}/user
+x-api-key: {{API_KEY}}
+aggregator: {{AGGREGATOR_ID}}
+content-type: "application/json"
+
+{
+    "email": "{{USER_EMAIL}}",
+    "phoneNumber": "{{USER_PHONE_NUMBER}}",
+    "name": "{{USER_NAME}}",
+    "isPhoneNumberVerified": true,
+    "isCGUAccepted": true,
+    "role": "USER",
+    "password": "{{USER_PASSWORD}}"
+}

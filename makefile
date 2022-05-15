@@ -15,8 +15,7 @@ tidy:
 #make ENV="env" run-api
 #Be aware that the migration is run automatically so be careful when running another env than development
 run-api:
-	docker stop postgres-db || true && docker rm postgres-db || true
-	docker run --name postgres-db -e POSTGRES_PASSWORD=postgres -p 5432:5432 -d postgres
+	docker run --name postgres-db -e POSTGRES_PASSWORD=postgres -p 5432:5432 -d postgres || true
 	go run -ldflags "-X main.build=${VERSION}" -ldflags "-X main.env=${ENV}" app/service/api/main.go | go run app/tools/logfmt/main.go
 
 
@@ -95,5 +94,5 @@ db-up:
 
 #Migrate the database schemas to use the command you should provide the MIGRATE_VERSION:
 #make db-migration MIGRATE_VERSION=v1
-db-migration:
-	go run app/tools/admin/main.go --commands=migrate --version=$(MIGRATE_VERSION) --env=$(ENV) --awsaccount=$(AWS_ACCOUNT)
+db-migrate:
+	go run app/tools/admin/main.go --commands=migrate --version=$(MIGRATE_VERSION) --env=$(ENV) --awsaccount=$(AWS_ACCOUNT) | go run app/tools/logfmt/main.go

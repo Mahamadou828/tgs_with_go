@@ -1,0 +1,15 @@
+### Create aggregator
+POST {{BASE_URL_V1}}/aggregator
+x-api-key: {{API_KEY}}
+aggregator: {{AGGREGATOR_ID}}
+
+{
+    "name": "poc-tgs-2",
+    "code": "poc-tgs-2",
+    "apiKey": "6fa8124b-5980-45f4-8cde-04b13e2e2629-2",
+    "providerTimeout": 5000,
+    "active": true,
+    "type": "default",
+    "paymentByTgs": true,
+    "logoUrl": "https://image.shutterstock.com/image-vector/stripes-dots-circle-logo-vector-260nw-1139400776.jpg"
+}

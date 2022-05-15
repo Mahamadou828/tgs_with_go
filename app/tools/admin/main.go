@@ -108,15 +108,16 @@ func run(log *zap.SugaredLogger) error {
 			)
 		case "createsecret":
 			scrCfg := struct {
-				Filename string `conf:"optional"`
-				Service  string `conf:"required"`
-				Bucket   string `conf:"optional"`
-				Key      string `conf:"optional"`
-				SrcType  string `conf:"optional"`
+				Filename string   `conf:"optional"`
+				Service  string   `conf:"required"`
+				Bucket   string   `conf:"optional"`
+				Key      string   `conf:"optional"`
+				SrcType  string   `conf:"optional"`
+				Secrets  []string `conf:"optional"`
 			}{}
 
 			if _, err = config.Parse(&scrCfg, service); err != nil {
-				return fmt.Errorf("can't start command %s because of missing configuration %w", command, err)
+				return fmt.Errorf("can't start command %s because of missing configuration %w ", command, err)
 			}
 
 			err = commands.CreateSecret(commands.CreateSecretCfg{
@@ -133,6 +134,7 @@ func run(log *zap.SugaredLogger) error {
 				Env:      cfg.Env,
 				Bucket:   scrCfg.Bucket,
 				Key:      scrCfg.Key,
+				Secrets:  scrCfg.Secrets,
 			})
 		case "uploadfile":
 			uplCfg := struct {

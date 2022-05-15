@@ -3,14 +3,19 @@ package handlers
 
 import (
 	"expvar"
+	"github.com/Mahamadou828/tgs_with_golang/business/core/v1/aggregator"
+	"net/http"
+	"net/http/pprof"
+
 	"github.com/Mahamadou828/tgs_with_golang/app/service/api/handlers/debug/checkroutes"
+	"github.com/Mahamadou828/tgs_with_golang/app/service/api/handlers/v1/aggregatorroutes"
 	"github.com/Mahamadou828/tgs_with_golang/app/service/api/handlers/v1/testroutes"
+	"github.com/Mahamadou828/tgs_with_golang/app/service/api/handlers/v1/userroutes"
+	"github.com/Mahamadou828/tgs_with_golang/business/core/v1/user"
 	"github.com/Mahamadou828/tgs_with_golang/business/web/v1/middleware"
 	"github.com/Mahamadou828/tgs_with_golang/foundation/web"
 	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"
-	"net/http"
-	"net/http/pprof"
 )
 
 func APIMux(cfg web.AppConfig) *web.App {
@@ -39,8 +44,16 @@ func v1(app *web.App, cfg web.AppConfig) {
 		Env:    cfg.Env,
 	}
 
+	urt := userroutes.Handler{User: user.NewCore(cfg.Log, cfg.DB, cfg.AWS)}
+	agt := aggregatorroutes.Handler{Agg: aggregator.NewCore(cfg.Log, cfg.DB, cfg.AWS)}
 	app.Handle(http.MethodGet, "/test", trt.Test)
 	app.Handle(http.MethodGet, "/test/fail", trt.TestFail)
+
+	//=========================== User Route
+	app.Handle(http.MethodPost, "/user", urt.Create)
+
+	//=========================== Aggregator Route
+	app.Handle(http.MethodPost, "/aggregator", agt.Create)
 }
 
 func DebugMux(build string, log *zap.SugaredLogger, db *sqlx.DB) *http.ServeMux {

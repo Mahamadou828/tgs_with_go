@@ -3,7 +3,7 @@ package commands
 import (
 	"context"
 	"fmt"
-	"github.com/Mahamadou828/tgs_with_golang/business/data/schema"
+	"github.com/Mahamadou828/tgs_with_golang/business/data/v1/schema"
 	"github.com/Mahamadou828/tgs_with_golang/business/sys/database"
 	"go.uber.org/zap"
 	"time"
