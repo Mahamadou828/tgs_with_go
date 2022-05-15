@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"go.uber.org/zap"
+	"strconv"
 )
 
 //Cognito represent an instance of the cognito session
@@ -71,6 +72,14 @@ func (c *Cognito) CreateUser(u CognitoUser) (string, error) {
 			{
 				Name:  aws.String("name"),
 				Value: aws.String(u.Name),
+			},
+			{
+				Name:  aws.String("custom:isActive"),
+				Value: aws.String(strconv.FormatBool(u.IsActive)),
+			},
+			{
+				Name:  aws.String("custom:aggregator"),
+				Value: aws.String(u.AggID),
 			},
 		},
 		Username: aws.String(sub),

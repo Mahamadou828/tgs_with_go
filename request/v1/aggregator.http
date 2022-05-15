@@ -4,9 +4,9 @@ x-api-key: {{API_KEY}}
 aggregator: {{AGGREGATOR_ID}}
 
 {
-    "name": "poc-tgs-2",
-    "code": "poc-tgs-2",
-    "apiKey": "6fa8124b-5980-45f4-8cde-04b13e2e2629-2",
+    "name": "{{DEFAULT_AGGREGATOR_CODE}}",
+    "code": "{{DEFAULT_AGGREGATOR_CODE}}",
+    "apiKey": "{{API_KEY}}",
     "providerTimeout": 5000,
     "active": true,
     "type": "default",

@@ -42,9 +42,9 @@ func (s Store) Create(ctx context.Context, na NewAggregator, now time.Time) (Agg
 
 	const q = `
 	INSERT INTO "public".aggregator
-	(id, name, code, apiKey, providerTimeout, active, type, paymentByTgs, LogoUrl, updatedAt, createdAt)
+	(id, name, code, api_key, provider_timeout, active, type, payment_by_tgs, logo_url, updated_at, created_at, deleted_at)
 	VALUES
-	(:id, :name, :code, :apiKey, :providerTimeout, :active, :type, :paymentByTgs, :logoUrl, :updatedAt, :createdAt)
+	(:id, :name, :code, :api_key, :provider_timeout, :active, :type, :payment_by_tgs, :logo_url, :updated_at, :created_at, null)
 `
 	if err := database.NamedExecContext(ctx, s.log, s.db, q, agr); err != nil {
 		return Aggregator{}, fmt.Errorf("failed to create aggregator: %v", err)
@@ -66,7 +66,7 @@ func (s Store) QueryByID(ctx context.Context, id string) (Aggregator, error) {
 	SELECT * FROM aggregator AS a WHERE a.id = :id
 `
 	if err := database.NamedQueryStruct(ctx, s.log, s.db, q, data, &agg); err != nil {
-		return agg, err
+		return agg, fmt.Errorf("aggregator %s not found", id)
 	}
 
 	return agg, nil

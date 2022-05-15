@@ -69,9 +69,9 @@ func (s Store) Create(ctx context.Context, aggID, apiKey string, nu NewUser, now
 
 	const q = `
 	INSERT INTO "public"."user" 
-	(id, aggregatorId, email, phoneNumber, name, stripeId, apiKey, active, cognitoId, isMonthlyActive, isCGUAccepted, role, createdAt, updatedAt, deletedAt)
+	(id, aggregator_id, email, phone_number, name, stripe_id, api_key, active, cognito_id, is_monthly_active, is_cgu_accepted, role, created_at, updated_at, deleted_at)
 	VALUES
-	(:id, :aggregatorId, :email, :phoneNumber, :name, :stripeId, :apiKey, :active, :cognitoId, false, :isCGUAccepted, :role, :createdAt, :updatedAt, null)
+	(:id, :aggregator_id, :email, :phone_number, :name, :stripe_id, :api_key, :active, :cognito_id, false, :is_cgu_accepted, :role, :created_at, :updated_at, null)
 `
 	if err := database.NamedExecContext(ctx, s.log, s.db, q, usr); err != nil {
 		//@todo we should rollback the user creating in cognito and stripe

@@ -9,15 +9,15 @@ type Aggregator struct {
 	ID              string      `db:"id" json:"id"`
 	Name            string      `db:"name" json:"name"`
 	Code            string      `db:"code" json:"code"`
-	ApiKey          string      `db:"apiKey" json:"apiKey"`
-	ProviderTimeout int         `db:"providerTimeout" json:"providerTimeout"`
+	ApiKey          string      `db:"api_key" json:"apiKey"`
+	ProviderTimeout int         `db:"provider_timeout" json:"providerTimeout"`
 	Active          bool        `db:"active" json:"active"`
 	Type            string      `db:"type" json:"type"`
-	PaymentByTGS    bool        `db:"paymentByTgs" json:"paymentByTgs"`
-	LogoURL         string      `db:"logoUrl" json:"logoUrl"`
-	UpdatedAt       time.Time   `db:"updatedAt" json:"-"`
-	CreatedAt       time.Time   `db:"createdAt" json:"createdAt"`
-	DeletedAt       pq.NullTime `db:"deletedAt" json:"-"`
+	PaymentByTGS    bool        `db:"payment_by_tgs" json:"paymentByTgs"`
+	LogoURL         string      `db:"logo_url" json:"logoUrl"`
+	UpdatedAt       time.Time   `db:"updated_at" json:"-"`
+	CreatedAt       time.Time   `db:"created_at" json:"createdAt"`
+	DeletedAt       pq.NullTime `db:"deleted_at" json:"-"`
 }
 
 type NewAggregator struct {

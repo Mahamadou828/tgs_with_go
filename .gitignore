@@ -92,3 +92,5 @@ fabric.properties
 # Dependency directories (remove the comment below to include it)
 # vendor/
 
+#request env file
+http-client.private.env.json
