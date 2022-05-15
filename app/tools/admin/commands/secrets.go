@@ -9,6 +9,7 @@ import (
 	"go.uber.org/zap"
 	"io/ioutil"
 	"os"
+	"strings"
 )
 
 const (
@@ -26,6 +27,7 @@ type CreateSecretCfg struct {
 	Env       string
 	Bucket    string
 	Key       string
+	Secrets   []string
 }
 
 type Secret struct {
@@ -65,7 +67,18 @@ func CreateSecret(cfg CreateSecretCfg) error {
 			return err
 		}
 	case CliSrc:
-		//@todo to implement. Parse cli argument to create ssm secret
+		for _, secret := range cfg.Secrets {
+			parseSecret := strings.Split(secret, ":")
+			if len(parseSecret) != 3 {
+				return fmt.Errorf("secrets malformated: %v, secret should be in the following format: key:value:description", secret)
+			}
+			name, value, desc := parseSecret[0], parseSecret[1], parseSecret[2]
+			secrets = append(secrets, Secret{
+				Name:        name,
+				Value:       value,
+				Description: desc,
+			})
+		}
 	case LocalFileSrc:
 		jsonFile, err := os.Open(cfg.Filename)
 		if err != nil {

@@ -1,18 +1,17 @@
-package userroutes
+package aggregatorroutes
 
 import (
 	"context"
 	"fmt"
-	aggCore "github.com/Mahamadou828/tgs_with_golang/business/core/v1/aggregator"
-	userCore "github.com/Mahamadou828/tgs_with_golang/business/core/v1/user"
-	"github.com/Mahamadou828/tgs_with_golang/business/data/v1/store/user"
-	"github.com/Mahamadou828/tgs_with_golang/foundation/web"
 	"net/http"
+
+	aggCore "github.com/Mahamadou828/tgs_with_golang/business/core/v1/aggregator"
+	"github.com/Mahamadou828/tgs_with_golang/business/data/v1/store/aggregator"
+	"github.com/Mahamadou828/tgs_with_golang/foundation/web"
 )
 
 type Handler struct {
-	User userCore.Core
-	Agg  aggCore.Core
+	Agg aggCore.Core
 }
 
 func (h Handler) Create(ctx context.Context, w http.ResponseWriter, r *http.Request) *web.RequestError {
@@ -25,23 +24,23 @@ func (h Handler) Create(ctx context.Context, w http.ResponseWriter, r *http.Requ
 		)
 	}
 
-	var nu user.NewUser
+	var na aggregator.NewAggregator
 
-	if err := web.Decode(r, &nu); err != nil {
+	if err := web.Decode(r, &na); err != nil {
 		return web.NewRequestError(
 			fmt.Errorf("unable to decode payload: %v", err),
 			http.StatusInternalServerError,
 		)
 	}
 
-	usr, err := h.User.Create(ctx, r.Header.Get("aggregator"), nu, v.Now)
+	agr, err := h.Agg.Create(ctx, na, v.Now)
 
 	if err != nil {
 		return web.NewRequestError(
-			fmt.Errorf("can't create user: %q, reason: %v", nu.Email, err),
+			err,
 			http.StatusBadRequest,
 		)
 	}
 
-	return web.Response(ctx, w, http.StatusCreated, usr)
+	return web.Response(ctx, w, http.StatusCreated, agr)
 }

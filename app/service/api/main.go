@@ -67,6 +67,20 @@ func run(log *zap.SugaredLogger) error {
 	log.Info("startup", "GOMAXPROCS", runtime.GOMAXPROCS(0))
 
 	//===========================
+	//Init a new aws session
+	sesAws, err := aws.New(log, aws.Config{
+		Account: "formation",
+		Service: service,
+		Env:     env,
+	})
+	//
+	if err != nil {
+		return fmt.Errorf("can't init an aws session: %w", err)
+	}
+
+	log.Infow("startup", "status", "parsing config struct", "env", env)
+
+	//===========================
 	//Configuration
 	cfg := struct {
 		config.Version
@@ -95,20 +109,6 @@ func run(log *zap.SugaredLogger) error {
 			Env:   env,
 		},
 	}
-
-	//===========================
-	//Init a new aws session
-	sesAws, err := aws.New(log, aws.Config{
-		Account: "formation",
-		Service: service,
-		Env:     env,
-	})
-	//
-	if err != nil {
-		return fmt.Errorf("can't init an aws session: %w", err)
-	}
-
-	log.Infow("startup", "status", "parsing config struct", "env", env)
 
 	if env == "staging" || env == "production" {
 		secrets, err := sesAws.Ssm.ListSecrets(service, env)

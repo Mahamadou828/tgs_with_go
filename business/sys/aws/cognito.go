@@ -1,13 +1,11 @@
 package aws
 
 import (
+	"crypto/sha256"
 	"fmt"
-	"strconv"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
-	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
 
@@ -17,6 +15,16 @@ type Cognito struct {
 	identityProvider *cognitoidentityprovider.CognitoIdentityProvider
 	clientID         string
 	userPoolID       string
+	seed             string
+}
+
+type CognitoUser struct {
+	Email       string
+	PhoneNumber string
+	Name        string
+	AggID       string
+	IsActive    bool
+	Password    string
 }
 
 type Session struct {
@@ -25,12 +33,13 @@ type Session struct {
 	ExpireIn     int64
 }
 
-func NewCognito(log *zap.SugaredLogger, sess *session.Session, clientID, userPoolID string) *Cognito {
+func NewCognito(log *zap.SugaredLogger, sess *session.Session, clientID, userPoolID, seed string) *Cognito {
 	identityProvider := cognitoidentityprovider.New(sess)
 	return &Cognito{
 		log: log, identityProvider: identityProvider,
 		clientID:   clientID,
 		userPoolID: userPoolID,
+		seed:       seed,
 	}
 }
 
@@ -40,32 +49,28 @@ func NewCognito(log *zap.SugaredLogger, sess *session.Session, clientID, userPoo
 //skipPhoneCheck indicate if we should verify the provided phone number
 //by sending sms code or if we should skip the verification and make the
 //account active right away
-func (c *Cognito) CreateUser(email, phoneNumber, password, aggregator string, skipPhoneCheck bool) (string, error) {
-	sub, err := c.GenerateSub(email, phoneNumber, aggregator)
+func (c *Cognito) CreateUser(u CognitoUser) (string, error) {
+	sub, err := c.GenerateSub(u.Email, u.PhoneNumber, u.AggID)
 
 	if err != nil {
 		return "", fmt.Errorf("error generating user sub: %v", err)
 	}
-
+	fmt.Println(sub)
 	inp := cognitoidentityprovider.SignUpInput{
 		ClientId: aws.String(c.clientID),
-		Password: aws.String(password),
+		Password: aws.String(u.Password),
 		UserAttributes: []*cognitoidentityprovider.AttributeType{
 			{
 				Name:  aws.String("email"),
-				Value: aws.String(email),
+				Value: aws.String(u.Email),
 			},
 			{
 				Name:  aws.String("phone_number"),
-				Value: aws.String(phoneNumber),
+				Value: aws.String(u.PhoneNumber),
 			},
 			{
-				Name:  aws.String("aggregator"),
-				Value: aws.String(aggregator),
-			},
-			{
-				Name:  aws.String("isActive"),
-				Value: aws.String(strconv.FormatBool(skipPhoneCheck)),
+				Name:  aws.String("name"),
+				Value: aws.String(u.Name),
 			},
 		},
 		Username: aws.String(sub),
@@ -221,12 +226,8 @@ func (c *Cognito) updateUserAttribute(sub string, attr []*cognitoidentityprovide
 }
 
 func (c *Cognito) GenerateSub(email, phoneNumber, aggregator string) (string, error) {
-	sub := email + phoneNumber + aggregator
-	id, err := uuid.FromBytes([]byte(sub))
-
-	if err != nil {
-		return "", err
-	}
-
-	return id.String(), nil
+	sub := email + phoneNumber + aggregator + c.seed
+	h := sha256.New()
+	h.Write([]byte(sub))
+	return fmt.Sprintf("%x", h.Sum(nil)), nil
 }

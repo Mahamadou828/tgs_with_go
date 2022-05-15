@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS "public".provider
     apiToken                 text NOT NULL,
     createdAt                timestamp NOT NULL,
     updatedAt                timestamp NOT NULL,
-    deletedAt                timestamp NOT NULL,
+    deletedAt                timestamp,
     CONSTRAINT PK_168 PRIMARY KEY ( id )
 );
 
@@ -67,15 +67,15 @@ CREATE TABLE IF NOT EXISTS "public".aggregator
     code            varchar(255) NOT NULL,
     apiKey          varchar(255) NOT NULL,
     providerTimeout int NOT NULL,
-    blockedProvider text[][] NOT NULL,
     active          boolean NOT NULL,
     type            varchar(255) NOT NULL,
     paymentByTgs    boolean NOT NULL,
     logoUrl         text NOT NULL,
     createdAt       timestamp NOT NULL,
     updatedAt       timestamp NOT NULL,
-    deletedAt       timestamp NOT NULL,
-    CONSTRAINT PK_23 PRIMARY KEY ( id )
+    deletedAt       timestamp,
+    CONSTRAINT PK_23 PRIMARY KEY ( id ),
+    CONSTRAINT Index_231 UNIQUE ( apiKey )
 );
 
 COMMENT ON TABLE "public".aggregator IS 'An aggregator is a client that integrate the api and redistribute the offer';
@@ -87,7 +87,7 @@ COMMENT ON COLUMN "public".aggregator.type IS 'There''s two type of aggregator:
 CREATE TABLE IF NOT EXISTS "public"."user"
 (
     id              UUID NOT NULL,
-    aggregatorId    int NOT NULL,
+    aggregatorId    UUID NOT NULL,
     email           varchar(255) NOT NULL,
     phoneNumber     varchar(255) NOT NULL,
     name            varchar(255) NOT NULL,
@@ -97,7 +97,7 @@ CREATE TABLE IF NOT EXISTS "public"."user"
     cognitoId       text NOT NULL,
     isMonthlyActive boolean NOT NULL,
     isCGUAccepted   boolean NOT NULL,
-    role            text[][] NOT NULL,
+    role            varchar(255) NOT NULL,
     updatedAt       timestamp NOT NULL,
     deletedAt       timestamp,
     createdAt       timestamp NOT NULL,
@@ -109,9 +109,9 @@ CREATE TABLE IF NOT EXISTS "public"."user"
 CREATE TABLE IF NOT EXISTS "public".search
 (
     id               UUID NOT NULL,
-    userId           int NOT NULL,
-    aggregatorId     int NOT NULL,
-    countryId        int NOT NULL,
+    userId           UUID NOT NULL,
+    aggregatorId     UUID NOT NULL,
+    countryId        UUID NOT NULL,
     startDate        timestamp NOT NULL,
     isPlanned        boolean NOT NULL,
     startFullAddress text NOT NULL,
@@ -126,10 +126,6 @@ CREATE TABLE IF NOT EXISTS "public".search
     endPostcode      varchar(255) NOT NULL,
     endCountry       varchar(255) NOT NULL,
     endRegion        varchar(255) NOT NULL,
-    stopsLongitude   int[] NOT NULL,
-    stopsNumber      int NOT NULL,
-    stopsAddress     text[][] NOT NULL,
-    additionalUsers  int[] NOT NULL,
     distance         int NOT NULL,
     nbrOfPassager    int NOT NULL,
     flightNumber     varchar(255) NOT NULL,
@@ -161,14 +157,14 @@ CREATE TABLE IF NOT EXISTS "public".payment_method
 (
     id                UUID NOT NULL,
     name              varchar(255) NOT NULL,
-    userId            int NOT NULL,
+    userId            UUID NOT NULL,
     displayCreditCard varchar(255) NOT NULL,
     stripeId          text NOT NULL,
     type              varchar(255) NOT NULL,
     isFavorite        boolean NOT NULL,
     createdAt         timestamp NOT NULL,
     updadtedAt        timestamp NOT NULL,
-    deletedAt         timestamp NOT NULL,
+    deletedAt         timestamp,
     CONSTRAINT PK_209 PRIMARY KEY ( id ),
     CONSTRAINT FK_224 FOREIGN KEY ( userId ) REFERENCES "public"."user" ( id )
 );
@@ -181,9 +177,9 @@ CREATE INDEX FK_226 ON "public".payment_method
 CREATE TABLE IF NOT EXISTS "public".offer
 (
     id                  UUID NOT NULL,
-    fareId              int NOT NULL,
-    searchId            int NOT NULL,
-    providerId          int NOT NULL,
+    fareId              UUID NOT NULL,
+    searchId            UUID NOT NULL,
+    providerId          UUID NOT NULL,
     displayPrice        varchar(255) NOT NULL,
     displayPriceNumeric decimal(10,2) NOT NULL,
     displayProviderName varchar(255) NOT NULL,
@@ -199,7 +195,7 @@ CREATE TABLE IF NOT EXISTS "public".offer
     description         varchar(255) NOT NULL,
     createdAt           timestamp NOT NULL,
     updatedAt           timestamp NOT NULL,
-    deletedAt           timestamp NOT NULL,
+    deletedAt           timestamp,
     CONSTRAINT PK_145 PRIMARY KEY ( id ),
     CONSTRAINT FK_163 FOREIGN KEY ( fareId ) REFERENCES "public".fare ( id ),
     CONSTRAINT FK_189 FOREIGN KEY ( providerId ) REFERENCES "public".provider ( id ),

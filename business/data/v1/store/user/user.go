@@ -22,10 +22,11 @@ func NewStore(log *zap.SugaredLogger, db *sqlx.DB, aws *aws.AWS) Store {
 	return Store{
 		log: log,
 		db:  db,
+		aws: aws,
 	}
 }
 
-func (s Store) Create(ctx context.Context, aggregatorId, apiKey string, nu NewUser, now time.Time) (User, error) {
+func (s Store) Create(ctx context.Context, aggID, apiKey string, nu NewUser, now time.Time) (User, error) {
 	if err := validate.Check(nu); err != nil {
 		return User{}, err
 	}
@@ -36,11 +37,14 @@ func (s Store) Create(ctx context.Context, aggregatorId, apiKey string, nu NewUs
 		return User{}, err
 	}
 
-	if err != nil {
-		return User{}, err
-	}
-
-	cognitoID, err := s.aws.Cognito.CreateUser(nu.Email, nu.PhoneNumber, nu.Password, aggregatorId, nu.IsPhoneNumberVerified)
+	cognitoID, err := s.aws.Cognito.CreateUser(aws.CognitoUser{
+		Email:       nu.Email,
+		PhoneNumber: nu.PhoneNumber,
+		Name:        nu.Name,
+		AggID:       aggID,
+		IsActive:    nu.IsPhoneNumberVerified,
+		Password:    nu.Password,
+	})
 
 	if err != nil {
 		return User{}, err
@@ -53,7 +57,7 @@ func (s Store) Create(ctx context.Context, aggregatorId, apiKey string, nu NewUs
 		Name:            nu.Name,
 		StripeID:        stripeID,
 		ApiKey:          apiKey,
-		AggregatorID:    aggregatorId,
+		AggregatorID:    aggID,
 		Active:          nu.IsPhoneNumberVerified,
 		CognitoID:       cognitoID,
 		IsMonthlyActive: false,
@@ -64,9 +68,10 @@ func (s Store) Create(ctx context.Context, aggregatorId, apiKey string, nu NewUs
 	}
 
 	const q = `
-	INSERT INTO user 
-		( id, aggregatorId, email, phoneNumber, name, stripeId, apiKey, active, cognitoId, isMonthlyActive, isCGUAccepted, role, createdAt, updatedAt, deleteAt )
-		(:id, :aggregatorId, :email, :phoneNumber, :name, :stripeId, :apiKey, :active, :cognitoId, false, :isCGUAccepted, :role, :createdAt, :updatedAt, null)
+	INSERT INTO "public"."user" 
+	(id, aggregatorId, email, phoneNumber, name, stripeId, apiKey, active, cognitoId, isMonthlyActive, isCGUAccepted, role, createdAt, updatedAt, deletedAt)
+	VALUES
+	(:id, :aggregatorId, :email, :phoneNumber, :name, :stripeId, :apiKey, :active, :cognitoId, false, :isCGUAccepted, :role, :createdAt, :updatedAt, null)
 `
 	if err := database.NamedExecContext(ctx, s.log, s.db, q, usr); err != nil {
 		//@todo we should rollback the user creating in cognito and stripe

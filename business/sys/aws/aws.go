@@ -56,6 +56,9 @@ func New(logger *zap.SugaredLogger, config Config) (*AWS, error) {
 		Cognito struct {
 			UserPoolID string
 			ClientID   string
+			//Seed is used to generate unique sub that are used as username
+			//for cognito user
+			Seed string
 		}
 	}{}
 
@@ -67,7 +70,7 @@ func New(logger *zap.SugaredLogger, config Config) (*AWS, error) {
 		logger:  logger,
 		sess:    sess,
 		Ssm:     NewSsm(logger, sess),
-		Cognito: NewCognito(logger, sess, cfg.Cognito.ClientID, cfg.Cognito.UserPoolID),
+		Cognito: NewCognito(logger, sess, cfg.Cognito.ClientID, cfg.Cognito.UserPoolID, cfg.Cognito.Seed),
 		S3:      NewS3(logger, sess),
 	}, nil
 }
@@ -97,6 +100,6 @@ func (p parser) Parse(field config.Field) error {
 		}
 
 	}
-	
+
 	return config.SetFieldValue(field, val)
 }

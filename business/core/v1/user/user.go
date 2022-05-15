@@ -4,6 +4,7 @@ package user
 
 import (
 	"context"
+	"github.com/Mahamadou828/tgs_with_golang/business/data/v1/store/aggregator"
 	"github.com/Mahamadou828/tgs_with_golang/business/data/v1/store/user"
 	"github.com/Mahamadou828/tgs_with_golang/business/sys/aws"
 	"github.com/jmoiron/sqlx"
@@ -16,6 +17,7 @@ type Core struct {
 	db        *sqlx.DB
 	aws       *aws.AWS
 	userStore user.Store
+	aggStore  aggregator.Store
 }
 
 func NewCore(log *zap.SugaredLogger, db *sqlx.DB, aws *aws.AWS) Core {
@@ -24,11 +26,19 @@ func NewCore(log *zap.SugaredLogger, db *sqlx.DB, aws *aws.AWS) Core {
 		db:        db,
 		aws:       aws,
 		userStore: user.NewStore(log, db, aws),
+		aggStore:  aggregator.NewStore(log, db, aws),
 	}
 }
 
-func (c Core) Create(ctx context.Context, aggregatorID, apiKey string, nu user.NewUser, now time.Time) (user.User, error) {
-	usr, err := c.userStore.Create(ctx, aggregatorID, apiKey, nu, now)
+func (c Core) Create(ctx context.Context, aggregatorCode string, nu user.NewUser, now time.Time) (user.User, error) {
+
+	agg, err := c.aggStore.QueryByID(ctx, aggregatorCode)
+
+	if err != nil {
+		return user.User{}, err
+	}
+
+	usr, err := c.userStore.Create(ctx, agg.ID, agg.ApiKey, nu, now)
 
 	if err != nil {
 		return user.User{}, err
