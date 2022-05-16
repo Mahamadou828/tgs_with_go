@@ -3,7 +3,10 @@ module github.com/Mahamadou828/tgs_with_golang
 go 1.18
 
 require (
+	github.com/aws/aws-cdk-go/awscdk/v2 v2.23.0
 	github.com/aws/aws-sdk-go v1.44.12
+	github.com/aws/constructs-go/constructs/v10 v10.0.9
+	github.com/aws/jsii-runtime-go v1.58.0
 	github.com/dimfeld/httptreemux v5.0.1+incompatible
 	github.com/go-playground/locales v0.14.0
 	github.com/go-playground/universal-translator v0.18.0
@@ -16,6 +19,7 @@ require (
 )
 
 require (
+	github.com/Masterminds/semver/v3 v3.1.1 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/mattn/go-sqlite3 v1.14.10 // indirect

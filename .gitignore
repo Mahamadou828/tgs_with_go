@@ -94,3 +94,7 @@ fabric.properties
 
 #request env file
 http-client.private.env.json
+
+# CDK asset staging directory
+.cdk.staging
+cdk.out

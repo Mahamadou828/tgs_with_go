@@ -1,3 +1,13 @@
+# github.com/Masterminds/semver/v3 v3.1.1
+## explicit; go 1.12
+github.com/Masterminds/semver/v3
+# github.com/aws/aws-cdk-go/awscdk/v2 v2.23.0
+## explicit; go 1.16
+github.com/aws/aws-cdk-go/awscdk/v2
+github.com/aws/aws-cdk-go/awscdk/v2/cloudassemblyschema
+github.com/aws/aws-cdk-go/awscdk/v2/cxapi
+github.com/aws/aws-cdk-go/awscdk/v2/internal
+github.com/aws/aws-cdk-go/awscdk/v2/jsii
 # github.com/aws/aws-sdk-go v1.44.12
 ## explicit; go 1.11
 github.com/aws/aws-sdk-go/aws
@@ -53,6 +63,20 @@ github.com/aws/aws-sdk-go/service/sso
 github.com/aws/aws-sdk-go/service/sso/ssoiface
 github.com/aws/aws-sdk-go/service/sts
 github.com/aws/aws-sdk-go/service/sts/stsiface
+# github.com/aws/constructs-go/constructs/v10 v10.0.9
+## explicit; go 1.16
+github.com/aws/constructs-go/constructs/v10
+github.com/aws/constructs-go/constructs/v10/jsii
+# github.com/aws/jsii-runtime-go v1.58.0
+## explicit; go 1.16
+github.com/aws/jsii-runtime-go
+github.com/aws/jsii-runtime-go/internal/api
+github.com/aws/jsii-runtime-go/internal/embedded
+github.com/aws/jsii-runtime-go/internal/kernel
+github.com/aws/jsii-runtime-go/internal/kernel/process
+github.com/aws/jsii-runtime-go/internal/objectstore
+github.com/aws/jsii-runtime-go/internal/typeregistry
+github.com/aws/jsii-runtime-go/runtime
 # github.com/dimfeld/httptreemux v5.0.1+incompatible
 ## explicit
 github.com/dimfeld/httptreemux

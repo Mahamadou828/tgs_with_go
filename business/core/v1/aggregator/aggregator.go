@@ -2,6 +2,7 @@ package aggregator
 
 import (
 	"context"
+	"fmt"
 	"github.com/Mahamadou828/tgs_with_golang/business/sys/validate"
 	"time"
 
@@ -39,10 +40,73 @@ func (c Core) Create(ctx context.Context, na aggregator.NewAggregator, now time.
 	return agg, nil
 }
 
-func (c Core) QueryByID(ctx context.Context, code string) (aggregator.Aggregator, error) {
-	agg, err := c.aggStore.QueryByID(ctx, code)
+func (c Core) Update(ctx context.Context, id string, ua aggregator.UpdateAggregator, now time.Time) (aggregator.Aggregator, error) {
+	if err := validate.CheckID(id); err != nil {
+		return aggregator.Aggregator{}, err
+	}
+	if err := validate.Check(ua); err != nil {
+		return aggregator.Aggregator{}, fmt.Errorf("validating data: %w", err)
+	}
+
+	dbAgg, err := c.QueryByID(ctx, id)
+	if err != nil {
+		return aggregator.Aggregator{}, err
+	}
+
+	if ua.Code != nil {
+		dbAgg.Code = *ua.Code
+	}
+	if ua.ApiKey != nil {
+		dbAgg.ApiKey = *ua.ApiKey
+	}
+	if ua.Name != nil {
+		dbAgg.Name = *ua.Name
+	}
+	if ua.ProviderTimeout != nil {
+		dbAgg.ProviderTimeout = *ua.ProviderTimeout
+	}
+	if ua.Active != nil {
+		dbAgg.Active = *ua.Active
+	}
+	if ua.Type != nil {
+		dbAgg.Type = *ua.Type
+	}
+	if ua.PaymentByTGS != nil {
+		dbAgg.PaymentByTGS = *ua.PaymentByTGS
+	}
+	if ua.LogoURL != nil {
+		dbAgg.LogoURL = *ua.LogoURL
+	}
+
+	if err := c.aggStore.Update(ctx, id, dbAgg, now); err != nil {
+		return aggregator.Aggregator{}, err
+	}
+
+	return dbAgg, nil
+}
+
+func (c Core) QueryByID(ctx context.Context, id string) (aggregator.Aggregator, error) {
+	agg, err := c.aggStore.QueryByID(ctx, id)
 	if err != nil {
 		return aggregator.Aggregator{}, err
 	}
 	return agg, nil
+}
+
+func (c Core) Query(ctx context.Context, pageNumber, rowsPerPage int) ([]aggregator.Aggregator, error) {
+	return c.aggStore.Query(ctx, pageNumber, rowsPerPage)
+}
+
+func (c Core) Delete(ctx context.Context, id string, now time.Time) (aggregator.Aggregator, error) {
+	agg, err := c.QueryByID(ctx, id)
+
+	if err != nil {
+		return aggregator.Aggregator{}, err
+	}
+
+	if err := c.aggStore.Delete(ctx, id, now); err != nil {
+		return aggregator.Aggregator{}, err
+	}
+
+	return agg, err
 }

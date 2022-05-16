@@ -54,6 +54,10 @@ func v1(app *web.App, cfg web.AppConfig) {
 
 	//=========================== Aggregator Route
 	app.Handle(http.MethodPost, "/aggregator", agt.Create)
+	app.Handle(http.MethodPut, "/aggregator/:id", agt.Update)
+	app.Handle(http.MethodDelete, "/aggregator/:id", agt.Delete)
+	app.Handle(http.MethodGet, "/aggregator", agt.Query)
+	app.Handle(http.MethodGet, "/aggregator/:id", agt.QueryByID)
 }
 
 func DebugMux(build string, log *zap.SugaredLogger, db *sqlx.DB) *http.ServeMux {

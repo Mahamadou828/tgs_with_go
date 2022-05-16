@@ -7,6 +7,7 @@ import (
 	"github.com/Mahamadou828/tgs_with_golang/business/sys/database"
 	"github.com/Mahamadou828/tgs_with_golang/business/sys/validate"
 	"github.com/jmoiron/sqlx"
+	"github.com/lib/pq"
 	"go.uber.org/zap"
 	"time"
 )
@@ -53,6 +54,58 @@ func (s Store) Create(ctx context.Context, na NewAggregator, now time.Time) (Agg
 	return agr, nil
 }
 
+func (s Store) Update(ctx context.Context, id string, ua Aggregator, now time.Time) error {
+	data := struct {
+		UpdatedAt       pq.NullTime `db:"updated_at"`
+		ID              string      `db:"id"`
+		Name            string      `db:"name"`
+		Code            string      `db:"code"`
+		ApiKey          string      `db:"api_key"`
+		ProviderTimeout int         `db:"provider_timeout"`
+		Active          bool        `db:"active"`
+		Type            string      `db:"type"`
+		PaymentByTGS    bool        `db:"payment_by_tgs"`
+		LogoURL         string      `db:"logo_url"`
+	}{
+		UpdatedAt: pq.NullTime{
+			Time:  now,
+			Valid: true,
+		},
+		ID:              id,
+		Name:            ua.Name,
+		Code:            ua.Code,
+		ApiKey:          ua.ApiKey,
+		ProviderTimeout: ua.ProviderTimeout,
+		Active:          ua.Active,
+		Type:            ua.Type,
+		PaymentByTGS:    ua.PaymentByTGS,
+		LogoURL:         ua.LogoURL,
+	}
+
+	const q = `
+	UPDATE 
+		aggregator 
+	SET 
+		name            	= :name,
+		code            	= :code,
+		api_key          	= :api_key,
+		provider_timeout 	= :provider_timeout,
+		active          	= :active,
+		type            	= :type,
+		payment_by_tgs    	= :payment_by_tgs,
+		logo_url         	= :logo_url,
+		updated_at          = :updated_at
+	WHERE 
+		id = id
+`
+
+	if err := database.NamedExecContext(ctx, s.log, s.db, q, data); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (s Store) QueryByID(ctx context.Context, id string) (Aggregator, error) {
 	var agg Aggregator
 
@@ -63,11 +116,62 @@ func (s Store) QueryByID(ctx context.Context, id string) (Aggregator, error) {
 	}
 
 	const q = `
-	SELECT * FROM aggregator AS a WHERE a.id = :id
+	SELECT * FROM aggregator AS a WHERE a.id = :id AND deleted_at IS NULL
 `
 	if err := database.NamedQueryStruct(ctx, s.log, s.db, q, data, &agg); err != nil {
 		return agg, fmt.Errorf("aggregator %s not found", id)
 	}
 
 	return agg, nil
+}
+
+func (s Store) Query(ctx context.Context, pageNumber, rowsPerPage int) ([]Aggregator, error) {
+	data := struct {
+		Offset      int `db:"offset"`
+		RowsPerPage int `db:"rows_per_page"`
+	}{
+		Offset:      (pageNumber - 1) * rowsPerPage,
+		RowsPerPage: rowsPerPage,
+	}
+
+	const q = `
+	SELECT 
+		* 
+	FROM 
+		aggregator 
+	WHERE deleted_at IS NULL
+	ORDER BY 
+		id
+	OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY`
+
+	var aggrs []Aggregator
+
+	if err := database.NamedQuerySlice[Aggregator](ctx, s.log, s.db, q, data, &aggrs); err != nil {
+		return nil, err
+	}
+
+	return aggrs, nil
+}
+
+func (s Store) Delete(ctx context.Context, id string, now time.Time) error {
+	data := struct {
+		ID        string      `db:"id"`
+		DeletedAt pq.NullTime `db:"deleted_at"`
+	}{
+		ID: id,
+		DeletedAt: pq.NullTime{
+			Time:  now,
+			Valid: true,
+		},
+	}
+
+	const q = `
+	UPDATE aggregator SET deleted_at = :deleted_at WHERE id = :id
+`
+
+	if err := database.NamedExecContext(ctx, s.log, s.db, q, data); err != nil {
+		return err
+	}
+
+	return nil
 }
