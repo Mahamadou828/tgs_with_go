@@ -12,6 +12,10 @@ func Param(r *http.Request, key string) string {
 	return m[key]
 }
 
+func QueryParam(r *http.Request, key string) []string {
+	return r.URL.Query()[key]
+}
+
 // Decode reads the body of an HTTP request looking for a JSON document. The
 // body is decoded into the provided value.
 //

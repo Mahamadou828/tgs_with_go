@@ -4,12 +4,36 @@ x-api-key: {{API_KEY}}
 aggregator: {{AGGREGATOR_ID}}
 
 {
-    "name": "{{DEFAULT_AGGREGATOR_CODE}}",
-    "code": "{{DEFAULT_AGGREGATOR_CODE}}",
-    "apiKey": "{{API_KEY}}",
+    "name": "{{DEFAULT_AGGREGATOR_CODE}}-2",
+    "code": "{{DEFAULT_AGGREGATOR_CODE}}-2",
+    "apiKey": "{{API_KEY}}-2",
     "providerTimeout": 5000,
     "active": true,
     "type": "default",
     "paymentByTgs": true,
     "logoUrl": "https://image.shutterstock.com/image-vector/stripes-dots-circle-logo-vector-260nw-1139400776.jpg"
 }
+
+### Query Aggregator
+GET {{BASE_URL_V1}}/aggregator?page=1&rows=100
+x-api-key: {{API_KEY}}
+aggregator: {{AGGREGATOR_ID}}
+
+### Query By Id Aggregator
+GET {{BASE_URL_V1}}/aggregator/4ebb17ad-2ecc-480c-a795-fe5a554cde60
+x-api-key: {{API_KEY}}
+aggregator: {{AGGREGATOR_ID}}
+
+### Update Aggregator
+PUT {{BASE_URL_V1}}/aggregator/5ddef641-644d-4fb1-aadb-274b9cae1b59
+x-api-key: {{API_KEY}}
+aggregator: {{AGGREGATOR_ID}}
+
+{
+    "providerTimeout": 3000
+}
+
+### DELETE Aggregator
+DELETE {{BASE_URL_V1}}/aggregator/4ebb17ad-2ecc-480c-a795-fe5a554cde60
+x-api-key: {{API_KEY}}
+aggregator: {{AGGREGATOR_ID}}
