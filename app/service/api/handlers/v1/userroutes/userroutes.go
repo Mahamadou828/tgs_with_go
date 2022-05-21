@@ -45,3 +45,25 @@ func (h Handler) Create(ctx context.Context, w http.ResponseWriter, r *http.Requ
 
 	return web.Response(ctx, w, http.StatusCreated, usr)
 }
+
+func (h Handler) Delete(ctx context.Context, w http.ResponseWriter, r *http.Request) *web.RequestError {
+	v, err := web.GetRequestTrace(ctx)
+
+	if err != nil {
+		return web.NewRequestError(
+			web.NewShutdownError("web value missing from context"),
+			http.StatusInternalServerError,
+		)
+	}
+
+	u, err := h.User.Delete(ctx, web.Param(r, "id"), v.Now)
+
+	if err != nil {
+		return web.NewRequestError(
+			err,
+			http.StatusBadRequest,
+		)
+	}
+
+	return web.Response(ctx, w, http.StatusOK, u)
+}

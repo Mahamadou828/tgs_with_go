@@ -96,7 +96,7 @@ func (s Store) Update(ctx context.Context, id string, ua Aggregator, now time.Ti
 		logo_url         	= :logo_url,
 		updated_at          = :updated_at
 	WHERE 
-		id = id
+		id = :id
 `
 
 	if err := database.NamedExecContext(ctx, s.log, s.db, q, data); err != nil {

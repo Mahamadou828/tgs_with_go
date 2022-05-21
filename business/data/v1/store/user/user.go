@@ -8,6 +8,7 @@ import (
 	"github.com/Mahamadou828/tgs_with_golang/business/sys/database"
 	"github.com/Mahamadou828/tgs_with_golang/business/sys/validate"
 	"github.com/jmoiron/sqlx"
+	"github.com/lib/pq"
 	"go.uber.org/zap"
 	"time"
 )
@@ -81,22 +82,170 @@ func (s Store) Create(ctx context.Context, aggID, apiKey string, nu NewUser, now
 	return usr, nil
 }
 
-//func (s Store) Update(ctx context.Context, id string, uu UpdateUser, now time.Time) (User, error) {
-//
-//}
-//
-//func (s Store) Delete(ctx context.Context, id string, now time.Time) (User, error) {
-//
-//}
-//
-//func (s Store) Query(ctx context.Context, now time.Time) (User, error) {
-//
-//}
-//
-//func (s Store) QueryById(ctx context.Context, id string, now time.Time) (User, error) {
-//
-//}
-//
-//func (s Store) QueryByEmail(ctx context.Context, email string, now time.Time) (User, error) {
-//
-//}
+func (s Store) Update(ctx context.Context, id string, u User, now time.Time) error {
+	data := struct {
+		UpdatedAt       pq.NullTime `db:"updated_at"`
+		ID              string      `db:"id"`
+		Email           string      `db:"name"`
+		PhoneNumber     string      `db:"code"`
+		Name            string      `db:"api_key"`
+		Active          bool        `db:"payment_by_tgs"`
+		IsMonthlyActive bool        `db:"is_monthly_active" json:"isMonthlyActive"`
+		IsCGUAccepted   bool        `db:"is_cgu_accepted" json:"isCGUAccepted"`
+		Role            string      `db:"role" json:"role"`
+	}{
+		UpdatedAt: pq.NullTime{
+			Time:  now,
+			Valid: true,
+		},
+		ID:              id,
+		Name:            u.Name,
+		Email:           u.Email,
+		PhoneNumber:     u.ApiKey,
+		Active:          u.Active,
+		Role:            u.Role,
+		IsMonthlyActive: u.IsMonthlyActive,
+		IsCGUAccepted:   u.IsCGUAccepted,
+	}
+
+	const q = `
+		UPDATE
+			user
+		SET 
+			name              = :name,
+			email             = :email,
+			phone_number      = :phone_number,
+			active            = :active,
+			role              = :role,
+			is_monthly_active = :is_monthly_active,
+			is_cgu_accepted   = :is_cgu_accepted,
+			updated_at        = :updated_at
+		WHERE 
+			id = :id
+`
+
+	if err := database.NamedExecContext(ctx, s.log, s.db, q, data); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s Store) Delete(ctx context.Context, id string, now time.Time) (User, error) {
+	u, err := s.QueryById(ctx, id)
+
+	if err != nil {
+		return User{}, err
+	}
+	data := struct {
+		DeleteAt pq.NullTime `json:"delete_at"`
+		ID       string      `json:"id"`
+	}{
+		DeleteAt: pq.NullTime{
+			Time:  now,
+			Valid: true,
+		},
+		ID: id,
+	}
+	const q = `
+	UPDATE user SET deleted_at = :deleted_at WHERE id = :id
+`
+
+	if err := database.NamedExecContext(ctx, s.log, s.db, q, data); err != nil {
+		return User{}, err
+	}
+
+	return u, nil
+}
+
+func (s Store) Query(ctx context.Context, pageNumber, rowsPerPage int) ([]User, error) {
+	data := struct {
+		Offset      int `db:"offset"`
+		RowsPerPage int `db:"rows_per_page"`
+	}{
+		Offset:      (pageNumber - 1) * rowsPerPage,
+		RowsPerPage: rowsPerPage,
+	}
+
+	const q = `
+	SELECT 
+		* 
+	FROM 
+		user 
+	WHERE deleted_at IS NULL
+	ORDER BY 
+		id
+	OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY`
+
+	var users []User
+
+	if err := database.NamedQuerySlice[User](ctx, s.log, s.db, q, data, &users); err != nil {
+		return nil, err
+	}
+
+	return users, nil
+}
+
+func (s Store) QueryById(ctx context.Context, id string) (User, error) {
+	data := struct {
+		ID string `db:"id"`
+	}{
+		ID: id,
+	}
+
+	var u User
+
+	const q = `
+	SELECT * FROM user WHERE id = :id AND deleted_at IS NOT NULL
+`
+
+	if err := database.NamedQueryStruct(ctx, s.log, s.db, q, data, &u); err != nil {
+		return u, fmt.Errorf("user #{%s} not found", id)
+	}
+
+	return u, nil
+}
+
+func (s Store) QueryByEmail(ctx context.Context, email string) (User, error) {
+	data := struct {
+		Email string `db:"email"`
+	}{
+		Email: email,
+	}
+
+	var u User
+
+	const q = `
+	SELECT * FROM user WHERE email = :email AND deleted_at IS NOT NULL
+`
+
+	if err := database.NamedQueryStruct(ctx, s.log, s.db, q, data, &u); err != nil {
+		return u, fmt.Errorf("user with email %s not found", email)
+	}
+
+	return u, nil
+}
+
+func (s Store) QueryByCognitoID(ctx context.Context, email, password, aggregator string) (User, error) {
+	cognitoID, err := s.aws.Cognito.GenerateSub(email, password, aggregator)
+	if err != nil {
+		return User{}, err
+	}
+	data := struct {
+		CognitoID string `db:"cognito_id"`
+	}{
+		CognitoID: cognitoID,
+	}
+
+	var u User
+
+	const q = `
+	SELECT * FROM user WHERE cognito_id = :cognito_id AND deleted_at IS NOT NULL
+`
+
+	if err := database.NamedQueryStruct(ctx, s.log, s.db, q, data, &u); err != nil {
+		return u, fmt.Errorf("user with sub %s not found", cognitoID)
+	}
+
+	return u, nil
+}
