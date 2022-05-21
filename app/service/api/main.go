@@ -22,7 +22,6 @@ import (
 	"github.com/Mahamadou828/tgs_with_golang/foundation/logger"
 	"github.com/Mahamadou828/tgs_with_golang/foundation/web"
 	"github.com/getsentry/sentry-go"
-	"github.com/Mahamadou828/tgs_with_golang/foundation/web"
 	"go.uber.org/automaxprocs/maxprocs"
 	"go.uber.org/zap"
 )

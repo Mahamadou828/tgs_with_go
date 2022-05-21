@@ -7,5 +7,4 @@ package v1
 type ErrorResponse struct {
 	Message string   `json:"message"`
 	Details []string `json:"details"`
-	TraceID string   `json:"traceId"`
 }

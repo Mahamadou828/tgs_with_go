@@ -7,7 +7,6 @@ import (
 )
 
 func Response(ctx context.Context, w http.ResponseWriter, statusCode int, data any) *RequestError {
-	//@todo Set the response to the sentry log
 	// Set the status code for the request logger middleware.
 	if err := SetStatusCode(ctx, statusCode); err != nil {
 		return NewRequestError(
@@ -15,6 +14,7 @@ func Response(ctx context.Context, w http.ResponseWriter, statusCode int, data a
 			http.StatusInternalServerError,
 		)
 	}
+
 	jsonData, err := json.Marshal(data)
 
 	if err != nil {
@@ -25,6 +25,8 @@ func Response(ctx context.Context, w http.ResponseWriter, statusCode int, data a
 	}
 	// Set the content type and headers once we know marshaling has succeeded.
 	w.Header().Set("Content-Type", "application/json")
+	// Set the trace id, useful for debugging
+	w.Header().Set("Trace-Id", GetTraceID(ctx))
 	// Write the status code to the response.
 	w.WriteHeader(statusCode)
 

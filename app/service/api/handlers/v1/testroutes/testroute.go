@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/Mahamadou828/tgs_with_golang/foundation/web"
-	"go.uber.org/zap"
 	"net/http"
 )
 
@@ -38,4 +37,10 @@ func (h Handler) TestFail(ctx context.Context, w http.ResponseWriter, r *http.Re
 		Details: []string{"Field ID must not be empty", "Email is not an email", "phone number is not valid"},
 		Status:  http.StatusBadRequest,
 	}
+}
+
+func (h Handler) TestPanic(ctx context.Context, w http.ResponseWriter, r *http.Request) *web.RequestError {
+	err := fmt.Errorf("panic")
+	panic(err)
+	return nil
 }

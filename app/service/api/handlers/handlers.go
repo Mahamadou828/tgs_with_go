@@ -46,8 +46,11 @@ func v1(app *web.App, cfg web.AppConfig) {
 
 	urt := userroutes.Handler{User: user.NewCore(cfg.Log, cfg.DB, cfg.AWS)}
 	agt := aggregatorroutes.Handler{Agg: aggregator.NewCore(cfg.Log, cfg.DB, cfg.AWS)}
+
+	//=========================== Test Route
 	app.Handle(http.MethodGet, "/test", trt.Test)
 	app.Handle(http.MethodGet, "/test/fail", trt.TestFail)
+	app.Handle(http.MethodGet, "/test/panic", trt.TestPanic)
 
 	//=========================== User Route
 	app.Handle(http.MethodPost, "/user", urt.Create)

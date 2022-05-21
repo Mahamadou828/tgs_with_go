@@ -7,7 +7,6 @@ import (
 	"github.com/Mahamadou828/tgs_with_golang/foundation/web"
 	"github.com/getsentry/sentry-go"
 	"net/http"
-	"runtime/debug"
 )
 
 func Panic() web.Middleware {
@@ -18,7 +17,6 @@ func Panic() web.Middleware {
 			//@todo review the panic handling
 			defer func() {
 				if rec := recover(); rec != nil {
-					trace := debug.Stack()
 					// Stack trace will be provided.
 					v, err := web.GetRequestTrace(ctx)
 
@@ -28,7 +26,10 @@ func Panic() web.Middleware {
 						panic(err)
 					}
 
-					err = web.NewRequestError(fmt.Errorf("PANIC [%v] TRACE[%s]", rec, string(trace)), http.StatusInternalServerError)
+					err = web.NewRequestError(
+						fmt.Errorf("panic: %v", sentry.NewRequest(r)),
+						http.StatusInternalServerError,
+					)
 					eventID := v.Hub.RecoverWithContext(context.WithValue(ctx, sentry.RequestContextKey, r), err)
 
 					if eventID != nil {
@@ -36,6 +37,14 @@ func Panic() web.Middleware {
 					}
 
 					metrics.AddPanics(ctx)
+
+					if err := web.Response(ctx, w, http.StatusInternalServerError, struct {
+						Message string
+					}{
+						Message: "Internal Server Error",
+					}); err != nil {
+						panic(err)
+					}
 				}
 			}()
 			return handler(ctx, w, r)

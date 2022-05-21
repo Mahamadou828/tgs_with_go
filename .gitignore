@@ -83,7 +83,7 @@ fabric.properties
 *.so
 *.dylib
 
-# Test binary, built with `go test -c`
+# Test binary, built with `go test_sentry -c`
 *.test
 
 # Output of the go coverage tool, specifically when used with LiteIDE
@@ -94,6 +94,7 @@ vendor/
 
 #request env file
 http-client.private.env.json
+*.private.env.json
 
 # CDK asset staging directory
 .cdk.staging

@@ -4,6 +4,7 @@ go 1.18
 
 require (
 	github.com/aws/aws-cdk-go/awscdk/v2 v2.23.0
+	github.com/aws/aws-lambda-go v1.32.0
 	github.com/aws/aws-sdk-go v1.44.12
 	github.com/aws/constructs-go/constructs/v10 v10.0.9
 	github.com/aws/jsii-runtime-go v1.58.0
@@ -27,7 +28,6 @@ require (
 	go.uber.org/atomic v1.7.0 // indirect
 	go.uber.org/goleak v1.1.12 // indirect
 	go.uber.org/multierr v1.6.0 // indirect
-	golang.org/x/sys v0.0.0-20211216021012-1d35b9e2eb4e // indirect
 	golang.org/x/crypto v0.0.0-20211215153901-e495a2d5b3d3 // indirect
 	golang.org/x/net v0.0.0-20220225172249-27dd8689420f // indirect
 	golang.org/x/sys v0.0.0-20211216021012-1d35b9e2eb4e // indirect
