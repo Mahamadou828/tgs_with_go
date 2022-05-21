@@ -33,14 +33,14 @@ func NewCore(log *zap.SugaredLogger, db *sqlx.DB, aws *aws.AWS) Core {
 }
 
 type Credentials struct {
-	Token        string `json:"token"`
-	RefreshToken string `json:"refreshToken"`
-	ExpiresIn    int64  `json:"expiresIn"`
-	User         user.User
+	Token        string    `json:"token"`
+	RefreshToken string    `json:"refreshToken"`
+	ExpiresIn    int64     `json:"expiresIn"`
+	User         user.User `json:"user"`
 }
 
 func (c Core) Login(ctx context.Context, aggregator string, payload userdto.Login) (Credentials, error) {
-	u, err := c.userStore.QueryByCognitoID(ctx, aggregator, payload.Email, payload.Password)
+	u, err := c.userStore.QueryByEmailAndAggregator(ctx, payload.Email, aggregator)
 	if err != nil {
 		return Credentials{}, err
 	}
@@ -114,13 +114,13 @@ func (c Core) RefreshToken(ctx context.Context, aggregator string, payload userd
 		return Credentials{}, fmt.Errorf("invalid refresh token")
 	}
 
-	sess, err := c.aws.Cognito.RefreshToken(payload.Token)
+	sess, err := c.aws.Cognito.RefreshToken(payload.RefreshToken)
 	if err != nil {
 		return Credentials{}, fmt.Errorf("session expired")
 	}
 	cred := Credentials{
 		Token:        sess.Token,
-		RefreshToken: sess.RefreshToken,
+		RefreshToken: payload.RefreshToken,
 		ExpiresIn:    sess.ExpireIn,
 		User:         u,
 	}

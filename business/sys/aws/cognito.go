@@ -127,6 +127,7 @@ func (c *Cognito) AuthenticateUser(sub, password string) (Session, error) {
 		AuthParameters: map[string]*string{
 			"USERNAME": aws.String(sub),
 			"SRP_A":    aws.String(password),
+			"PASSWORD": aws.String(password),
 		},
 		ClientId: aws.String(c.clientID),
 	}
@@ -173,9 +174,8 @@ func (c *Cognito) RefreshToken(token string) (Session, error) {
 	}
 
 	return Session{
-		Token:        *out.AuthenticationResult.AccessToken,
-		RefreshToken: *out.AuthenticationResult.RefreshToken,
-		ExpireIn:     *out.AuthenticationResult.ExpiresIn,
+		Token:    *out.AuthenticationResult.AccessToken,
+		ExpireIn: *out.AuthenticationResult.ExpiresIn,
 	}, nil
 }
 

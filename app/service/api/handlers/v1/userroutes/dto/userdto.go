@@ -33,8 +33,8 @@ type Login struct {
 }
 
 type RefreshToken struct {
-	ID    string `json:"id" validate:"required"`
-	Token string `json:"token" validate:"required"`
+	ID           string `json:"id" validate:"required"`
+	RefreshToken string `json:"refreshToken" validate:"required"`
 }
 
 type VerifyConfirmationCode struct {

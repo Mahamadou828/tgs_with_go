@@ -41,3 +41,60 @@ DELETE {{BASE_URL_V1}}/user/{{USER_ID}}
 x-api-key: {{API_KEY}}
 aggregator: {{AGGREGATOR_ID}}
 content-type: "application/json"
+
+### Login User
+POST {{BASE_URL_V1}}/user/login
+x-api-key: {{API_KEY}}
+aggregator: {{AGGREGATOR_ID}}
+content-type: "application/json"
+
+{
+    "email": "{{USER_EMAIL}}",
+    "password": "{{USER_PASSWORD}}"
+}
+
+### Refresh Token
+POST {{BASE_URL_V1}}/user/token/refresh
+x-api-key: {{API_KEY}}
+aggregator: {{AGGREGATOR_ID}}
+content-type: "application/json"
+
+{
+  "refreshToken": "eyJjdHkiOiJKV1QiLCJlbmMiOiJBMjU2R0NNIiwiYWxnIjoiUlNBLU9BRVAifQ.RpN9lAR8FEUzid5jh1ckQE74MZY9wGtZK9-_lLpmCxflODLQCjeLA0CImFgEIZT_RCNMAwQNucIe1-2U0TevdVAHelUt2v_MT-bWd2l0C1gyhR6YGPEOBO8HJfn4TUwGnuv55-rDIjZm6VuKaRTwyKT7Q-n08vjpB63_FrVr5glB3-EpzCYxmjL1KMnR30Lx8GhnANwAFV8uK78_9QHeKuPIqgjnVIFuIgoeUBJ5aRQOtGOGo1xl-0B1MBns88_DJZiQ1NrAL6JtaMhhDVhH3xbf1jeT1iCwJzDEuHsWnJNrXiib1xZN5_AgFezCiyvTEHPWKzc5eRNdMuGRg-MSDA.yOxXaMzJkuMJnbDk.yKfid8xk1KBuhmBp902Koc4RnlSzCBSShmLkQw64iyuo4sv8TEuQff64oG7fH67BiSHHVgbsj-vFr9YlPuOjZB6jTqPuEs2XHOXbAMep0lOwrGDCnuwrAzdLmvh2fat8FQHXFg6u5O044fX8R00nqh6nTz3ObwkBDCaI9L55TJtBOOf_KbaHZRY6scfVEl4RfIFXhCf-fasKZpyTG1jNIlfxw51W42P42sv0lxSUQ62eHqQUvHw4721mJGo1rQafh6wo4UYwRz7MPEAtg9_2e37yIfOhr2tDLM0oNWS_b0mUdpe7uk4mzNggQ-uNeiZyNZAlfP9BXXtODyhRgJ08DxSZSxMRAqHCWN1KPaYysZCB9w6rx5DlWQklhm7ow1Hcqq899gdB0mRxs3gnGkPLpfr2R91WG1rR400TQu5KxwgvN2rr1Eml4pFrSV98r5798iEE6hcIRp3BFMTECJnwnwXAgx-m25Q-6VmsRbp4pjFogHkQqkmc2mollIvPzS2a_2ttAi-yTIO_hMO8d8FKKYC2BYkAHXCZjmk83fShjCeR2QfBDig9eK5RKaCM6FusyKTCuO6P-AmYQeAyfVRmD1i9__EkiHISDom6MsX5R9U62mu0_Y6Ek8QfljxMahr6muVJSBuEIwtN6wN34Yag7F55l_o6Ya0pIqlDsPbomS3u3lrZkZArDS0p3gLziMajla3ivPlu36Cpvc_SntnYNy7IdU0eAOWGF9FOVeF2dCYAXFQ2uO3d4jufoyyglzy0JkHZQSTL-Gd0b0LSZ8bEYaTBi7DnFcG1P9RNHZsddYqlDVNpONOPkMcrDb_JtJBny300qU87r78Usos9zn4kdLhlSb3mFhhhNmpnfNbCPedAnMBnPDherxijGElBaynSp2dztr_2M9BEcHgO_6rCN64SdYqYhCE5xQxlwcJp_lKrrXieyv0lvJiri5xHrCq4miZ8siO3I9uw-yC7EwR6UMUD0y3_ehek11oH8n8Tqw47hbnfhDz5f4xv4eVSMn6hww_PIyj_pHnWtSpFzgznyIf2aGLPfRzfWnANSDYnRAVIR6Rmixv_gSP5EWW8Zc66IWPzKM3vAb8Tm6qcDtBb1QBkZFQfs6Wo7pjbPPjGvwNB5gegBzUG61TgYcwfFG9LbE-Ycj5ilO1Kjq7eWdd5kkW-ADsuD3WTeP2tnegqBsuPLgGvQiZN9_uwPRJtULfysTYJf-UPN_yFtuHLmkdS4p4v9lXQLlsxC_Mg-DVEC83WVRAQr0nYE_LiPOPBpMJHcVTZOlA-BYCT-S_9hVpOCYRHIeD-stPF07Tj3Mu25l12jE0h-HWxNXQanW2HA2Xmrlfi1eR0b6MQ_5I2lHjOoWo-oVE9AjBwmR27sdrwo-PO.ZMrx-qXqoTDCV3Up_53Myg",
+  "id": "871f9552-87a0-4027-9245-786102a218db"
+}
+
+### Verify Sms Code
+POST {{BASE_URL_V1}}/user/code/verify
+x-api-key: {{API_KEY}}
+aggregator: {{AGGREGATOR_ID}}
+content-type: "application/json"
+
+{
+    "id": "{{USER_ID}}",
+    "code": "923215"
+}
+
+### Resend Sms Code
+GET {{BASE_URL_V1}}/user/code/resend/{{USER_ID}}
+x-api-key: {{API_KEY}}
+aggregator: {{AGGREGATOR_ID}}
+content-type: "application/json"
+
+### Forgot Password
+PUT {{BASE_URL_V1}}/user/code/resend/{{USER_ID}}
+x-api-key: {{API_KEY}}
+aggregator: {{AGGREGATOR_ID}}
+content-type: "application/json"
+
+### Reset Password
+PUT {{BASE_URL_V1}}/user/code/resend
+x-api-key: {{API_KEY}}
+aggregator: {{AGGREGATOR_ID}}
+content-type: "application/json"
+
+{
+    "id": "{{USER_ID}}",
+    "code": "1234",
+    "newPassword": "{{USER_PASSWORD}}",
+}

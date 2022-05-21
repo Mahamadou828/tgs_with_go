@@ -211,17 +211,19 @@ func (s Store) QueryById(ctx context.Context, id string) (User, error) {
 	return u, nil
 }
 
-func (s Store) QueryByEmail(ctx context.Context, email string) (User, error) {
+func (s Store) QueryByEmailAndAggregator(ctx context.Context, email, aggr string) (User, error) {
 	data := struct {
-		Email string `db:"email"`
+		Email      string `db:"email"`
+		Aggregator string `db:"aggregator_id"`
 	}{
-		Email: email,
+		Email:      email,
+		Aggregator: aggr,
 	}
 
 	var u User
 
 	const q = `
-	SELECT * FROM "public"."user"  WHERE email = :email AND deleted_at IS NULL
+	SELECT * FROM "public"."user"  WHERE email = :email AND aggregator_id = :aggregator_id AND deleted_at IS NULL 
 `
 
 	if err := database.NamedQueryStruct(ctx, s.log, s.db, q, data, &u); err != nil {
@@ -231,8 +233,8 @@ func (s Store) QueryByEmail(ctx context.Context, email string) (User, error) {
 	return u, nil
 }
 
-func (s Store) QueryByCognitoID(ctx context.Context, email, password, aggregator string) (User, error) {
-	cognitoID, err := s.aws.Cognito.GenerateSub(email, password, aggregator)
+func (s Store) QueryByCognitoID(ctx context.Context, email, phoneNumber, aggregator string) (User, error) {
+	cognitoID, err := s.aws.Cognito.GenerateSub(email, phoneNumber, aggregator)
 	if err != nil {
 		return User{}, err
 	}

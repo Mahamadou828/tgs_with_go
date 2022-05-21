@@ -72,9 +72,10 @@ func (a *App) Handle(method, path string, handler Handler, mw ...Middleware) {
 		ctx := sentry.SetHubOnContext(r.Context(), hub)
 		span := uuid.NewString()
 		//Because aggregator is needed towards the entire application we will add it inside the request trace
-		aggregators := r.Header["aggregator"]
+		aggregators := r.Header["Aggregator"]
 		if len(aggregators) != 1 {
-			if err := Response(ctx, w, http.StatusUnauthorized, "missing aggregator in header value"); err != nil {
+			err := NewRequestError(fmt.Errorf("missing aggregator in header value"), http.StatusUnauthorized)
+			if err := Response(ctx, w, http.StatusUnauthorized, err); err != nil {
 				a.SignalShutdown()
 			}
 			return
