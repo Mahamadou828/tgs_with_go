@@ -102,7 +102,6 @@ CREATE TABLE IF NOT EXISTS "public"."user"
     deleted_at        timestamp,
     created_at        timestamp    NOT NULL,
     CONSTRAINT PK_7 PRIMARY KEY (id),
-    CONSTRAINT cognitoId UNIQUE (cognito_id),
     CONSTRAINT FK_50 FOREIGN KEY (aggregator_id) REFERENCES "public".aggregator (id)
 );
 

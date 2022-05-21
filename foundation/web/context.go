@@ -21,6 +21,7 @@ type RequestTrace struct {
 	Now        time.Time
 	StatusCode int
 	Hub        *sentry.Hub
+	Aggregator string
 }
 
 // GetRequestTrace returns the values from the context.

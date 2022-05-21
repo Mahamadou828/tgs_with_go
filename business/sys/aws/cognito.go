@@ -127,6 +127,7 @@ func (c *Cognito) AuthenticateUser(sub, password string) (Session, error) {
 		AuthParameters: map[string]*string{
 			"USERNAME": aws.String(sub),
 			"SRP_A":    aws.String(password),
+			"PASSWORD": aws.String(password),
 		},
 		ClientId: aws.String(c.clientID),
 	}
@@ -173,20 +174,20 @@ func (c *Cognito) RefreshToken(token string) (Session, error) {
 	}
 
 	return Session{
-		Token:        *out.AuthenticationResult.AccessToken,
-		RefreshToken: *out.AuthenticationResult.RefreshToken,
-		ExpireIn:     *out.AuthenticationResult.ExpiresIn,
+		Token:    *out.AuthenticationResult.AccessToken,
+		ExpireIn: *out.AuthenticationResult.ExpiresIn,
 	}, nil
 }
 
 //DeleteUser will completely delete the user from the pool
 //the user will not be able to recover the account.
-func (c *Cognito) DeleteUser(accessToken string) error {
-	inp := cognitoidentityprovider.DeleteUserInput{
-		AccessToken: aws.String(accessToken),
+func (c *Cognito) DeleteUser(sub string) error {
+	inp := cognitoidentityprovider.AdminDeleteUserInput{
+		UserPoolId: aws.String(c.userPoolID),
+		Username:   aws.String(sub),
 	}
 
-	if _, err := c.identityProvider.DeleteUser(&inp); err != nil {
+	if _, err := c.identityProvider.AdminDeleteUser(&inp); err != nil {
 		return err
 	}
 

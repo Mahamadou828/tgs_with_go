@@ -2,8 +2,7 @@ package aggregator
 
 import (
 	"context"
-	"fmt"
-	"github.com/Mahamadou828/tgs_with_golang/business/sys/validate"
+	aggregatordto "github.com/Mahamadou828/tgs_with_golang/app/service/api/handlers/v1/aggregatorroutes/dto"
 	"time"
 
 	"github.com/Mahamadou828/tgs_with_golang/business/data/v1/store/aggregator"
@@ -28,11 +27,7 @@ func NewCore(log *zap.SugaredLogger, db *sqlx.DB, aws *aws.AWS) Core {
 	}
 }
 
-func (c Core) Create(ctx context.Context, na aggregator.NewAggregator, now time.Time) (aggregator.Aggregator, error) {
-	if err := validate.Check(na); err != nil {
-		return aggregator.Aggregator{}, err
-	}
-
+func (c Core) Create(ctx context.Context, na aggregatordto.NewAggregator, now time.Time) (aggregator.Aggregator, error) {
 	agg, err := c.aggStore.Create(ctx, na, now)
 	if err != nil {
 		return aggregator.Aggregator{}, err
@@ -40,14 +35,7 @@ func (c Core) Create(ctx context.Context, na aggregator.NewAggregator, now time.
 	return agg, nil
 }
 
-func (c Core) Update(ctx context.Context, id string, ua aggregator.UpdateAggregator, now time.Time) (aggregator.Aggregator, error) {
-	if err := validate.CheckID(id); err != nil {
-		return aggregator.Aggregator{}, err
-	}
-	if err := validate.Check(ua); err != nil {
-		return aggregator.Aggregator{}, fmt.Errorf("validating data: %w", err)
-	}
-
+func (c Core) Update(ctx context.Context, id string, ua aggregatordto.UpdateAggregator, now time.Time) (aggregator.Aggregator, error) {
 	dbAgg, err := c.QueryByID(ctx, id)
 	if err != nil {
 		return aggregator.Aggregator{}, err

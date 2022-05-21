@@ -3,11 +3,12 @@ package aggregatorroutes
 import (
 	"context"
 	"fmt"
+	aggregatordto "github.com/Mahamadou828/tgs_with_golang/app/service/api/handlers/v1/aggregatorroutes/dto"
+	"github.com/Mahamadou828/tgs_with_golang/business/sys/validate"
 	"net/http"
 	"strconv"
 
 	aggCore "github.com/Mahamadou828/tgs_with_golang/business/core/v1/aggregator"
-	"github.com/Mahamadou828/tgs_with_golang/business/data/v1/store/aggregator"
 	"github.com/Mahamadou828/tgs_with_golang/foundation/web"
 )
 
@@ -25,12 +26,19 @@ func (h Handler) Create(ctx context.Context, w http.ResponseWriter, r *http.Requ
 		)
 	}
 
-	var na aggregator.NewAggregator
+	var na aggregatordto.NewAggregator
 
 	if err := web.Decode(r, &na); err != nil {
 		return web.NewRequestError(
 			fmt.Errorf("unable to decode payload: %v", err),
 			http.StatusInternalServerError,
+		)
+	}
+
+	if err := validate.Check(na); err != nil {
+		return web.NewRequestError(
+			err,
+			http.StatusBadRequest,
 		)
 	}
 
@@ -89,29 +97,32 @@ func (h Handler) Update(ctx context.Context, w http.ResponseWriter, r *http.Requ
 	}
 
 	id := web.Param(r, "id")
-
-	var agg aggregator.UpdateAggregator
-	if err := web.Decode(r, &agg); err != nil {
-		return web.NewRequestError(
-			err,
-			http.StatusBadRequest,
-		)
+	if err := validate.CheckID(id); err != nil {
+		return web.NewRequestError(err, http.StatusBadRequest)
 	}
-	aggr, err := h.Agg.Update(ctx, id, agg, v.Now)
 
+	var agg aggregatordto.UpdateAggregator
+	if err := web.Decode(r, &agg); err != nil {
+		return web.NewRequestError(err, http.StatusBadRequest)
+	}
+	if err := validate.Check(agg); err != nil {
+		return web.NewRequestError(err, http.StatusBadRequest)
+	}
+
+	aggr, err := h.Agg.Update(ctx, id, agg, v.Now)
 	if err != nil {
-		return web.NewRequestError(
-			err,
-			http.StatusBadRequest,
-		)
+		return web.NewRequestError(err, http.StatusBadRequest)
 	}
 
 	return web.Response(ctx, w, http.StatusOK, aggr)
 }
 
 func (h Handler) Query(ctx context.Context, w http.ResponseWriter, r *http.Request) *web.RequestError {
-	page := web.QueryParam(r, "page")[0]
-	pageNumber, err := strconv.Atoi(page)
+	page := web.QueryParam(r, "page")
+	if len(page) != 1 {
+		return web.NewRequestError(fmt.Errorf("missing query parameter page"), http.StatusBadRequest)
+	}
+	pageNumber, err := strconv.Atoi(page[0])
 	if err != nil {
 		return web.NewRequestError(
 			fmt.Errorf("invalid page format [%s]", page),
@@ -119,8 +130,11 @@ func (h Handler) Query(ctx context.Context, w http.ResponseWriter, r *http.Reque
 		)
 	}
 
-	rows := web.QueryParam(r, "rows")[0]
-	rowsPerPage, err := strconv.Atoi(rows)
+	rows := web.QueryParam(r, "rows")
+	if len(page) != 1 {
+		return web.NewRequestError(fmt.Errorf("missing query parameter rows"), http.StatusBadRequest)
+	}
+	rowsPerPage, err := strconv.Atoi(rows[0])
 	if err != nil {
 		return web.NewRequestError(
 			fmt.Errorf("invalid rows format [%s]", rows),

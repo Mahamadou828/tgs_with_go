@@ -54,6 +54,17 @@ func v1(app *web.App, cfg web.AppConfig) {
 
 	//=========================== User Route
 	app.Handle(http.MethodPost, "/user", urt.Create)
+	app.Handle(http.MethodGet, "/user/:id", urt.QueryByID)
+	app.Handle(http.MethodGet, "/user", urt.Query)
+	app.Handle(http.MethodPut, "/user/:id", urt.Update)
+	app.Handle(http.MethodDelete, "/user/:id", urt.Delete)
+	//=========================== User Auth Route
+	app.Handle(http.MethodPost, "/user/login", urt.Login)
+	app.Handle(http.MethodPost, "/user/token/refresh", urt.RefreshToken)
+	app.Handle(http.MethodPost, "/user/code/verify", urt.VerifyConfirmationCode)
+	app.Handle(http.MethodGet, "/user/code/resend/:id", urt.ResendConfirmationCode)
+	app.Handle(http.MethodPut, "/user/password/forgot/:id", urt.ForgotPassword)
+	app.Handle(http.MethodPut, "/user/password/reset", urt.ConfirmNewPassword)
 
 	//=========================== Aggregator Route
 	app.Handle(http.MethodPost, "/aggregator", agt.Create)
