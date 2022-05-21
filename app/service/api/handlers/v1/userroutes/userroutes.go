@@ -3,9 +3,9 @@ package userroutes
 import (
 	"context"
 	"fmt"
+	userdto "github.com/Mahamadou828/tgs_with_golang/app/service/api/handlers/v1/userroutes/dto"
 	aggCore "github.com/Mahamadou828/tgs_with_golang/business/core/v1/aggregator"
 	userCore "github.com/Mahamadou828/tgs_with_golang/business/core/v1/user"
-	"github.com/Mahamadou828/tgs_with_golang/business/data/v1/store/user"
 	"github.com/Mahamadou828/tgs_with_golang/business/sys/validate"
 	"github.com/Mahamadou828/tgs_with_golang/foundation/web"
 	"net/http"
@@ -72,7 +72,7 @@ func (h Handler) Create(ctx context.Context, w http.ResponseWriter, r *http.Requ
 		)
 	}
 
-	var nu user.NewUser
+	var nu userdto.NewUser
 
 	if err := web.Decode(r, &nu); err != nil {
 		return web.NewRequestError(
@@ -111,8 +111,111 @@ func (h Handler) Delete(ctx context.Context, w http.ResponseWriter, r *http.Requ
 			http.StatusBadRequest,
 		)
 	}
-
 	return web.Response(ctx, w, http.StatusOK, u)
+}
+
+func (h Handler) Login(ctx context.Context, w http.ResponseWriter, r *http.Request) *web.RequestError {
+	var login userdto.Login
+	v, err := web.GetRequestTrace(ctx)
+
+	if err != nil {
+		return web.NewRequestError(
+			web.NewShutdownError("web value missing from context"),
+			http.StatusInternalServerError,
+		)
+	}
+
+	if err := web.Decode(r, &login); err != nil {
+		return web.NewRequestError(err, http.StatusBadRequest)
+	}
+	if err := validate.Check(login); err != nil {
+		return web.NewRequestError(err, http.StatusBadRequest)
+	}
+
+	cred, err := h.User.Login(ctx, v.Aggregator, login)
+	if err != nil {
+		return web.NewRequestError(err, http.StatusBadRequest)
+	}
+
+	return web.Response(ctx, w, http.StatusOK, cred)
+}
+
+func (h Handler) ResendConfirmationCode(ctx context.Context, w http.ResponseWriter, r *http.Request) *web.RequestError {
+	id := web.Param(r, "id")
+	if err := validate.CheckID(id); err != nil {
+		return web.NewRequestError(err, http.StatusBadRequest)
+	}
+
+	if err := h.User.ResendConfirmationCode(ctx, id); err != nil {
+		return web.NewRequestError(err, http.StatusBadRequest)
+	}
+
+	return web.Response(ctx, w, http.StatusNoContent, nil)
+}
+
+func (h Handler) VerifyConfirmationCode(ctx context.Context, w http.ResponseWriter, r *http.Request) *web.RequestError {
+	var payload userdto.VerifyConfirmationCode
+	if err := web.Decode(r, &payload); err != nil {
+		return web.NewRequestError(err, http.StatusBadRequest)
+	}
+	if err := validate.Check(payload); err != nil {
+		return web.NewRequestError(err, http.StatusBadRequest)
+	}
+	if err := h.User.VerifyConfirmationCode(ctx, payload); err != nil {
+		return web.NewRequestError(err, http.StatusBadRequest)
+	}
+	return web.Response(ctx, w, http.StatusNoContent, nil)
+}
+
+func (h Handler) ForgotPassword(ctx context.Context, w http.ResponseWriter, r *http.Request) *web.RequestError {
+	id := web.Param(r, "id")
+	if err := validate.CheckID(id); err != nil {
+		return web.NewRequestError(err, http.StatusBadRequest)
+	}
+	if err := h.User.ForgotPassword(ctx, id); err != nil {
+		return web.NewRequestError(err, http.StatusBadRequest)
+	}
+	return web.Response(ctx, w, http.StatusNoContent, nil)
+}
+
+func (h Handler) ConfirmNewPassword(ctx context.Context, w http.ResponseWriter, r *http.Request) *web.RequestError {
+	var payload userdto.ConfirmNewPassword
+	if err := web.Decode(r, &payload); err != nil {
+		return web.NewRequestError(err, http.StatusBadRequest)
+	}
+	if err := validate.Check(payload); err != nil {
+		return web.NewRequestError(err, http.StatusBadRequest)
+	}
+	if err := h.User.ConfirmNewPassword(ctx, payload); err != nil {
+		return web.NewRequestError(err, http.StatusBadRequest)
+	}
+	return web.Response(ctx, w, http.StatusNoContent, nil)
+}
+
+func (h Handler) RefreshToken(ctx context.Context, w http.ResponseWriter, r *http.Request) *web.RequestError {
+	var payload userdto.RefreshToken
+	v, err := web.GetRequestTrace(ctx)
+
+	if err != nil {
+		return web.NewRequestError(
+			web.NewShutdownError("web value missing from context"),
+			http.StatusInternalServerError,
+		)
+	}
+
+	if err := web.Decode(r, &payload); err != nil {
+		return web.NewRequestError(err, http.StatusBadRequest)
+	}
+	if err := validate.Check(payload); err != nil {
+		return web.NewRequestError(err, http.StatusBadRequest)
+	}
+
+	cred, err := h.User.RefreshToken(ctx, v.Aggregator, payload)
+	if err != nil {
+		return web.NewRequestError(err, http.StatusBadRequest)
+	}
+
+	return web.Response(ctx, w, http.StatusOK, cred)
 }
 
 func (h Handler) Update(ctx context.Context, w http.ResponseWriter, r *http.Request) *web.RequestError {
@@ -130,7 +233,7 @@ func (h Handler) Update(ctx context.Context, w http.ResponseWriter, r *http.Requ
 		return web.NewRequestError(err, http.StatusBadRequest)
 	}
 
-	var ua user.UpdateUser
+	var ua userdto.UpdateUser
 	if err := web.Decode(r, &ua); err != nil {
 		return web.NewRequestError(err, http.StatusBadRequest)
 	}
