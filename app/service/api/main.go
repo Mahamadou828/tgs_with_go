@@ -21,6 +21,7 @@ import (
 	"github.com/Mahamadou828/tgs_with_golang/business/sys/database"
 	"github.com/Mahamadou828/tgs_with_golang/foundation/logger"
 	"github.com/Mahamadou828/tgs_with_golang/foundation/web"
+	"github.com/getsentry/sentry-go"
 	"go.uber.org/automaxprocs/maxprocs"
 	"go.uber.org/zap"
 )
@@ -48,13 +49,27 @@ func main() {
 
 	defer log.Sync()
 
+	//Configuring sentry monitoring.
+	if err := sentry.Init(sentry.ClientOptions{
+		Dsn:              "https://1567c85ae6f04d988eec860a82d6f5b5@o1236486.ingest.sentry.io/6386545",
+		Environment:      env,
+		Release:          fmt.Sprintf("%s@%s", service, build),
+		Debug:            env == "development",
+		AttachStacktrace: true,
+		TracesSampleRate: 0.2, //see sampling https://docs.sentry.io/platforms/go/configuration/sampling/
+	}); err != nil {
+		fmt.Println("impossible to construct sentry logger")
+		panic(err)
+	}
+
+	defer sentry.Flush(2 * time.Second)
+
 	if err := run(log); err != nil {
 		panic(err)
 	}
 }
 
 func run(log *zap.SugaredLogger) error {
-
 	//===========================
 	//GOMAXPROCS
 

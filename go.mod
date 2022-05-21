@@ -4,10 +4,12 @@ go 1.18
 
 require (
 	github.com/aws/aws-cdk-go/awscdk/v2 v2.23.0
+	github.com/aws/aws-lambda-go v1.32.0
 	github.com/aws/aws-sdk-go v1.44.12
 	github.com/aws/constructs-go/constructs/v10 v10.0.9
 	github.com/aws/jsii-runtime-go v1.58.0
 	github.com/dimfeld/httptreemux v5.0.1+incompatible
+	github.com/getsentry/sentry-go v0.13.0
 	github.com/go-playground/locales v0.14.0
 	github.com/go-playground/universal-translator v0.18.0
 	github.com/go-playground/validator/v10 v10.11.0

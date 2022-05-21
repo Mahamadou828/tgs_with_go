@@ -5,6 +5,7 @@ package web
 import (
 	"context"
 	"fmt"
+	"github.com/getsentry/sentry-go"
 	"github.com/jmoiron/sqlx"
 	"net/http"
 	"os"
@@ -62,25 +63,20 @@ func (a *App) Handle(method, path string, handler Handler, mw ...Middleware) {
 	if mw != nil {
 		handler = wrapMiddleware(mw, handler)
 	}
-
 	//Second we wrap the app level middleware
 	handler = wrapMiddleware(a.mw, handler)
-
 	//The function to execute for each request
 	h := func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
-
-		//For now let's use a false traceID
-		//@todo generate a unique traceid for sentry logs
+		hub := sentry.CurrentHub().Clone()
+		hub.Scope().SetRequest(r)
+		ctx := sentry.SetHubOnContext(r.Context(), hub)
 		span := uuid.NewString()
-
 		v := RequestTrace{
 			ID:  span,
 			Now: time.Now().UTC(),
+			Hub: hub,
 		}
-
 		ctx = context.WithValue(ctx, key, &v)
-
 		if err := handler(ctx, w, r); err != nil {
 			a.SignalShutdown()
 			return
