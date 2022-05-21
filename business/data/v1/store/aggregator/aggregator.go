@@ -42,7 +42,7 @@ func (s Store) Create(ctx context.Context, na NewAggregator, now time.Time) (Agg
 	}
 
 	const q = `
-	INSERT INTO "public".aggregator
+	INSERT INTO "public"."aggregator"
 	(id, name, code, api_key, provider_timeout, active, type, payment_by_tgs, logo_url, updated_at, created_at, deleted_at)
 	VALUES
 	(:id, :name, :code, :api_key, :provider_timeout, :active, :type, :payment_by_tgs, :logo_url, :updated_at, :created_at, null)
@@ -84,7 +84,7 @@ func (s Store) Update(ctx context.Context, id string, ua Aggregator, now time.Ti
 
 	const q = `
 	UPDATE 
-		aggregator 
+		"public"."aggregator" 
 	SET 
 		name            	= :name,
 		code            	= :code,
@@ -116,7 +116,7 @@ func (s Store) QueryByID(ctx context.Context, id string) (Aggregator, error) {
 	}
 
 	const q = `
-	SELECT * FROM aggregator AS a WHERE a.id = :id AND deleted_at IS NULL
+	SELECT * FROM "public"."aggregator" AS a WHERE a.id = :id AND deleted_at IS NULL
 `
 	if err := database.NamedQueryStruct(ctx, s.log, s.db, q, data, &agg); err != nil {
 		return agg, fmt.Errorf("aggregator %s not found", id)
@@ -138,8 +138,8 @@ func (s Store) Query(ctx context.Context, pageNumber, rowsPerPage int) ([]Aggreg
 	SELECT 
 		* 
 	FROM 
-		aggregator 
-	WHERE deleted_at IS NULL
+		"public"."aggregator" 
+	WHERE deleted_at IS NOT NULL
 	ORDER BY 
 		id
 	OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY`
@@ -147,7 +147,11 @@ func (s Store) Query(ctx context.Context, pageNumber, rowsPerPage int) ([]Aggreg
 	var aggrs []Aggregator
 
 	if err := database.NamedQuerySlice[Aggregator](ctx, s.log, s.db, q, data, &aggrs); err != nil {
-		return nil, err
+		return []Aggregator{}, err
+	}
+
+	if aggrs == nil {
+		return []Aggregator{}, nil
 	}
 
 	return aggrs, nil
@@ -166,7 +170,7 @@ func (s Store) Delete(ctx context.Context, id string, now time.Time) error {
 	}
 
 	const q = `
-	UPDATE aggregator SET deleted_at = :deleted_at WHERE id = :id
+	UPDATE "public"."aggregator" SET deleted_at = :deleted_at WHERE id = :id
 `
 
 	if err := database.NamedExecContext(ctx, s.log, s.db, q, data); err != nil {

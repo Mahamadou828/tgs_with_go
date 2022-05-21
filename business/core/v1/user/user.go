@@ -66,10 +66,36 @@ func (c Core) QueryByID(ctx context.Context, id string) (user.User, error) {
 	return usr, nil
 }
 
-func (c Core) Update(ctx context.Context, id string) (user.User, error) {
+func (c Core) Update(ctx context.Context, id string, ua user.UpdateUser, now time.Time) (user.User, error) {
 	usr, err := c.userStore.QueryById(ctx, id)
 
 	if err != nil {
+		return user.User{}, err
+	}
+
+	if ua.Name != nil {
+		usr.Name = *ua.Name
+	}
+	if ua.Email != nil {
+		usr.Email = *ua.Email
+	}
+	if ua.PhoneNumber != nil {
+		usr.PhoneNumber = *ua.PhoneNumber
+	}
+	if ua.Active != nil {
+		usr.Active = *ua.Active
+	}
+	if ua.IsMonthlyActive != nil {
+		usr.IsMonthlyActive = *ua.IsMonthlyActive
+	}
+	if ua.Role != nil {
+		usr.Role = *ua.Role
+	}
+	if ua.IsCGUAccepted != nil {
+		usr.IsCGUAccepted = *ua.IsCGUAccepted
+	}
+
+	if err := c.userStore.Update(ctx, id, usr, now); err != nil {
 		return user.User{}, err
 	}
 
@@ -77,8 +103,16 @@ func (c Core) Update(ctx context.Context, id string) (user.User, error) {
 }
 
 func (c Core) Delete(ctx context.Context, userId string, now time.Time) (user.User, error) {
-	usr, err := c.userStore.Delete(ctx, userId, now)
+	u, err := c.userStore.QueryById(ctx, userId)
+	if err != nil {
+		return user.User{}, err
+	}
 
+	if err := c.aws.Cognito.DeleteUser(u.CognitoID); err != nil {
+		return user.User{}, err
+	}
+	
+	usr, err := c.userStore.Delete(ctx, userId, now)
 	if err != nil {
 		return user.User{}, err
 	}

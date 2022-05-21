@@ -13,3 +13,31 @@ content-type: "application/json"
     "role": "USER",
     "password": "{{USER_PASSWORD}}"
 }
+
+### Query User
+GET {{BASE_URL_V1}}/user?page=1&rows=10
+x-api-key: {{API_KEY}}
+aggregator: {{AGGREGATOR_ID}}
+content-type: "application/json"
+
+### Query User By ID
+GET {{BASE_URL_V1}}/user/{{USER_ID}}
+x-api-key: {{API_KEY}}
+aggregator: {{AGGREGATOR_ID}}
+content-type: "application/json"
+
+### Update user
+PUT {{BASE_URL_V1}}/user/{{USER_ID}}
+x-api-key: {{API_KEY}}
+aggregator: {{AGGREGATOR_ID}}
+content-type: "application/json"
+
+{
+    "name": "Nicolas"
+}
+
+### Delete User
+DELETE {{BASE_URL_V1}}/user/{{USER_ID}}
+x-api-key: {{API_KEY}}
+aggregator: {{AGGREGATOR_ID}}
+content-type: "application/json"

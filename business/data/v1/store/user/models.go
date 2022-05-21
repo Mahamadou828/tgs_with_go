@@ -42,8 +42,11 @@ type NewUser struct {
 // we do not want to use pointers to basic types but we make exceptions around
 // marshalling/unmarshalling.
 type UpdateUser struct {
-	Email         *string `json:"email" validate:"omitempty,email"`
-	PhoneNumber   *string `json:"phoneNumber"`
-	Name          *string `json:"name"`
-	IsCGUAccepted *bool   `json:"isCGUAccepted"`
+	Name            *string `json:"name"`
+	Email           *string `json:"email" validate:"omitempty,email"`
+	PhoneNumber     *string `json:"phoneNumber"`
+	Active          *bool   `json:"active"`
+	IsMonthlyActive *bool   `json:"isMonthlyActive"`
+	Role            *string `json:"role"`
+	IsCGUAccepted   *bool   `json:"isCGUAccepted"`
 }

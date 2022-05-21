@@ -86,10 +86,10 @@ func (s Store) Update(ctx context.Context, id string, u User, now time.Time) err
 	data := struct {
 		UpdatedAt       pq.NullTime `db:"updated_at"`
 		ID              string      `db:"id"`
-		Email           string      `db:"name"`
-		PhoneNumber     string      `db:"code"`
-		Name            string      `db:"api_key"`
-		Active          bool        `db:"payment_by_tgs"`
+		Email           string      `db:"email"`
+		PhoneNumber     string      `db:"phone_number"`
+		Name            string      `db:"name"`
+		Active          bool        `db:"active"`
 		IsMonthlyActive bool        `db:"is_monthly_active" json:"isMonthlyActive"`
 		IsCGUAccepted   bool        `db:"is_cgu_accepted" json:"isCGUAccepted"`
 		Role            string      `db:"role" json:"role"`
@@ -110,7 +110,7 @@ func (s Store) Update(ctx context.Context, id string, u User, now time.Time) err
 
 	const q = `
 		UPDATE
-			user
+			"public"."user" 
 		SET 
 			name              = :name,
 			email             = :email,
@@ -138,17 +138,17 @@ func (s Store) Delete(ctx context.Context, id string, now time.Time) (User, erro
 		return User{}, err
 	}
 	data := struct {
-		DeleteAt pq.NullTime `json:"delete_at"`
-		ID       string      `json:"id"`
+		ID        string      `db:"id"`
+		DeletedAt pq.NullTime `db:"deleted_at"`
 	}{
-		DeleteAt: pq.NullTime{
+		DeletedAt: pq.NullTime{
 			Time:  now,
 			Valid: true,
 		},
 		ID: id,
 	}
 	const q = `
-	UPDATE user SET deleted_at = :deleted_at WHERE id = :id
+	UPDATE "public"."user" SET deleted_at = :deleted_at WHERE id = :id
 `
 
 	if err := database.NamedExecContext(ctx, s.log, s.db, q, data); err != nil {
@@ -171,7 +171,7 @@ func (s Store) Query(ctx context.Context, pageNumber, rowsPerPage int) ([]User, 
 	SELECT 
 		* 
 	FROM 
-		user 
+		"public"."user" 
 	WHERE deleted_at IS NULL
 	ORDER BY 
 		id
@@ -180,7 +180,11 @@ func (s Store) Query(ctx context.Context, pageNumber, rowsPerPage int) ([]User, 
 	var users []User
 
 	if err := database.NamedQuerySlice[User](ctx, s.log, s.db, q, data, &users); err != nil {
-		return nil, err
+		return []User{}, err
+	}
+
+	if users == nil {
+		return []User{}, nil
 	}
 
 	return users, nil
@@ -196,7 +200,7 @@ func (s Store) QueryById(ctx context.Context, id string) (User, error) {
 	var u User
 
 	const q = `
-	SELECT * FROM user WHERE id = :id AND deleted_at IS NOT NULL
+	SELECT * FROM "public"."user"  WHERE id = :id AND deleted_at IS NULL
 `
 
 	if err := database.NamedQueryStruct(ctx, s.log, s.db, q, data, &u); err != nil {
@@ -216,7 +220,7 @@ func (s Store) QueryByEmail(ctx context.Context, email string) (User, error) {
 	var u User
 
 	const q = `
-	SELECT * FROM user WHERE email = :email AND deleted_at IS NOT NULL
+	SELECT * FROM "public"."user"  WHERE email = :email AND deleted_at IS NULL
 `
 
 	if err := database.NamedQueryStruct(ctx, s.log, s.db, q, data, &u); err != nil {
@@ -240,7 +244,7 @@ func (s Store) QueryByCognitoID(ctx context.Context, email, password, aggregator
 	var u User
 
 	const q = `
-	SELECT * FROM user WHERE cognito_id = :cognito_id AND deleted_at IS NOT NULL
+	SELECT * FROM "public"."user"  WHERE cognito_id = :cognito_id AND deleted_at IS NULL
 `
 
 	if err := database.NamedQueryStruct(ctx, s.log, s.db, q, data, &u); err != nil {

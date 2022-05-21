@@ -6,6 +6,8 @@ import (
 	"net/http"
 )
 
+//Response send a response to the client, if the data pass is a nil pointer
+//the response send will be a empty slice.
 func Response(ctx context.Context, w http.ResponseWriter, statusCode int, data any) *RequestError {
 	// Set the status code for the request logger middleware.
 	if err := SetStatusCode(ctx, statusCode); err != nil {

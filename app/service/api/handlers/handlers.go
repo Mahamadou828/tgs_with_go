@@ -54,6 +54,10 @@ func v1(app *web.App, cfg web.AppConfig) {
 
 	//=========================== User Route
 	app.Handle(http.MethodPost, "/user", urt.Create)
+	app.Handle(http.MethodGet, "/user/:id", urt.QueryByID)
+	app.Handle(http.MethodGet, "/user", urt.Query)
+	app.Handle(http.MethodPut, "/user/:id", urt.Update)
+	app.Handle(http.MethodDelete, "/user/:id", urt.Delete)
 
 	//=========================== Aggregator Route
 	app.Handle(http.MethodPost, "/aggregator", agt.Create)
