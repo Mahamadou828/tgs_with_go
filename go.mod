@@ -3,7 +3,7 @@ module github.com/Mahamadou828/tgs_with_golang
 go 1.18
 
 require (
-	github.com/aws/aws-cdk-go/awscdk/v2 v2.23.0
+	github.com/aws/aws-cdk-go/awscdk/v2 v2.25.0
 	github.com/aws/aws-lambda-go v1.32.0
 	github.com/aws/aws-sdk-go v1.44.12
 	github.com/aws/constructs-go/constructs/v10 v10.0.9

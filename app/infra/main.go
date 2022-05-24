@@ -1,16 +1,18 @@
 package main
 
 import (
+	"fmt"
 	"github.com/aws/aws-cdk-go/awscdk/v2"
+	"github.com/aws/aws-cdk-go/awscdk/v2/awss3"
 	"github.com/aws/constructs-go/constructs/v10"
 	"github.com/aws/jsii-runtime-go"
 )
 
-type TestStackProps struct {
+type TgsStackProps struct {
 	awscdk.StackProps
 }
 
-func NewTestStack(scope constructs.Construct, id string, props *TestStackProps) awscdk.Stack {
+func NewStack(scope constructs.Construct, id string, props *TgsStackProps) awscdk.Stack {
 	var sprops awscdk.StackProps
 	if props != nil {
 		sprops = props.StackProps
@@ -18,14 +20,24 @@ func NewTestStack(scope constructs.Construct, id string, props *TestStackProps) 
 	stack := awscdk.NewStack(scope, &id, &sprops)
 
 	// The code that defines your stack goes here
-
+	awss3.NewBucket(stack, jsii.String(fmt.Sprintf("testbucket-%s", id)), nil)
 	return stack
 }
 
 func main() {
 	app := awscdk.NewApp(nil)
 
-	NewTestStack(app, "TestStack", &TestStackProps{
+	NewStack(app, "TgsDevelopmentStack", &TgsStackProps{
+		awscdk.StackProps{
+			Env: env(),
+		},
+	})
+	NewStack(app, "TgsProductionStack", &TgsStackProps{
+		awscdk.StackProps{
+			Env: env(),
+		},
+	})
+	NewStack(app, "TgsStagingStack", &TgsStackProps{
 		awscdk.StackProps{
 			Env: env(),
 		},
