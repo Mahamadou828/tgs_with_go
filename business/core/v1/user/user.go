@@ -134,7 +134,7 @@ func (c Core) Create(ctx context.Context, aggregatorCode string, nu userdto.NewU
 		return user.User{}, err
 	}
 
-	usr, err := c.userStore.Create(ctx, agg.ID, agg.ApiKey, nu, now)
+	usr, err := c.userStore.Create(ctx, agg, nu, now)
 
 	if err != nil {
 		return user.User{}, err

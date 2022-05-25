@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	userdto "github.com/Mahamadou828/tgs_with_golang/app/service/api/handlers/v1/userroutes/dto"
+	"github.com/Mahamadou828/tgs_with_golang/business/data/v1/store/aggregator"
 	"github.com/Mahamadou828/tgs_with_golang/business/service/v1/stripe"
 	"github.com/Mahamadou828/tgs_with_golang/business/sys/aws"
 	"github.com/Mahamadou828/tgs_with_golang/business/sys/database"
@@ -28,7 +29,7 @@ func NewStore(log *zap.SugaredLogger, db *sqlx.DB, aws *aws.AWS) Store {
 	}
 }
 
-func (s Store) Create(ctx context.Context, aggID, apiKey string, nu userdto.NewUser, now time.Time) (User, error) {
+func (s Store) Create(ctx context.Context, agg aggregator.Aggregator, nu userdto.NewUser, now time.Time) (User, error) {
 	if err := validate.Check(nu); err != nil {
 		return User{}, err
 	}
@@ -43,7 +44,7 @@ func (s Store) Create(ctx context.Context, aggID, apiKey string, nu userdto.NewU
 		Email:       nu.Email,
 		PhoneNumber: nu.PhoneNumber,
 		Name:        nu.Name,
-		AggID:       aggID,
+		AggID:       agg.ID,
 		IsActive:    nu.IsPhoneNumberVerified,
 		Password:    nu.Password,
 	})
@@ -58,8 +59,8 @@ func (s Store) Create(ctx context.Context, aggID, apiKey string, nu userdto.NewU
 		PhoneNumber:     nu.PhoneNumber,
 		Name:            nu.Name,
 		StripeID:        stripeID,
-		ApiKey:          apiKey,
-		AggregatorID:    aggID,
+		ApiKey:          agg.ApiKey,
+		AggregatorID:    agg.ID,
 		Active:          nu.IsPhoneNumberVerified,
 		CognitoID:       cognitoID,
 		IsMonthlyActive: false,

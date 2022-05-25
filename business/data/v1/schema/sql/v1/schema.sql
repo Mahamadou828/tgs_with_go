@@ -86,23 +86,27 @@ COMMENT ON COLUMN "public".aggregator.type IS 'There''s two type of aggregator:
 
 CREATE TABLE IF NOT EXISTS "public"."user"
 (
-    id                UUID         NOT NULL,
-    aggregator_id     UUID         NOT NULL,
-    email             varchar(255) NOT NULL,
-    phone_number      varchar(255) NOT NULL,
-    name              varchar(255) NOT NULL,
-    stripe_id         text         NOT NULL,
-    api_key           varchar(255) NOT NULL,
-    active            boolean      NOT NULL,
-    cognito_id        text         NOT NULL,
-    is_monthly_active boolean      NOT NULL,
-    is_cgu_accepted   boolean      NOT NULL,
-    role              varchar(255) NOT NULL,
-    updated_at        timestamp    NOT NULL,
-    deleted_at        timestamp,
-    created_at        timestamp    NOT NULL,
+    id                 UUID         NOT NULL,
+    aggregator_id      UUID         NOT NULL,
+    enterprise_id      UUID,
+    enterprise_team_id UUID,
+    email              varchar(255) NOT NULL,
+    phone_number       varchar(255) NOT NULL,
+    name               varchar(255) NOT NULL,
+    stripe_id          text         NOT NULL,
+    api_key            varchar(255) NOT NULL,
+    active             boolean      NOT NULL,
+    cognito_id         text         NOT NULL,
+    is_monthly_active  boolean      NOT NULL,
+    is_cgu_accepted    boolean      NOT NULL,
+    role               varchar(255) NOT NULL,
+    updated_at         timestamp    NOT NULL,
+    deleted_at         timestamp,
+    created_at         timestamp    NOT NULL,
     CONSTRAINT PK_7 PRIMARY KEY (id),
-    CONSTRAINT FK_50 FOREIGN KEY (aggregator_id) REFERENCES "public".aggregator (id)
+    CONSTRAINT FK_50 FOREIGN KEY (aggregator_id) REFERENCES "public".aggregator (id),
+    CONSTRAINT FK_255 FOREIGN KEY ( enterprise_id ) REFERENCES "public".enterprise ( "id" ),
+    CONSTRAINT FK_301 FOREIGN KEY ( enterprise_team_id ) REFERENCES "public".enterprise_team ( "id" )
 );
 
 CREATE TABLE IF NOT EXISTS "public".search
@@ -110,6 +114,7 @@ CREATE TABLE IF NOT EXISTS "public".search
     id                 UUID         NOT NULL,
     user_id            UUID         NOT NULL,
     aggregator_id      UUID         NOT NULL,
+
     country_id         UUID         NOT NULL,
     start_date         timestamp    NOT NULL,
     is_planned         boolean      NOT NULL,
@@ -134,8 +139,140 @@ CREATE TABLE IF NOT EXISTS "public".search
     CONSTRAINT PK_60 PRIMARY KEY (id),
     CONSTRAINT FK_109 FOREIGN KEY (country_id) REFERENCES "public".country (id),
     CONSTRAINT FK_204 FOREIGN KEY (aggregator_id) REFERENCES "public".aggregator (id),
-    CONSTRAINT FK_86 FOREIGN KEY (user_id) REFERENCES "public"."user" (id)
+    CONSTRAINT FK_86 FOREIGN KEY (user_id) REFERENCES "public"."user" (id),
 );
+
+CREATE TABLE "public".enterprise
+(
+    "id"                        uuid NOT NULL,
+    code                      varchar(255) NOT NULL,
+    pack_id                   uuid NOT NULL,
+    name                      varchar(255) NOT NULL,
+    created_at                timestamp NOT NULL,
+    updated_at                timestamp NOT NULL,
+    deleted_at                timestamp NOT NULL,
+    contact_email             varchar(255) NOT NULL,
+    description               varchar(255) NOT NULL,
+    logo_url                  varchar(255) NOT NULL,
+    max_carbon_emission_offer varchar(255) NOT NULL,
+    blocked_provider          text[] NOT NULL,
+    blocked_product_type      text[] NOT NULL,
+    active                    boolean NOT NULL,
+    CONSTRAINT PK_234 PRIMARY KEY ( "id" ),
+    CONSTRAINT FK_267 FOREIGN KEY ( pack_id ) REFERENCES "public".enterprise_pack ( "id" )
+);
+
+CREATE TABLE "public".facturation_entity
+(
+    "id"                 uuid NOT NULL,
+    denomination       varchar(255) NOT NULL,
+    enterprise_id      uuid NOT NULL,
+    facturation_number varchar(255) NOT NULL,
+    vat                varchar(255) NOT NULL,
+    street             varchar(255) NOT NULL,
+    postal_code        varchar(255) NOT NULL,
+    town               varchar(255) NOT NULL,
+    country            varchar(255) NOT NULL,
+    created_at         timestamp NOT NULL,
+    updated_at         timestamp NOT NULL,
+    deleted_at         timestamp NOT NULL,
+    CONSTRAINT PK_318 PRIMARY KEY ( "id" ),
+    CONSTRAINT FK_329 FOREIGN KEY ( enterprise_id ) REFERENCES "public".enterprise ( "id" )
+);
+
+CREATE INDEX FK_331 ON "public".facturation_entity
+    (
+     enterprise_id
+        );
+
+CREATE TABLE "public".enterprise_policy
+(
+    "id"                  uuid NOT NULL,
+    name                varchar(255) NOT NULL,
+    enterprise_id       uuid NOT NULL,
+    description         varchar(255) NOT NULL,
+    collaborator_budget int NOT NULL,
+    start_service_time  varchar(255) NOT NULL,
+    end_service_time    varchar(255) NOT NULL,
+    blocked_days        text[] NOT NULL,
+    budget_type         varchar(255) NOT NULL,
+    CONSTRAINT PK_281 PRIMARY KEY ( "id" ),
+    CONSTRAINT FK_289 FOREIGN KEY ( enterprise_id ) REFERENCES "public".enterprise ( "id" )
+);
+
+CREATE INDEX FK_291 ON "public".enterprise_policy
+    (
+     enterprise_id
+        );
+
+CREATE TABLE "public".enterprise_team
+(
+    "id"                    uuid NOT NULL,
+    name                  varchar(255) NOT NULL,
+    facturation_entity_id uuid NOT NULL,
+    enterprise_id         uuid NOT NULL,
+    description           varchar(255) NOT NULL,
+    payment_method        varchar(255) NOT NULL,
+    created_at            timestamp NOT NULL,
+    updated_at            timestamp NOT NULL,
+    deleted_at            timestamp NOT NULL,
+    CONSTRAINT PK_294 PRIMARY KEY ( "id" ),
+    CONSTRAINT FK_313 FOREIGN KEY ( enterprise_id ) REFERENCES "public".enterprise ( "id" ),
+    CONSTRAINT FK_335 FOREIGN KEY ( facturation_entity_id ) REFERENCES "public".facturation_entity ( "id" )
+);
+
+CREATE INDEX FK_315 ON "public".enterprise_team
+    (
+     enterprise_id
+        );
+
+CREATE INDEX FK_337 ON "public".enterprise_team
+    (
+     facturation_entity_id
+        );
+
+
+CREATE INDEX FK_269 ON "public".enterprise
+    (
+     pack_id
+        );
+
+
+
+CREATE TABLE "public".enterprise_pack
+(
+    "id"                                uuid NOT NULL,
+    name                              varchar(255) NOT NULL,
+    send_monthly_report               boolean NOT NULL,
+    can_customize_report              boolean NOT NULL,
+    send_expense_report               boolean NOT NULL,
+    included_field_in_report          text[] NOT NULL,
+    max_active_callaborator_per_month int NOT NULL,
+    CONSTRAINT PK_260 PRIMARY KEY ( "id" )
+);
+
+CREATE TABLE "public".enterprise_policy
+(
+    "id"                uuid            NOT NULL,
+    name                varchar(255)    NOT NULL,
+    enterprise_id       uuid            NOT NULL,
+    description         varchar(255)    NOT NULL,
+    collaborator_budget int             NOT NULL,
+    start_service_time  varchar(255)    NOT NULL,
+    end_service_time    varchar(255)    NOT NULL,
+    blocked_days        text            NOT NULL,
+    budget_type         varchar(255)    NOT NULL,
+    CONSTRAINT PK_281 PRIMARY KEY ( "id" ),
+    CONSTRAINT FK_289 FOREIGN KEY ( enterprise_id ) REFERENCES "public".enterprise ( "id" )
+);
+
+CREATE INDEX FK_291 ON "public".enterprise_policy
+    (
+     enterprise_id
+        );
+
+
+
 
 CREATE INDEX FK_111 ON "public".search
     (
@@ -219,4 +356,9 @@ CREATE INDEX FK_194 ON "public".offer
 CREATE INDEX Index_162 ON "public".offer
     (
      start_date
+        );
+
+CREATE INDEX FK_257 ON "public"."user"
+    (
+     enterprise_id
         );

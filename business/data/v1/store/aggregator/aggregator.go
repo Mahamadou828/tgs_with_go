@@ -3,14 +3,15 @@ package aggregator
 import (
 	"context"
 	"fmt"
-	aggregatordto "github.com/Mahamadou828/tgs_with_golang/app/service/api/handlers/v1/aggregatorroutes/dto"
+	"time"
+
+	"github.com/Mahamadou828/tgs_with_golang/business/data/v1/dto"
 	"github.com/Mahamadou828/tgs_with_golang/business/sys/aws"
 	"github.com/Mahamadou828/tgs_with_golang/business/sys/database"
 	"github.com/Mahamadou828/tgs_with_golang/business/sys/validate"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 	"go.uber.org/zap"
-	"time"
 )
 
 type Store struct {
@@ -27,7 +28,7 @@ func NewStore(log *zap.SugaredLogger, db *sqlx.DB, aws *aws.AWS) Store {
 	}
 }
 
-func (s Store) Create(ctx context.Context, na aggregatordto.NewAggregator, now time.Time) (Aggregator, error) {
+func (s Store) Create(ctx context.Context, na dto.NewAggregator, now time.Time) (Aggregator, error) {
 	agr := Aggregator{
 		ID:              validate.GenerateID(),
 		Name:            na.Name,

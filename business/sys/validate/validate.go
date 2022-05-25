@@ -2,7 +2,9 @@
 package validate
 
 import (
+	"crypto/rand"
 	"errors"
+	"io"
 	"reflect"
 	"regexp"
 	"strings"
@@ -13,6 +15,9 @@ import (
 	enTranslations "github.com/go-playground/validator/v10/translations/en"
 	"github.com/google/uuid"
 )
+
+//table is used to generate 6 digits code for enterprise see GenerateEnterpriseCode
+var table = [...]byte{'1', '2', '3', '4', '5', '6', '7', '8', '9', '0'}
 
 // validate holds the settings and caches for validating request struct values.
 var validate *validator.Validate
@@ -79,6 +84,17 @@ func Check(val any) error {
 // GenerateID generate a unique id for entities.
 func GenerateID() string {
 	return uuid.NewString()
+}
+
+//GenerateEnterpriseCode an unique 6 digit code for enterprise
+func GenerateEnterpriseCode() string {
+	b := make([]byte, 6)
+	//DEPRECATED: error here is not handled
+	io.ReadAtLeast(rand.Reader, b, 6)
+	for i := 0; i < len(b); i++ {
+		b[i] = table[int(b[i])%len(table)]
+	}
+	return string(b)
 }
 
 // CheckID validates that the format of an id is valid.
