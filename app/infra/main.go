@@ -10,6 +10,7 @@ import (
 
 type TgsStackProps struct {
 	awscdk.StackProps
+	env string
 }
 
 func NewStack(scope constructs.Construct, id string, props *TgsStackProps) awscdk.Stack {
@@ -20,7 +21,7 @@ func NewStack(scope constructs.Construct, id string, props *TgsStackProps) awscd
 	stack := awscdk.NewStack(scope, &id, &sprops)
 
 	// The code that defines your stack goes here
-	awss3.NewBucket(stack, jsii.String(fmt.Sprintf("testbucket-%s", id)), nil)
+	awss3.NewBucket(stack, jsii.String(fmt.Sprintf("testbucket-%s-%s", props.env, id)), nil)
 	return stack
 }
 
@@ -31,16 +32,19 @@ func main() {
 		awscdk.StackProps{
 			Env: env(),
 		},
+		"development",
 	})
 	NewStack(app, "TgsProductionStack", &TgsStackProps{
 		awscdk.StackProps{
 			Env: env(),
 		},
+		"production",
 	})
 	NewStack(app, "TgsStagingStack", &TgsStackProps{
 		awscdk.StackProps{
 			Env: env(),
 		},
+		"staging",
 	})
 
 	app.Synth(nil)
