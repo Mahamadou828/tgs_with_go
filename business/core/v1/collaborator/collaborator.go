@@ -16,7 +16,7 @@ type Core struct {
 
 func NewCore(aws *aws.AWS, db *sqlx.DB, log *zap.SugaredLogger) Core {
 	return Core{
-		collaboraterStore: collaborator.NewStore(),
+		collaboraterStore: collaborator.NewStore(log),
 		aws:               aws,
 		db:                db,
 		log:               log,

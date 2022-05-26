@@ -3,9 +3,9 @@ package userroutes
 import (
 	"context"
 	"fmt"
-	userdto "github.com/Mahamadou828/tgs_with_golang/app/service/api/handlers/v1/userroutes/dto"
 	aggCore "github.com/Mahamadou828/tgs_with_golang/business/core/v1/aggregator"
 	userCore "github.com/Mahamadou828/tgs_with_golang/business/core/v1/user"
+	userdto "github.com/Mahamadou828/tgs_with_golang/business/data/v1/dto"
 	"github.com/Mahamadou828/tgs_with_golang/business/sys/validate"
 	"github.com/Mahamadou828/tgs_with_golang/foundation/web"
 	"net/http"

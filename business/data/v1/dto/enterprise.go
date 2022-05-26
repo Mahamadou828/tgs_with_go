@@ -14,3 +14,14 @@ type NewEnterprise struct {
 	BlockedProductType string `json:"blockedProductType" validate:"required"`
 	PackID             string `json:"packId" validate:"required"`
 }
+
+type UpdateEnterprise struct {
+	Name               *string `json:"name"`
+	ContactEmail       *string `json:"contactEmail" validate:"required,email"`
+	Description        *string `json:"description"`
+	LogoURL            *string `json:"logoUrl"`
+	MaxCarbonEmission  *int    `json:"maxCarbonEmission"`
+	BlockedProvider    *string `json:"blockedProvider"`
+	BlockedProductType *string `json:"blockedProductType"`
+	PackID             *string `json:"packId"`
+}

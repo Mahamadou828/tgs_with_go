@@ -30,24 +30,3 @@ type UpdateCollaborator struct {
 	EnterpriseID    *string `json:"enterpriseId" validate:"required"`
 	TeamID          *string `json:"teamId" validate:"required"`
 }
-
-type Login struct {
-	Password string `json:"password" validate:"required"`
-	Email    string `json:"email" validate:"required,email"`
-}
-
-type RefreshToken struct {
-	ID           string `json:"id" validate:"required"`
-	RefreshToken string `json:"refreshToken" validate:"required"`
-}
-
-type VerifyConfirmationCode struct {
-	ID   string `json:"id" validate:"required"`
-	Code string `json:"code" validate:"required"`
-}
-
-type ConfirmNewPassword struct {
-	NewPassword string `json:"new_password" validate:"required"`
-	Code        string `json:"code" validate:"required"`
-	ID          string `json:"id" validate:"required"`
-}
