@@ -5,7 +5,7 @@ package user
 import (
 	"context"
 	"fmt"
-	userdto "github.com/Mahamadou828/tgs_with_golang/business/data/v1/dto"
+	"github.com/Mahamadou828/tgs_with_golang/business/data/v1/dto"
 	"github.com/Mahamadou828/tgs_with_golang/business/data/v1/store/aggregator"
 	"github.com/Mahamadou828/tgs_with_golang/business/data/v1/store/user"
 	"github.com/Mahamadou828/tgs_with_golang/business/sys/aws"
@@ -39,7 +39,7 @@ type Credentials struct {
 	User         user.User `json:"user"`
 }
 
-func (c Core) Login(ctx context.Context, aggregator string, payload userdto.Login) (Credentials, error) {
+func (c Core) Login(ctx context.Context, aggregator string, payload dto.Login) (Credentials, error) {
 	u, err := c.userStore.QueryByEmailAndAggregator(ctx, payload.Email, aggregator)
 	if err != nil {
 		return Credentials{}, err
@@ -63,8 +63,8 @@ func (c Core) Login(ctx context.Context, aggregator string, payload userdto.Logi
 	return cred, nil
 }
 
-func (c Core) ConfirmNewPassword(ctx context.Context, payload userdto.ConfirmNewPassword) error {
-	u, err := c.userStore.QueryById(ctx, payload.ID)
+func (c Core) ConfirmNewPassword(ctx context.Context, payload dto.ConfirmNewPassword) error {
+	u, err := c.userStore.QueryByID(ctx, payload.ID)
 	if err != nil {
 		return err
 	}
@@ -75,7 +75,7 @@ func (c Core) ConfirmNewPassword(ctx context.Context, payload userdto.ConfirmNew
 }
 
 func (c Core) ForgotPassword(ctx context.Context, id string) error {
-	u, err := c.userStore.QueryById(ctx, id)
+	u, err := c.userStore.QueryByID(ctx, id)
 	if err != nil {
 		return err
 	}
@@ -85,8 +85,8 @@ func (c Core) ForgotPassword(ctx context.Context, id string) error {
 	return nil
 }
 
-func (c Core) VerifyConfirmationCode(ctx context.Context, payload userdto.VerifyConfirmationCode) error {
-	u, err := c.userStore.QueryById(ctx, payload.ID)
+func (c Core) VerifyConfirmationCode(ctx context.Context, payload dto.VerifyConfirmationCode) error {
+	u, err := c.userStore.QueryByID(ctx, payload.ID)
 	if err != nil {
 		return err
 	}
@@ -97,7 +97,7 @@ func (c Core) VerifyConfirmationCode(ctx context.Context, payload userdto.Verify
 }
 
 func (c Core) ResendConfirmationCode(ctx context.Context, id string) error {
-	u, err := c.userStore.QueryById(ctx, id)
+	u, err := c.userStore.QueryByID(ctx, id)
 	if err != nil {
 		return err
 	}
@@ -105,8 +105,8 @@ func (c Core) ResendConfirmationCode(ctx context.Context, id string) error {
 	return c.aws.Cognito.ResendValidateCode(u.CognitoID)
 }
 
-func (c Core) RefreshToken(ctx context.Context, aggregator string, payload userdto.RefreshToken) (Credentials, error) {
-	u, err := c.userStore.QueryById(ctx, payload.ID)
+func (c Core) RefreshToken(ctx context.Context, aggregator string, payload dto.RefreshToken) (Credentials, error) {
+	u, err := c.userStore.QueryByID(ctx, payload.ID)
 	if err != nil {
 		return Credentials{}, err
 	}
@@ -127,7 +127,7 @@ func (c Core) RefreshToken(ctx context.Context, aggregator string, payload userd
 	return cred, nil
 }
 
-func (c Core) Create(ctx context.Context, aggregatorCode string, nu userdto.NewUser, now time.Time) (user.User, error) {
+func (c Core) Create(ctx context.Context, aggregatorCode string, nu dto.NewUser, now time.Time) (user.User, error) {
 	agg, err := c.aggStore.QueryByID(ctx, aggregatorCode)
 
 	if err != nil {
@@ -154,7 +154,7 @@ func (c Core) Query(ctx context.Context, pages, rows int) ([]user.User, error) {
 }
 
 func (c Core) QueryByID(ctx context.Context, id string) (user.User, error) {
-	usr, err := c.userStore.QueryById(ctx, id)
+	usr, err := c.userStore.QueryByID(ctx, id)
 
 	if err != nil {
 		return user.User{}, err
@@ -163,8 +163,8 @@ func (c Core) QueryByID(ctx context.Context, id string) (user.User, error) {
 	return usr, nil
 }
 
-func (c Core) Update(ctx context.Context, id string, ua userdto.UpdateUser, now time.Time) (user.User, error) {
-	usr, err := c.userStore.QueryById(ctx, id)
+func (c Core) Update(ctx context.Context, id string, ua dto.UpdateUser, now time.Time) (user.User, error) {
+	usr, err := c.userStore.QueryByID(ctx, id)
 
 	if err != nil {
 		return user.User{}, err
@@ -200,7 +200,7 @@ func (c Core) Update(ctx context.Context, id string, ua userdto.UpdateUser, now 
 }
 
 func (c Core) Delete(ctx context.Context, userId string, now time.Time) (user.User, error) {
-	u, err := c.userStore.QueryById(ctx, userId)
+	u, err := c.userStore.QueryByID(ctx, userId)
 	if err != nil {
 		return user.User{}, err
 	}

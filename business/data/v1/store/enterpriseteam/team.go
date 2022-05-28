@@ -33,6 +33,7 @@ func (s Store) Create(ctx context.Context, nt dto.NewTeam, now time.Time) (Team,
 		Description:       nt.Description,
 		PaymentMethod:     nt.PaymentMethod,
 		UpdatedAt:         now,
+		PolicyID:          nt.PolicyID,
 		CreatedAt:         now,
 		DeletedAt: pq.NullTime{
 			Time:  time.Time{},
@@ -42,9 +43,9 @@ func (s Store) Create(ctx context.Context, nt dto.NewTeam, now time.Time) (Team,
 
 	const q = `
 	INSERT INTO "public"."enterprise_team"
-		(id, name, invoicing_entity_id, enterprise_id, description, payment_method, created_at, updated_at, deleted_at) 
+		(id, name, invoicing_entity_id, policy_id, enterprise_id, description, payment_method, created_at, updated_at, deleted_at) 
 	VALUES 
-		(:id, :name, :invoicing_entity_id, :enterprise_id, :description, :payment_method, :created_at, :updated_at, :deleted_at)
+		(:id, :name, :invoicing_entity_id, :policy_id, :enterprise_id, :description, :payment_method, :created_at, :updated_at, :deleted_at)
 `
 
 	if err := database.NamedExecContext(ctx, s.log, s.db, q, team); err != nil {

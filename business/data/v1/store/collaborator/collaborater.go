@@ -121,6 +121,34 @@ func (s Store) QueryByID(ctx context.Context, collabID string) (Collaborator, er
 	return collab, nil
 }
 
+func (s Store) QueryByEmail(ctx context.Context, agg, email string) (Collaborator, error) {
+	data := struct {
+		Email        string `db:"email"`
+		AggregatorID string `db:"aggregator_id"`
+	}{
+		Email:        email,
+		AggregatorID: agg,
+	}
+	const q = `
+	SELECT 
+		* 
+	FROM 
+		"public"."user" 
+	WHERE 
+		deleted_at IS NULL 
+	AND 
+		email 		= :email
+		aggregator 	= :agg
+`
+	var collab Collaborator
+
+	if err := database.NamedQueryStruct(ctx, s.log, s.db, q, data, &collab); err != nil {
+		return Collaborator{}, err
+	}
+
+	return collab, nil
+}
+
 //@torefacto
 func (s Store) Create(
 	ctx context.Context,

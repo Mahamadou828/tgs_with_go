@@ -86,20 +86,17 @@ func (s Store) Create(ctx context.Context, agg aggregator.Aggregator, nu userdto
 
 func (s Store) Update(ctx context.Context, id string, u User, now time.Time) error {
 	data := struct {
-		UpdatedAt       pq.NullTime `db:"updated_at"`
-		ID              string      `db:"id"`
-		Email           string      `db:"email"`
-		PhoneNumber     string      `db:"phone_number"`
-		Name            string      `db:"name"`
-		Active          bool        `db:"active"`
-		IsMonthlyActive bool        `db:"is_monthly_active" json:"isMonthlyActive"`
-		IsCGUAccepted   bool        `db:"is_cgu_accepted" json:"isCGUAccepted"`
-		Role            string      `db:"role" json:"role"`
+		UpdatedAt       time.Time `db:"updated_at"`
+		ID              string    `db:"id"`
+		Email           string    `db:"email"`
+		PhoneNumber     string    `db:"phone_number"`
+		Name            string    `db:"name"`
+		Active          bool      `db:"active"`
+		IsMonthlyActive bool      `db:"is_monthly_active" json:"isMonthlyActive"`
+		IsCGUAccepted   bool      `db:"is_cgu_accepted" json:"isCGUAccepted"`
+		Role            string    `db:"role" json:"role"`
 	}{
-		UpdatedAt: pq.NullTime{
-			Time:  now,
-			Valid: true,
-		},
+		UpdatedAt:       now,
 		ID:              id,
 		Name:            u.Name,
 		Email:           u.Email,
@@ -134,7 +131,7 @@ func (s Store) Update(ctx context.Context, id string, u User, now time.Time) err
 }
 
 func (s Store) Delete(ctx context.Context, id string, now time.Time) (User, error) {
-	u, err := s.QueryById(ctx, id)
+	u, err := s.QueryByID(ctx, id)
 
 	if err != nil {
 		return User{}, err
@@ -192,7 +189,7 @@ func (s Store) Query(ctx context.Context, pageNumber, rowsPerPage int) ([]User, 
 	return users, nil
 }
 
-func (s Store) QueryById(ctx context.Context, id string) (User, error) {
+func (s Store) QueryByID(ctx context.Context, id string) (User, error) {
 	data := struct {
 		ID string `db:"id"`
 	}{

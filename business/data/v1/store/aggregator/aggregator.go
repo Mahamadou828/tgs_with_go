@@ -127,6 +127,25 @@ func (s Store) QueryByID(ctx context.Context, id string) (Aggregator, error) {
 	return agg, nil
 }
 
+func (s Store) QueryByCode(ctx context.Context, code string) (Aggregator, error) {
+	var agg Aggregator
+
+	data := struct {
+		Code string `db:"Code"`
+	}{
+		Code: code,
+	}
+
+	const q = `
+	SELECT * FROM "public"."aggregator" AS a WHERE a.code = :code AND deleted_at IS NULL
+`
+	if err := database.NamedQueryStruct(ctx, s.log, s.db, q, data, &agg); err != nil {
+		return agg, fmt.Errorf("aggregator %s not found", code)
+	}
+
+	return agg, nil
+}
+
 func (s Store) Query(ctx context.Context, pageNumber, rowsPerPage int) ([]Aggregator, error) {
 	data := struct {
 		Offset      int `db:"offset"`

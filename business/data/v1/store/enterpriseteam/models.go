@@ -6,10 +6,11 @@ import (
 )
 
 type Team struct {
-	ID                string `db:"id" json:"id"`
-	Name              string
+	ID                string      `db:"id" json:"id"`
+	Name              string      `db:"name" json:"name"`
 	InvoicingEntityID string      `db:"facturation_entity_id" json:"FacturationEntityID"`
 	EnterpriseID      string      `db:"enterprise_id" json:"EnterpriseID"`
+	PolicyID          string      `db:"policy_id" json:"policyID"`
 	Description       string      `db:"description" json:"Description"`
 	PaymentMethod     string      `db:"payment_method" json:"PaymentMethod"`
 	UpdatedAt         time.Time   `db:"updated_at" json:"-"`
