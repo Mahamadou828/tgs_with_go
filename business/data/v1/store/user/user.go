@@ -168,7 +168,21 @@ func (s Store) Query(ctx context.Context, pageNumber, rowsPerPage int) ([]User, 
 
 	const q = `
 	SELECT 
-		* 
+		id, 
+		email, 
+		phone_number, 
+		name, 
+		stripe_id, 
+		api_key, 
+		aggregator_id, 
+		active, 
+		cognito_id, 
+		is_monthly_active, 
+		is_cgu_accepted, 
+		role,
+		updated_at, 
+		created_at, 
+		deleted_at
 	FROM 
 		"public"."user" 
 	WHERE deleted_at IS NULL
@@ -199,7 +213,22 @@ func (s Store) QueryByID(ctx context.Context, id string) (User, error) {
 	var u User
 
 	const q = `
-	SELECT * FROM "public"."user"  WHERE id = :id AND deleted_at IS NULL
+	SELECT id, 
+		email, 
+		phone_number, 
+		name, 
+		stripe_id, 
+		api_key, 
+		aggregator_id, 
+		active, 
+		cognito_id, 
+		is_monthly_active, 
+		is_cgu_accepted, 
+		role,
+		updated_at, 
+		created_at, 
+		deleted_at
+	FROM "public"."user"  WHERE id = :id AND deleted_at IS NULL
 `
 
 	if err := database.NamedQueryStruct(ctx, s.log, s.db, q, data, &u); err != nil {
@@ -221,7 +250,23 @@ func (s Store) QueryByEmailAndAggregator(ctx context.Context, email, aggr string
 	var u User
 
 	const q = `
-	SELECT * FROM "public"."user"  WHERE email = :email AND aggregator_id = :aggregator_id AND deleted_at IS NULL 
+	SELECT id, 
+		email, 
+		phone_number, 
+		name, 
+		stripe_id, 
+		api_key, 
+		aggregator_id, 
+		active, 
+		cognito_id, 
+		is_monthly_active, 
+		is_cgu_accepted, 
+		role,
+		updated_at, 
+		created_at, 
+		deleted_at
+	FROM "public"."user"  
+	WHERE email = :email AND aggregator_id = :aggregator_id AND deleted_at IS NULL 
 `
 
 	if err := database.NamedQueryStruct(ctx, s.log, s.db, q, data, &u); err != nil {
@@ -245,7 +290,22 @@ func (s Store) QueryByCognitoID(ctx context.Context, email, phoneNumber, aggrega
 	var u User
 
 	const q = `
-	SELECT * FROM "public"."user"  WHERE cognito_id = :cognito_id AND deleted_at IS NULL
+	SELECT id, 
+		email, 
+		phone_number, 
+		name, 
+		stripe_id, 
+		api_key, 
+		aggregator_id, 
+		active, 
+		cognito_id, 
+		is_monthly_active, 
+		is_cgu_accepted, 
+		role,
+		updated_at, 
+		created_at, 
+		deleted_at
+	FROM "public"."user"  WHERE cognito_id = :cognito_id AND deleted_at IS NULL
 `
 
 	if err := database.NamedQueryStruct(ctx, s.log, s.db, q, data, &u); err != nil {

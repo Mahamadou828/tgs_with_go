@@ -36,10 +36,10 @@ type Credentials struct {
 
 func NewCore(aws *aws.AWS, db *sqlx.DB, log *zap.SugaredLogger) Core {
 	return Core{
-		collaboratorStore: collaborator.NewStore(log),
 		aws:               aws,
 		db:                db,
 		log:               log,
+		collaboratorStore: collaborator.NewStore(log),
 		aggregatorStore:   aggregator.NewStore(log, db, aws),
 		policyStore:       teampolicy.NewStore(db, log),
 		teamStore:         enterpriseteam.NewStore(db, log),
@@ -189,4 +189,46 @@ func (c Core) Delete(ctx context.Context, id string, now time.Time) (collaborato
 		return collaborator.Collaborator{}, err
 	}
 	return co, nil
+}
+
+func (c Core) ConfirmNewPassword(ctx context.Context, payload dto.ConfirmNewPassword) error {
+	u, err := c.collaboratorStore.QueryByID(ctx, payload.ID)
+	if err != nil {
+		return err
+	}
+	if err := c.aws.Cognito.ConfirmNewPassword(payload.Code, payload.NewPassword, u.CognitoID); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c Core) ForgotPassword(ctx context.Context, id string) error {
+	u, err := c.collaboratorStore.QueryByID(ctx, id)
+	if err != nil {
+		return err
+	}
+	if err := c.aws.Cognito.ForgotPassword(u.CognitoID); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c Core) VerifyConfirmationCode(ctx context.Context, payload dto.VerifyConfirmationCode) error {
+	u, err := c.collaboratorStore.QueryByID(ctx, payload.ID)
+	if err != nil {
+		return err
+	}
+	if err := c.aws.Cognito.ConfirmSignUp(payload.ID, u.CognitoID); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c Core) ResendConfirmationCode(ctx context.Context, id string) error {
+	u, err := c.collaboratorStore.QueryByID(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	return c.aws.Cognito.ResendValidateCode(u.CognitoID)
 }

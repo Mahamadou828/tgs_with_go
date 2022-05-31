@@ -67,7 +67,17 @@ func (s Store) Query(ctx context.Context, pageNumber, rowsPerPage int) ([]Enterp
 
 	const q = `
 	SELECT 
-		* 
+		id,
+		code, 
+		name, 
+		contact_email, 
+		description, 
+		logo_url, 
+		max_carbon_emission,
+		active,
+		updated_at, 
+		created_at, 
+		deleted_at
 	FROM 
 		"public"."enterprise" 
 	WHERE deleted_at IS NULL
@@ -99,7 +109,17 @@ func (s Store) QueryByID(ctx context.Context, id string) (Enterprise, error) {
 
 	const q = `
 	SELECT 
-		* 
+		id,
+		code, 
+		name, 
+		contact_email, 
+		description, 
+		logo_url, 
+		max_carbon_emission,
+		active,
+		updated_at, 
+		created_at, 
+		deleted_at 
 	FROM 
 		"public"."enterprise"
 	WHERE 
@@ -126,7 +146,17 @@ func (s Store) QueryByCode(ctx context.Context, code string) (Enterprise, error)
 
 	const q = `
 	SELECT 
-		* 
+		id,
+		code, 
+		name, 
+		contact_email, 
+		description, 
+		logo_url, 
+		max_carbon_emission,
+		active,
+		updated_at, 
+		created_at, 
+		deleted_at 
 	FROM 
 		"public"."enterprise"
 	WHERE 

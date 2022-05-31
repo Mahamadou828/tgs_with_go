@@ -14,7 +14,6 @@ type User struct {
 	StripeID        string      `db:"stripe_id" json:"stripeId"`
 	ApiKey          string      `db:"api_key" json:"apiKey"`
 	AggregatorID    string      `db:"aggregator_id" json:"aggregatorId"`
-	EnterpriseID    string      `db:"enterprise_id" json:"enterpriseId"`
 	Active          bool        `db:"active" json:"active"`
 	CognitoID       string      `db:"cognito_id" json:"cognitoId"`
 	IsMonthlyActive bool        `db:"is_monthly_active" json:"isMonthlyActive"`

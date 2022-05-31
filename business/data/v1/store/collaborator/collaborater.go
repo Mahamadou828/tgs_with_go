@@ -39,7 +39,24 @@ func (s Store) Query(ctx context.Context, pageNumber int, rows int) ([]Collabora
 	}
 	const q = `
 	SELECT 
-		* 
+		id, 
+		email, 
+		phone_number, 
+		name, 
+		stripe_id, 
+		api_key, 
+		aggregator_id, 
+		active, 
+		cognito_id, 
+		is_monthly_active, 
+		is_cgu_accepted, 
+		role,
+		enterprise_team_id,
+		enterprise_id,
+		budget,
+		updated_at, 
+		created_at, 
+		deleted_at 
 	FROM 
 		"public"."user" 
 	WHERE deleted_at IS NULL
@@ -72,7 +89,24 @@ func (s Store) QueryByEnterprise(ctx context.Context, entID string, pageNumber, 
 	}
 	const q = `
 	SELECT 
-		* 
+		id, 
+		email, 
+		phone_number, 
+		name, 
+		stripe_id, 
+		api_key, 
+		aggregator_id, 
+		active, 
+		cognito_id, 
+		is_monthly_active, 
+		is_cgu_accepted, 
+		role,
+		enterprise_team_id,
+		enterprise_id,
+		budget,
+		updated_at, 
+		created_at, 
+		deleted_at  
 	FROM 
 		"public"."user" 
 	WHERE 
@@ -104,7 +138,24 @@ func (s Store) QueryByID(ctx context.Context, collabID string) (Collaborator, er
 	}
 	const q = `
 	SELECT 
-		* 
+		id, 
+		email, 
+		phone_number, 
+		name, 
+		stripe_id, 
+		api_key, 
+		aggregator_id, 
+		active, 
+		cognito_id, 
+		is_monthly_active, 
+		is_cgu_accepted, 
+		role,
+		enterprise_team_id,
+		enterprise_id,
+		budget,
+		updated_at, 
+		created_at, 
+		deleted_at  
 	FROM 
 		"public"."user" 
 	WHERE 
@@ -131,7 +182,24 @@ func (s Store) QueryByEmail(ctx context.Context, agg, email string) (Collaborato
 	}
 	const q = `
 	SELECT 
-		* 
+		id, 
+		email, 
+		phone_number, 
+		name, 
+		stripe_id, 
+		api_key, 
+		aggregator_id, 
+		active, 
+		cognito_id, 
+		is_monthly_active, 
+		is_cgu_accepted, 
+		role,
+		enterprise_team_id,
+		enterprise_id,
+		budget,
+		updated_at, 
+		created_at, 
+		deleted_at  
 	FROM 
 		"public"."user" 
 	WHERE 

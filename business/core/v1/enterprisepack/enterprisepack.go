@@ -15,6 +15,14 @@ type Core struct {
 	packStore enterprisepack.Store
 }
 
+func NewCore(log *zap.SugaredLogger, db *sqlx.DB) Core {
+	return Core{
+		log:       log,
+		db:        db,
+		packStore: enterprisepack.NewStore(db, log),
+	}
+}
+
 func (c Core) Create(ctx context.Context, np dto.NewPack, now time.Time) (enterprisepack.EnterprisePack, error) {
 	p, err := c.packStore.Create(ctx, np, now)
 	if err != nil {

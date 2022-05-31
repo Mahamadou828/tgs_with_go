@@ -59,7 +59,7 @@ func (c Core) Query(ctx context.Context, pageNumber, rowsPerPage int) ([]enterpr
 	return ts, nil
 }
 
-func (c Core) QueryById(ctx context.Context, id string) (enterpriseteam.Team, error) {
+func (c Core) QueryByID(ctx context.Context, id string) (enterpriseteam.Team, error) {
 	t, err := c.teamStore.QueryByID(ctx, id)
 	if err != nil {
 		return enterpriseteam.Team{}, err

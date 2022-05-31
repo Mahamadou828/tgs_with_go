@@ -35,7 +35,15 @@ func (s Store) Query(ctx context.Context, pageNumber, rowsPerPage int) ([]Enterp
 
 	const q = `
 	SELECT 
-		* 
+		id,
+		name, 
+		send_monthly_report, 
+		can_customize_report, 
+		send_expense_report,
+		max_active_collaborator_per_month,
+		updated_at, 
+		created_at, 
+		deleted_at
 	FROM 
 		"public"."enterprise_pack"
 	WHERE deleted_at IS NULL
@@ -96,7 +104,15 @@ func (s Store) QueryByID(ctx context.Context, id string) (EnterprisePack, error)
 
 	const q = `
 	SELECT 
-		* 
+		id,
+		name, 
+		send_monthly_report, 
+		can_customize_report, 
+		send_expense_report,
+		max_active_collaborator_per_month,
+		updated_at, 
+		created_at, 
+		deleted_at 
 	FROM 
 		"public"."enterprise_pack"
 	WHERE 

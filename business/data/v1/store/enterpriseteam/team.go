@@ -64,7 +64,16 @@ func (s Store) QueryByID(ctx context.Context, id string) (Team, error) {
 
 	const q = `
 	SELECT 
-		*
+		id, 
+		name, 
+		invoicing_entity_id, 
+		enterprise_id, 
+		policy_id, 
+		description, 
+		payment_method,
+		updated_at, 
+		created_at, 
+		deleted_at
 	FROM 
 		"public"."enterprise_team" 
 	WHERE deleted_at IS NULL AND id = :id 
@@ -88,7 +97,16 @@ func (s Store) QueryByEnterpriseID(ctx context.Context, id string) (Team, error)
 
 	const q = `
 	SELECT 
-		*
+		id, 
+		name, 
+		invoicing_entity_id, 
+		enterprise_id, 
+		policy_id, 
+		description, 
+		payment_method,
+		updated_at, 
+		created_at, 
+		deleted_at
 	FROM 
 		"public"."enterprise_team" 
 	WHERE deleted_at IS NULL AND enterprise_id = :enterprise_id 
@@ -114,7 +132,16 @@ func (s Store) Query(ctx context.Context, pageNumber, rowsPerPage int) ([]Team, 
 
 	const q = `
 	SELECT 
-		* 
+		id, 
+		name, 
+		invoicing_entity_id, 
+		enterprise_id, 
+		policy_id, 
+		description, 
+		payment_method,
+		updated_at, 
+		created_at, 
+		deleted_at 
 	FROM 
 		"public"."enterprise_team" 
 	WHERE deleted_at IS NULL

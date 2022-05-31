@@ -60,7 +60,17 @@ func (s Store) Query(ctx context.Context, pageNumber, rowsPerPage int) ([]TeamPo
 
 	const q = `
 	SELECT 
-		* 
+		id, 
+		name,
+		description, 
+		collaborator_budget, 
+		start_service_time, 
+		end_service_time, 
+		budget_type, 
+		enterprise_id,
+		updated_at, 
+		created_at, 
+		deleted_at
 	FROM 
 		"public"."team_policy" 
 	WHERE deleted_at IS NULL
@@ -90,7 +100,17 @@ func (s Store) QueryByID(ctx context.Context, id string) (TeamPolicy, error) {
 
 	const q = `
 	SELECT 
-		*
+		id, 
+		name,
+		description, 
+		collaborator_budget, 
+		start_service_time, 
+		end_service_time, 
+		budget_type, 
+		enterprise_id,
+		updated_at, 
+		created_at, 
+		deleted_at
 	FROM 
 		"public"."team_policy" 
 	WHERE deleted_at IS NULL AND id = :id 
@@ -114,7 +134,17 @@ func (s Store) QueryByEnterpriseID(ctx context.Context, id string) (TeamPolicy, 
 
 	const q = `
 	SELECT 
-		*
+		id, 
+		name,
+		description, 
+		collaborator_budget, 
+		start_service_time, 
+		end_service_time, 
+		budget_type, 
+		enterprise_id,
+		updated_at, 
+		created_at, 
+		deleted_at
 	FROM 
 		"public"."team_policy" 
 	WHERE deleted_at IS NULL AND enterprise_id = :enterprise_id 
@@ -138,7 +168,17 @@ func (s Store) QueryByTeamID(ctx context.Context, id string) (TeamPolicy, error)
 
 	const q = `
 	SELECT 
-		*
+		id, 
+		name,
+		description, 
+		collaborator_budget, 
+		start_service_time, 
+		end_service_time, 
+		budget_type, 
+		enterprise_id,
+		updated_at, 
+		created_at, 
+		deleted_at
 	FROM 
 		"public"."team_policy" 
 	WHERE deleted_at IS NULL AND team_id = :team_id 

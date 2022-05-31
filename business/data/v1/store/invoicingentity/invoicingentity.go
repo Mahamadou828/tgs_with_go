@@ -34,7 +34,18 @@ func (s Store) Query(ctx context.Context, pageNumber, rowsPerPage int) ([]Invoic
 
 	const q = `
 	SELECT 
-		* 
+		id, 
+		denomination, 
+		enterprise_id, 
+		number, 
+		vat, 
+		street,
+		postal_code,
+		town, 
+		country,
+		updated_at, 
+		created_at, 
+		deleted_at
 	FROM 
 		"public"."invoicing_entity"
 	WHERE 
@@ -65,7 +76,18 @@ func (s Store) QueryByID(ctx context.Context, id string) (InvoicingEntity, error
 
 	const q = `
 	SELECT 
-		* 
+		id, 
+		denomination, 
+		enterprise_id, 
+		number, 
+		vat, 
+		street,
+		postal_code,
+		town, 
+		country,
+		updated_at, 
+		created_at, 
+		deleted_at 
 	FROM 
 		"public"."invoicing_entity"
 	WHERE
@@ -89,7 +111,18 @@ func (s Store) QueryByEnterpriseID(ctx context.Context, id string) (InvoicingEnt
 
 	const q = `
 	SELECT 
-		* 
+		id, 
+		denomination, 
+		enterprise_id, 
+		number, 
+		vat, 
+		street,
+		postal_code,
+		town, 
+		country,
+		updated_at, 
+		created_at, 
+		deleted_at 
 	FROM 
 		"public"."invoicing_entity"
 	WHERE

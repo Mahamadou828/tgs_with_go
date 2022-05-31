@@ -118,7 +118,19 @@ func (s Store) QueryByID(ctx context.Context, id string) (Aggregator, error) {
 	}
 
 	const q = `
-	SELECT * FROM "public"."aggregator" AS a WHERE a.id = :id AND deleted_at IS NULL
+	SELECT id, 
+		name,
+		code, 
+		api_key, 
+		provider_timeout, 
+		active, 
+		type, 
+		payment_by_tgs, 
+		logo_url, 
+		updated_at, 
+		created_at, 
+		deleted_at
+	FROM "public"."aggregator" AS a WHERE a.id = :id AND deleted_at IS NULL
 `
 	if err := database.NamedQueryStruct(ctx, s.log, s.db, q, data, &agg); err != nil {
 		return agg, fmt.Errorf("aggregator %s not found", id)
@@ -137,7 +149,19 @@ func (s Store) QueryByCode(ctx context.Context, code string) (Aggregator, error)
 	}
 
 	const q = `
-	SELECT * FROM "public"."aggregator" AS a WHERE a.code = :code AND deleted_at IS NULL
+	SELECT id, 
+		name,
+		code, 
+		api_key, 
+		provider_timeout, 
+		active, 
+		type, 
+		payment_by_tgs, 
+		logo_url, 
+		updated_at, 
+		created_at, 
+		deleted_at
+	FROM "public"."aggregator" AS a WHERE a.code = :code AND deleted_at IS NULL
 `
 	if err := database.NamedQueryStruct(ctx, s.log, s.db, q, data, &agg); err != nil {
 		return agg, fmt.Errorf("aggregator %s not found", code)
@@ -157,10 +181,21 @@ func (s Store) Query(ctx context.Context, pageNumber, rowsPerPage int) ([]Aggreg
 
 	const q = `
 	SELECT 
-		* 
+		id, 
+		name,
+		code, 
+		api_key, 
+		provider_timeout, 
+		active, 
+		type, 
+		payment_by_tgs, 
+		logo_url, 
+		updated_at, 
+		created_at, 
+		deleted_at 
 	FROM 
 		"public"."aggregator" 
-	WHERE deleted_at IS NOT NULL
+	WHERE deleted_at IS NULL
 	ORDER BY 
 		id
 	OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY`
