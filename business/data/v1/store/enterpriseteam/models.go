@@ -8,7 +8,7 @@ import (
 type Team struct {
 	ID                string      `db:"id" json:"id"`
 	Name              string      `db:"name" json:"name"`
-	InvoicingEntityID string      `db:"facturation_entity_id" json:"FacturationEntityID"`
+	InvoicingEntityID string      `db:"invoicing_entity_id" json:"InvoicingEntityID"`
 	EnterpriseID      string      `db:"enterprise_id" json:"EnterpriseID"`
 	PolicyID          string      `db:"policy_id" json:"policyID"`
 	Description       string      `db:"description" json:"Description"`

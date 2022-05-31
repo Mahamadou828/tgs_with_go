@@ -1,4 +1,4 @@
-### Create aggregator
+### Create enterprise
 POST {{BASE_URL_V1}}/enterprise
 x-api-key: {{API_KEY}}
 aggregator: {{AGGREGATOR_ID}}
@@ -14,12 +14,12 @@ aggregator: {{AGGREGATOR_ID}}
     "logoUrl": "https://image.shutterstock.com/image-vector/stripes-dots-circle-logo-vector-260nw-1139400776.jpg"
 }
 
-### Query Aggregator
+### Query enterprise
 GET {{BASE_URL_V1}}/enterprise?page=1&rows=100
 x-api-key: {{API_KEY}}
 aggregator: {{AGGREGATOR_ID}}
 
-### Query By Id Aggregator
+### Query By Id enterprise
 GET {{BASE_URL_V1}}/enterprise/{{ENTERPRISE_ID}}
 x-api-key: {{API_KEY}}
 aggregator: {{AGGREGATOR_ID}}
@@ -30,16 +30,16 @@ x-api-key: {{API_KEY}}
 aggregator: {{AGGREGATOR_ID}}
 
 
-### Update Aggregator
+### Update enterprise
 PUT {{BASE_URL_V1}}/enterprise/{{ENTERPRISE_ID}}
 x-api-key: {{API_KEY}}
 aggregator: {{AGGREGATOR_ID}}
 
 {
-    "description": "This is a test enterprise, but updated",
+    "description": "This is a test enterprise, but updated"
 }
 
-### DELETE Aggregator
+### DELETE enterprise
 DELETE {{BASE_URL_V1}}/enterprise/{{ENTERPRISE_ID}}
 x-api-key: {{API_KEY}}
 aggregator: {{AGGREGATOR_ID}}

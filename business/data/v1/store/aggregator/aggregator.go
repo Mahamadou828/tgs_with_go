@@ -143,13 +143,14 @@ func (s Store) QueryByCode(ctx context.Context, code string) (Aggregator, error)
 	var agg Aggregator
 
 	data := struct {
-		Code string `db:"Code"`
+		Code string `db:"code"`
 	}{
 		Code: code,
 	}
 
 	const q = `
-	SELECT id, 
+	SELECT 
+		id, 
 		name,
 		code, 
 		api_key, 
@@ -161,7 +162,7 @@ func (s Store) QueryByCode(ctx context.Context, code string) (Aggregator, error)
 		updated_at, 
 		created_at, 
 		deleted_at
-	FROM "public"."aggregator" AS a WHERE a.code = :code AND deleted_at IS NULL
+	FROM "public"."aggregator" WHERE code = :code AND deleted_at IS NULL
 `
 	if err := database.NamedQueryStruct(ctx, s.log, s.db, q, data, &agg); err != nil {
 		return agg, fmt.Errorf("aggregator %s not found", code)

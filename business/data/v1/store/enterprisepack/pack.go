@@ -73,6 +73,7 @@ func (s Store) Create(ctx context.Context, np dto.NewPack, now time.Time) (Enter
 		CanCustomizeReport:            np.CanCustomizeReport,
 		SendExpenseReport:             np.SendExpenseReport,
 		MaxActiveCollaboratorPerMonth: np.MaxActiveCollaboratorPerMonth,
+		IncludedFieldInReport:         np.IncludedFieldInReport,
 		UpdatedAt:                     now,
 		CreatedAt:                     now,
 		DeletedAt: pq.NullTime{
@@ -83,9 +84,9 @@ func (s Store) Create(ctx context.Context, np dto.NewPack, now time.Time) (Enter
 
 	const q = `
 	INSERT INTO "public"."enterprise_pack"
-		(id, name, send_monthly_report, can_customize_report, send_expense_report, max_active_collaborator_per_month)
+		(id, name, send_monthly_report, can_customize_report, included_field_in_report, send_expense_report, max_active_collaborator_per_month, created_at, updated_at, deleted_at)
 	VALUES
-		(:id, :name, :send_monthly_report, :can_customize_report, :send_expense_report, :max_active_collaborator_per_month)
+		(:id, :name, :send_monthly_report, :can_customize_report, :included_field_in_report, :send_expense_report, :max_active_collaborator_per_month, :created_at, :updated_at, :deleted_at)
 `
 
 	if err := database.NamedExecContext(ctx, s.log, s.db, q, pack); err != nil {
@@ -116,7 +117,7 @@ func (s Store) QueryByID(ctx context.Context, id string) (EnterprisePack, error)
 	FROM 
 		"public"."enterprise_pack"
 	WHERE 
-		deleted_at IS NOT NULL
+		deleted_at IS NULL
 	AND 
 		id = :id
 `
@@ -153,11 +154,11 @@ func (s Store) Update(ctx context.Context, p EnterprisePack, now time.Time) erro
 		UPDATE 
 			"public"."enterprise_pack" 
 		SET 
-			name 								= :name 
-			send_expense_report 				= :send_expense_report
-			can_customize_report 				= :can_customize_report
-			send_expense_report 				= :send_expense_report
-			max_active_collaborator_per_month 	= :max_active_collaborator_per_month
+			name 								= :name, 
+			send_monthly_report 				= :send_monthly_report,
+			can_customize_report 				= :can_customize_report,
+			send_expense_report 				= :send_expense_report,
+			max_active_collaborator_per_month 	= :max_active_collaborator_per_month,
 			updated_at         	 				= :updated_at
 		WHERE 	
 			id = :id

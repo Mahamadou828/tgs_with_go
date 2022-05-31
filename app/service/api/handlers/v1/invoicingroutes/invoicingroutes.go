@@ -69,7 +69,7 @@ func (h Handler) QueryByID(ctx context.Context, w http.ResponseWriter, r *http.R
 }
 
 func (h Handler) QueryByEnterprise(ctx context.Context, w http.ResponseWriter, r *http.Request) *web.RequestError {
-	c := web.Param(r, "code")
+	c := web.Param(r, "id")
 
 	e, err := h.InCore.QueryByEnterpriseID(ctx, c)
 	if err != nil {
@@ -90,7 +90,7 @@ func (h Handler) Create(ctx context.Context, w http.ResponseWriter, r *http.Requ
 
 	var eu dto.NewInvoicingEntity
 
-	if err := web.Decode(r, eu); err != nil {
+	if err := web.Decode(r, &eu); err != nil {
 		return web.NewRequestError(err, http.StatusBadRequest)
 	}
 	if err := validate.Check(eu); err != nil {
@@ -120,7 +120,7 @@ func (h Handler) Update(ctx context.Context, w http.ResponseWriter, r *http.Requ
 
 	var eu dto.UpdateInvoicingEntity
 
-	if err := web.Decode(r, eu); err != nil {
+	if err := web.Decode(r, &eu); err != nil {
 		return web.NewRequestError(err, http.StatusBadRequest)
 	}
 	if err := validate.Check(eu); err != nil {

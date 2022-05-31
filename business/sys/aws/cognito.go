@@ -51,6 +51,7 @@ func NewCognito(log *zap.SugaredLogger, sess *session.Session, clientID, userPoo
 //by sending sms code or if we should skip the verification and make the
 //account active right away
 func (c *Cognito) CreateUser(u CognitoUser) (string, error) {
+	fmt.Println(u)
 	sub, err := c.GenerateSub(u.Email, u.PhoneNumber, u.AggID)
 
 	if err != nil {

@@ -4,9 +4,9 @@ import (
 	"context"
 	"github.com/Mahamadou828/tgs_with_golang/business/data/v1/dto"
 	"github.com/Mahamadou828/tgs_with_golang/business/data/v1/store/enterprise"
+	"github.com/Mahamadou828/tgs_with_golang/business/data/v1/store/enterprisepolicy"
 	"github.com/Mahamadou828/tgs_with_golang/business/data/v1/store/enterpriseteam"
 	"github.com/Mahamadou828/tgs_with_golang/business/data/v1/store/invoicingentity"
-	"github.com/Mahamadou828/tgs_with_golang/business/data/v1/store/teampolicy"
 	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"
 	"time"
@@ -18,7 +18,7 @@ type Core struct {
 	teamStore       enterpriseteam.Store
 	invoicingStore  invoicingentity.Store
 	enterpriseStore enterprise.Store
-	policyStore     teampolicy.Store
+	policyStore     enterprisepolicy.Store
 }
 
 func NewCore(db *sqlx.DB, log *zap.SugaredLogger) Core {
@@ -28,7 +28,7 @@ func NewCore(db *sqlx.DB, log *zap.SugaredLogger) Core {
 		teamStore:       enterpriseteam.NewStore(db, log),
 		invoicingStore:  invoicingentity.NewStore(db, log),
 		enterpriseStore: enterprise.NewStore(db, log),
-		policyStore:     teampolicy.NewStore(db, log),
+		policyStore:     enterprisepolicy.NewStore(db, log),
 	}
 }
 

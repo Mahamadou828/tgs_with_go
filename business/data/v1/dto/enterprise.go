@@ -17,7 +17,7 @@ type NewEnterprise struct {
 
 type UpdateEnterprise struct {
 	Name               *string `json:"name"`
-	ContactEmail       *string `json:"contactEmail" validate:"required,email"`
+	ContactEmail       *string `json:"contactEmail" validate:"omitempty,email"`
 	Description        *string `json:"description"`
 	LogoURL            *string `json:"logoUrl"`
 	MaxCarbonEmission  *int    `json:"maxCarbonEmission"`

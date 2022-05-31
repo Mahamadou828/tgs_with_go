@@ -34,12 +34,11 @@ x-api-key: {{API_KEY}}
 aggregator: {{AGGREGATOR_ID}}
 
 {
-    "town": "sweden",
-    "country": "estonia"
+    "name": "station"
 }
 
 
 ### DELETE Team
-DELETE {{BASE_URL_V1}}/invoicing/{{TEAM_ID}}
+DELETE {{BASE_URL_V1}}/team/{{TEAM_ID}}
 x-api-key: {{API_KEY}}
 aggregator: {{AGGREGATOR_ID}}

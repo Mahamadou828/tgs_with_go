@@ -196,13 +196,13 @@ func (s Store) Update(ctx context.Context, i InvoicingEntity, now time.Time) err
 	UPDATE 
 		"public"."invoicing_entity"
 	SET 
-		denomination 	= :denomination
-		number 			= :number
-		vat         	= :vat
-		street 			= :street
-		postal_code     = :postal_code
-		town 			= :town
-		country 		= :country
+		denomination 	= :denomination,
+		number 			= :number,
+		vat         	= :vat,
+		street 			= :street,
+		postal_code     = :postal_code,
+		town 			= :town,
+		country 		= :country,
 		updated_at 		= :updated_at
 	WHERE 	
 		id = :id`

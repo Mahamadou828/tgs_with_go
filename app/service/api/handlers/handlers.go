@@ -3,10 +3,10 @@ package handlers
 
 import (
 	"expvar"
-	"github.com/Mahamadou828/tgs_with_golang/app/service/api/handlers/v1/teampolicyroutes"
+	"github.com/Mahamadou828/tgs_with_golang/app/service/api/handlers/v1/enterprisepolicyroutes"
+	"github.com/Mahamadou828/tgs_with_golang/business/core/v1/enterprisepolicy"
 	"github.com/Mahamadou828/tgs_with_golang/business/core/v1/enterpriseteam"
 	"github.com/Mahamadou828/tgs_with_golang/business/core/v1/invoicingentity"
-	"github.com/Mahamadou828/tgs_with_golang/business/core/v1/teampolicy"
 	"net/http"
 	"net/http/pprof"
 
@@ -62,7 +62,7 @@ func v1(app *web.App, cfg web.AppConfig) {
 	epgt := enterprisepackroutes.Handler{Pac: enterprisepack.NewCore(cfg.Log, cfg.DB)}
 	cgt := collaboratorroutes.Handler{Co: collaborator.NewCore(cfg.AWS, cfg.DB, cfg.Log)}
 	tgt := enterpriseteamroutes.Handler{TeCore: enterpriseteam.NewCore(cfg.DB, cfg.Log)}
-	tpt := teampolicyroutes.Handler{PoCore: teampolicy.NewCore(cfg.DB, cfg.Log)}
+	tpt := enterprisepolicyroutes.Handler{PoCore: enterprisepolicy.NewCore(cfg.DB, cfg.Log)}
 	igt := invoicingroutes.Handler{InCore: invoicingentity.NewCore(cfg.Log, cfg.DB)}
 
 	//=========================== Test Route

@@ -79,7 +79,7 @@ func (h Handler) Create(ctx context.Context, w http.ResponseWriter, r *http.Requ
 
 	var eu dto.NewPack
 
-	if err := web.Decode(r, eu); err != nil {
+	if err := web.Decode(r, &eu); err != nil {
 		return web.NewRequestError(err, http.StatusBadRequest)
 	}
 	if err := validate.Check(eu); err != nil {
@@ -109,7 +109,7 @@ func (h Handler) Update(ctx context.Context, w http.ResponseWriter, r *http.Requ
 
 	var eu dto.UpdatePack
 
-	if err := web.Decode(r, eu); err != nil {
+	if err := web.Decode(r, &eu); err != nil {
 		return web.NewRequestError(err, http.StatusBadRequest)
 	}
 	if err := validate.Check(eu); err != nil {

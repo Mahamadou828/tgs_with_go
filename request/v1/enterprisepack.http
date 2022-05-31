@@ -5,12 +5,14 @@ aggregator: {{AGGREGATOR_ID}}
 
 {
     "name": "siege",
-    "description": "all collaborator that are admin",
-    "paymentMethod": "NDF",
-    "enterpriseId": "{{ENTERPRISE_ID}}",
-    "policyId": "{{POLICY_ID}}",
-    "invoicingEntityId": "{{INVOICING_ID}}"
+    "sendMonthlyReport": true,
+    "canCustomizeReport": true,
+    "sendExpenseReport": true,
+    "maxActiveCollaboratorPerMonth": 120,
+    "includedFieldInReport": "test"
 }
+
+
 
 ### Query Pack
 GET {{BASE_URL_V1}}/pack?page=1&rows=100
@@ -18,22 +20,21 @@ x-api-key: {{API_KEY}}
 aggregator: {{AGGREGATOR_ID}}
 
 ### Query By Id Pack
-GET {{BASE_URL_V1}}/pack/{{PACK_ID}}
+GET {{BASE_URL_V1}}/pack/{{ENTERPRISE_PACK_ID}}
 x-api-key: {{API_KEY}}
 aggregator: {{AGGREGATOR_ID}}
 
 ### Update Pack
-PUT {{BASE_URL_V1}}/pack/{{PACK_ID}}
+PUT {{BASE_URL_V1}}/pack/{{ENTERPRISE_PACK_ID}}
 x-api-key: {{API_KEY}}
 aggregator: {{AGGREGATOR_ID}}
 
 {
-    "town": "sweden",
-    "country": "estonia"
+    "maxActiveCollaboratorPerMonth": 200
 }
 
 
 ### Delete Pack
-DELETE {{BASE_URL_V1}}/pack/{{PACK_ID}}
+DELETE {{BASE_URL_V1}}/pack/{{ENTERPRISE_PACK_ID}}
 x-api-key: {{API_KEY}}
 aggregator: {{AGGREGATOR_ID}}

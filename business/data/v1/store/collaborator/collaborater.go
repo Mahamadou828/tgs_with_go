@@ -6,7 +6,6 @@ import (
 
 	"github.com/Mahamadou828/tgs_with_golang/business/data/v1/dto"
 	"github.com/Mahamadou828/tgs_with_golang/business/data/v1/store/aggregator"
-	"github.com/Mahamadou828/tgs_with_golang/business/data/v1/store/enterprise"
 	"github.com/Mahamadou828/tgs_with_golang/business/service/v1/stripe"
 	"github.com/Mahamadou828/tgs_with_golang/business/sys/aws"
 	"github.com/Mahamadou828/tgs_with_golang/business/sys/database"
@@ -17,24 +16,25 @@ import (
 )
 
 type Store struct {
-	log             *zap.SugaredLogger
-	enterpriseStore enterprise.Store
-	aws             *aws.AWS
-	db              *sqlx.DB
+	log *zap.SugaredLogger
+	aws *aws.AWS
+	db  *sqlx.DB
 }
 
-func NewStore(log *zap.SugaredLogger) Store {
+func NewStore(log *zap.SugaredLogger, db *sqlx.DB, aws *aws.AWS) Store {
 	return Store{
 		log: log,
+		aws: aws,
+		db:  db,
 	}
 }
 
 func (s Store) Query(ctx context.Context, pageNumber int, rows int) ([]Collaborator, error) {
 	data := struct {
-		Offset int `db:"Offset"`
-		Rows   int `db:"Rows"`
+		Offset int `db:"offset"`
+		Rows   int `db:"rows_per_page"`
 	}{
-		Offset: pageNumber,
+		Offset: (pageNumber - 1) * rows,
 		Rows:   rows,
 	}
 	const q = `
@@ -206,7 +206,8 @@ func (s Store) QueryByEmail(ctx context.Context, agg, email string) (Collaborato
 		deleted_at IS NULL 
 	AND 
 		email 		= :email
-		aggregator 	= :agg
+	AND
+		aggregator_id 	= :aggregator_id
 `
 	var collab Collaborator
 

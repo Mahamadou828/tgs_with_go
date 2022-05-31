@@ -27,6 +27,6 @@ type UpdateCollaborator struct {
 	IsMonthlyActive *bool   `json:"isMonthlyActive"`
 	Role            *string `json:"role"`
 	IsCGUAccepted   *bool   `json:"isCGUAccepted"`
-	EnterpriseID    *string `json:"enterpriseId" validate:"required"`
-	TeamID          *string `json:"teamId" validate:"required"`
+	EnterpriseID    *string `json:"enterpriseId"`
+	TeamID          *string `json:"teamId"`
 }

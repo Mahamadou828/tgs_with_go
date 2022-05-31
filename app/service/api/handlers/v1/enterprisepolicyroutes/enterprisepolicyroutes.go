@@ -1,9 +1,9 @@
-package teampolicyroutes
+package enterprisepolicyroutes
 
 import (
 	"context"
 	"fmt"
-	"github.com/Mahamadou828/tgs_with_golang/business/core/v1/teampolicy"
+	"github.com/Mahamadou828/tgs_with_golang/business/core/v1/enterprisepolicy"
 	"net/http"
 	"strconv"
 
@@ -13,7 +13,7 @@ import (
 )
 
 type Handler struct {
-	PoCore teampolicy.Core
+	PoCore enterprisepolicy.Core
 }
 
 func (h Handler) Query(ctx context.Context, w http.ResponseWriter, r *http.Request) *web.RequestError {
@@ -69,7 +69,7 @@ func (h Handler) QueryByID(ctx context.Context, w http.ResponseWriter, r *http.R
 }
 
 func (h Handler) QueryByEnterprise(ctx context.Context, w http.ResponseWriter, r *http.Request) *web.RequestError {
-	c := web.Param(r, "code")
+	c := web.Param(r, "id")
 
 	e, err := h.PoCore.QueryByEnterpriseID(ctx, c)
 	if err != nil {
@@ -88,9 +88,9 @@ func (h Handler) Create(ctx context.Context, w http.ResponseWriter, r *http.Requ
 		)
 	}
 
-	var eu dto.NewTeamPolicy
+	var eu dto.NewEnterprisePolicy
 
-	if err := web.Decode(r, eu); err != nil {
+	if err := web.Decode(r, &eu); err != nil {
 		return web.NewRequestError(err, http.StatusBadRequest)
 	}
 	if err := validate.Check(eu); err != nil {
@@ -118,9 +118,9 @@ func (h Handler) Update(ctx context.Context, w http.ResponseWriter, r *http.Requ
 		)
 	}
 
-	var eu dto.UpdateTeamPolicy
+	var eu dto.UpdateEnterprisePolicy
 
-	if err := web.Decode(r, eu); err != nil {
+	if err := web.Decode(r, &eu); err != nil {
 		return web.NewRequestError(err, http.StatusBadRequest)
 	}
 	if err := validate.Check(eu); err != nil {

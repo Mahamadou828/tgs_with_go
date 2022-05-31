@@ -26,17 +26,19 @@ func NewStore(db *sqlx.DB, log *zap.SugaredLogger) Store {
 
 func (s Store) Create(ctx context.Context, nent dto.NewEnterprise, now time.Time) (Enterprise, error) {
 	en := Enterprise{
-		ID:                validate.GenerateID(),
-		Code:              validate.GenerateEnterpriseCode(),
-		Name:              nent.Name,
-		ContactEmail:      nent.ContactEmail,
-		Description:       nent.Description,
-		LogoURL:           nent.LogoURL,
-		MaxCarbonEmission: nent.MaxCarbonEmission,
-		Active:            true,
-		UpdatedAt:         now,
-		CreatedAt:         now,
-		PackID:            nent.PackID,
+		ID:                 validate.GenerateID(),
+		Code:               validate.GenerateEnterpriseCode(),
+		Name:               nent.Name,
+		ContactEmail:       nent.ContactEmail,
+		Description:        nent.Description,
+		LogoURL:            nent.LogoURL,
+		MaxCarbonEmission:  nent.MaxCarbonEmission,
+		BlockedProductType: nent.BlockedProductType,
+		Active:             true,
+		UpdatedAt:          now,
+		CreatedAt:          now,
+		PackID:             nent.PackID,
+		BlockedProvider:    nent.BlockedProvider,
 		DeletedAt: pq.NullTime{
 			Time:  time.Time{},
 			Valid: false,
@@ -45,9 +47,9 @@ func (s Store) Create(ctx context.Context, nent dto.NewEnterprise, now time.Time
 
 	const q = `
 	INSERT INTO "public"."enterprise" 
-		(id, pack_id, code, name, contact_email, description, logo_url, max_carbon_emission, active, created_at, updated_at, deleted_at)	
+		(id, pack_id, code, name, blocked_provider, blocked_product_type, contact_email, description, logo_url, max_carbon_emission, active, created_at, updated_at, deleted_at)	
 	VALUES 
-		(:id, :pack_id, :code, :name, :contact_email, :description, :logo_url, :max_carbon_emission, :active, :created_at, :updated_at, :deleted_at)
+		(:id, :pack_id, :code, :name, :blocked_provider, :blocked_product_type, :contact_email, :description, :logo_url, :max_carbon_emission, :active, :created_at, :updated_at, :deleted_at)
 `
 	if err := database.NamedExecContext(ctx, s.log, s.db, q, en); err != nil {
 		return Enterprise{}, err
@@ -61,7 +63,7 @@ func (s Store) Query(ctx context.Context, pageNumber, rowsPerPage int) ([]Enterp
 		Offset      int `db:"offset"`
 		RowsPerPage int `db:"rows_per_page"`
 	}{
-		Offset:      pageNumber,
+		Offset:      (pageNumber - 1) * rowsPerPage,
 		RowsPerPage: rowsPerPage,
 	}
 
@@ -70,6 +72,7 @@ func (s Store) Query(ctx context.Context, pageNumber, rowsPerPage int) ([]Enterp
 		id,
 		code, 
 		name, 
+		pack_id,
 		contact_email, 
 		description, 
 		logo_url, 
@@ -112,6 +115,7 @@ func (s Store) QueryByID(ctx context.Context, id string) (Enterprise, error) {
 		id,
 		code, 
 		name, 
+		pack_id,
 		contact_email, 
 		description, 
 		logo_url, 
@@ -151,6 +155,7 @@ func (s Store) QueryByCode(ctx context.Context, code string) (Enterprise, error)
 		name, 
 		contact_email, 
 		description, 
+		pack_id,
 		logo_url, 
 		max_carbon_emission,
 		active,

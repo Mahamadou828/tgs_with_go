@@ -1,4 +1,4 @@
-package teampolicy
+package enterprisepolicy
 
 import (
 	"context"
@@ -23,7 +23,7 @@ func NewStore(db *sqlx.DB, log *zap.SugaredLogger) Store {
 	}
 }
 
-func (s Store) Create(ctx context.Context, ntp dto.NewTeamPolicy, now time.Time) (TeamPolicy, error) {
+func (s Store) Create(ctx context.Context, ntp dto.NewEnterprisePolicy, now time.Time) (TeamPolicy, error) {
 	tp := TeamPolicy{
 		ID:                 validate.GenerateID(),
 		Name:               ntp.Name,
@@ -38,10 +38,10 @@ func (s Store) Create(ctx context.Context, ntp dto.NewTeamPolicy, now time.Time)
 	}
 
 	const q = `
-	INSERT INTO team_policy 
-		(id, enterprise_id, name, description, collaborator_budget, start_service_time, end_service_time, budget_type, created_at, updated_at, deleted_at)
+	INSERT INTO enterprise_policy 
+		(id, enterprise_id, name, blocked_days, description, collaborator_budget, start_service_time, end_service_time, budget_type, created_at, updated_at, deleted_at)
 	VALUES
-		(:id, :enterprise_id, :name, :description, :collaborator_budget, :start_service_time, :end_service_time, :budget_type, :created_at, :updated_at, null)
+		(:id, :enterprise_id, :name, :blocked_days, :description, :collaborator_budget, :start_service_time, :end_service_time, :budget_type, :created_at, :updated_at, null)
 `
 	if err := database.NamedExecContext(ctx, s.log, s.db, q, tp); err != nil {
 		return TeamPolicy{}, err
@@ -72,7 +72,7 @@ func (s Store) Query(ctx context.Context, pageNumber, rowsPerPage int) ([]TeamPo
 		created_at, 
 		deleted_at
 	FROM 
-		"public"."team_policy" 
+		"public"."enterprise_policy" 
 	WHERE deleted_at IS NULL
 	ORDER BY 
 		id
@@ -112,7 +112,7 @@ func (s Store) QueryByID(ctx context.Context, id string) (TeamPolicy, error) {
 		created_at, 
 		deleted_at
 	FROM 
-		"public"."team_policy" 
+		"public"."enterprise_policy" 
 	WHERE deleted_at IS NULL AND id = :id 
 `
 
@@ -146,7 +146,7 @@ func (s Store) QueryByEnterpriseID(ctx context.Context, id string) (TeamPolicy, 
 		created_at, 
 		deleted_at
 	FROM 
-		"public"."team_policy" 
+		"public"."enterprise_policy" 
 	WHERE deleted_at IS NULL AND enterprise_id = :enterprise_id 
 `
 
@@ -180,7 +180,7 @@ func (s Store) QueryByTeamID(ctx context.Context, id string) (TeamPolicy, error)
 		created_at, 
 		deleted_at
 	FROM 
-		"public"."team_policy" 
+		"public"."enterprise_policy" 
 	WHERE deleted_at IS NULL AND team_id = :team_id 
 `
 
@@ -216,13 +216,13 @@ func (s Store) Update(ctx context.Context, id string, tp TeamPolicy, now time.Ti
 
 	const q = `
 	UPDATE 
-		"public"."team_policy" 
+		"public"."enterprise_policy" 
 	SET
-		description         = :description
-		name 				= :name
-		collaborator_budget = :collaborator_budget
-		start_service_time 	= :start_service_time
-		end_service_time 	= :end_service_time
+		description         = :description,
+		name 				= :name,
+		collaborator_budget = :collaborator_budget,
+		start_service_time 	= :start_service_time,
+		end_service_time 	= :end_service_time,
 		budget_type 		= :budget_type
 	WHERE 
 		id = :id`
@@ -248,7 +248,7 @@ func (s Store) Delete(ctx context.Context, id string, now time.Time) error {
 
 	const q = `
 	UPDATE 
-		"public"."team_policy"
+		"public"."enterprise_policy"
 	SET
 		deleted_at 		= :deleted_at
 	WHERE 	

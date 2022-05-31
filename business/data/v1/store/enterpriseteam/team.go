@@ -166,6 +166,7 @@ func (s Store) Update(ctx context.Context, t Team, now time.Time) error {
 		ID                string    `db:"id"`
 		Name              string    `db:"name"`
 		InvoicingEntityID string    `db:"invoicing_entity_id"`
+		PolicyID          string    `db:"policy_id"`
 		Description       string    `db:"description"`
 		PaymentMethod     string    `db:"payment_method"`
 		UpdatedAt         time.Time `db:"updated_at"`
@@ -173,6 +174,7 @@ func (s Store) Update(ctx context.Context, t Team, now time.Time) error {
 		ID:                t.ID,
 		Name:              t.Name,
 		InvoicingEntityID: t.InvoicingEntityID,
+		PolicyID:          t.PolicyID,
 		Description:       t.Description,
 		PaymentMethod:     t.PaymentMethod,
 		UpdatedAt:         now,
@@ -182,10 +184,11 @@ func (s Store) Update(ctx context.Context, t Team, now time.Time) error {
 	UPDATE 
 		"public"."enterprise_team"
 	SET 	
-		name 				= :name
-		invoicing_entity_id = :invoicing_entity_id
-		description 		= :description
-		payment_method		= :payment_method
+		name 				= :name,
+		invoicing_entity_id = :invoicing_entity_id,
+		policy_id 			= :policy_id,
+		description 		= :description,
+		payment_method		= :payment_method,
 		updated_at 			= :updated_at
 	WHERE 
 		id = :id

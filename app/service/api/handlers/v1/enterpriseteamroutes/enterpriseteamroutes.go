@@ -92,7 +92,7 @@ func (h Handler) Create(ctx context.Context, w http.ResponseWriter, r *http.Requ
 
 	var eu dto.NewTeam
 
-	if err := web.Decode(r, eu); err != nil {
+	if err := web.Decode(r, &eu); err != nil {
 		return web.NewRequestError(err, http.StatusBadRequest)
 	}
 	if err := validate.Check(eu); err != nil {
@@ -122,7 +122,7 @@ func (h Handler) Update(ctx context.Context, w http.ResponseWriter, r *http.Requ
 
 	var tu dto.UpdateTeam
 
-	if err := web.Decode(r, tu); err != nil {
+	if err := web.Decode(r, &tu); err != nil {
 		return web.NewRequestError(err, http.StatusBadRequest)
 	}
 	if err := validate.Check(tu); err != nil {

@@ -24,7 +24,7 @@ GET {{BASE_URL_V1}}/invoicing/{{INVOICING_ID}}
 x-api-key: {{API_KEY}}
 aggregator: {{AGGREGATOR_ID}}
 
-### Query By Invoicing
+### Query By Enterprise Invoicing
 GET {{BASE_URL_V1}}/invoicing/enterprise/{{ENTERPRISE_ID}}
 x-api-key: {{API_KEY}}
 aggregator: {{AGGREGATOR_ID}}

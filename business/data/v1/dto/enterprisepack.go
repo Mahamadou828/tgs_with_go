@@ -7,6 +7,7 @@ type NewPack struct {
 	CanCustomizeReport            bool   `json:"canCustomizeReport" validate:"required"`
 	SendExpenseReport             bool   `json:"sendExpenseReport" validate:"required"`
 	MaxActiveCollaboratorPerMonth int    `json:"maxActiveCollaboratorPerMonth" validate:"required"`
+	IncludedFieldInReport         string `db:"included_field_in_report" json:"includedFieldInReport"`
 }
 
 type UpdatePack struct {

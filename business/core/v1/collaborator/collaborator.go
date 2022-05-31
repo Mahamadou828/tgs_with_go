@@ -6,8 +6,8 @@ import (
 	"github.com/Mahamadou828/tgs_with_golang/business/data/v1/dto"
 	"github.com/Mahamadou828/tgs_with_golang/business/data/v1/store/aggregator"
 	"github.com/Mahamadou828/tgs_with_golang/business/data/v1/store/collaborator"
+	"github.com/Mahamadou828/tgs_with_golang/business/data/v1/store/enterprisepolicy"
 	"github.com/Mahamadou828/tgs_with_golang/business/data/v1/store/enterpriseteam"
-	"github.com/Mahamadou828/tgs_with_golang/business/data/v1/store/teampolicy"
 	"github.com/Mahamadou828/tgs_with_golang/business/sys/aws"
 	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"
@@ -23,7 +23,7 @@ type Core struct {
 	db                *sqlx.DB
 	log               *zap.SugaredLogger
 	aggregatorStore   aggregator.Store
-	policyStore       teampolicy.Store
+	policyStore       enterprisepolicy.Store
 	teamStore         enterpriseteam.Store
 }
 
@@ -39,15 +39,21 @@ func NewCore(aws *aws.AWS, db *sqlx.DB, log *zap.SugaredLogger) Core {
 		aws:               aws,
 		db:                db,
 		log:               log,
-		collaboratorStore: collaborator.NewStore(log),
+		collaboratorStore: collaborator.NewStore(log, db, aws),
 		aggregatorStore:   aggregator.NewStore(log, db, aws),
-		policyStore:       teampolicy.NewStore(db, log),
+		policyStore:       enterprisepolicy.NewStore(db, log),
 		teamStore:         enterpriseteam.NewStore(db, log),
 	}
 }
 
 func (c Core) Login(ctx context.Context, payload dto.Login) (Credentials, error) {
-	co, err := c.collaboratorStore.QueryByEmail(ctx, aggregatorCode, payload.Email)
+	agg, err := c.aggregatorStore.QueryByCode(ctx, aggregatorCode)
+	//if the tgs-corporate aggregator does not exist we should panic
+	//because we have an integrity issue
+	if err != nil {
+		panic(err)
+	}
+	co, err := c.collaboratorStore.QueryByEmail(ctx, agg.ID, payload.Email)
 	if err != nil {
 		return Credentials{}, err
 	}
@@ -96,11 +102,12 @@ func (c Core) Create(ctx context.Context, nco dto.NewCollaborator, now time.Time
 		panic(err)
 	}
 
-	if _, err := c.teamStore.QueryByID(ctx, nco.TeamID); err != nil {
+	t, err := c.teamStore.QueryByID(ctx, nco.TeamID)
+	if err != nil {
 		return collaborator.Collaborator{}, err
 	}
 
-	p, err := c.policyStore.QueryByID(ctx, nco.TeamID)
+	p, err := c.policyStore.QueryByID(ctx, t.PolicyID)
 	if err != nil {
 		return collaborator.Collaborator{}, err
 	}

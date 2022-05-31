@@ -1,4 +1,4 @@
-package teampolicy
+package enterprisepolicy
 
 import (
 	"github.com/lib/pq"
@@ -19,6 +19,7 @@ type TeamPolicy struct {
 	EndServiceTime     string      `json:"endServiceTime" db:"end_service_time"`
 	BudgetType         string      `json:"budgetType" db:"budget_type"`
 	EnterpriseID       string      `json:"enterpriseId" db:"enterprise_id"`
+	BlockedDays        string      `json:"blockedDays" db:"blocked_days"` //@todo make it a []string, and make it updatable
 	UpdatedAt          time.Time   `db:"updated_at" json:"-"`
 	CreatedAt          time.Time   `db:"created_at" json:"createdAt"`
 	DeletedAt          pq.NullTime `db:"deleted_at" json:"-"`
