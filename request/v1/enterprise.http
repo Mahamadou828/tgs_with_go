@@ -1,0 +1,45 @@
+### Create enterprise
+POST {{BASE_URL_V1}}/enterprise
+x-api-key: {{API_KEY}}
+aggregator: {{AGGREGATOR_ID}}
+
+{
+    "name": "samaketech",
+    "contactEmail": "opmadou@gmail.com",
+    "description": "This is a test enterprise",
+    "maxCarbonEmission": 5000,
+    "blockedProvider": "bolt",
+    "blockedProductType": "eco",
+    "packID": "{{ENTERPRISE_PACK_ID}}",
+    "logoUrl": "https://image.shutterstock.com/image-vector/stripes-dots-circle-logo-vector-260nw-1139400776.jpg"
+}
+
+### Query enterprise
+GET {{BASE_URL_V1}}/enterprise?page=1&rows=100
+x-api-key: {{API_KEY}}
+aggregator: {{AGGREGATOR_ID}}
+
+### Query By Id enterprise
+GET {{BASE_URL_V1}}/enterprise/{{ENTERPRISE_ID}}
+x-api-key: {{API_KEY}}
+aggregator: {{AGGREGATOR_ID}}
+
+### Query By Code
+GET {{BASE_URL_V1}}/enterprise/code/{{ENTERPRISE_CODE}}
+x-api-key: {{API_KEY}}
+aggregator: {{AGGREGATOR_ID}}
+
+
+### Update enterprise
+PUT {{BASE_URL_V1}}/enterprise/{{ENTERPRISE_ID}}
+x-api-key: {{API_KEY}}
+aggregator: {{AGGREGATOR_ID}}
+
+{
+    "description": "This is a test enterprise, but updated"
+}
+
+### DELETE enterprise
+DELETE {{BASE_URL_V1}}/enterprise/{{ENTERPRISE_ID}}
+x-api-key: {{API_KEY}}
+aggregator: {{AGGREGATOR_ID}}

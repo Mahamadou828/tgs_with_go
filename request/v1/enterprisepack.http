@@ -1,0 +1,40 @@
+### Create Pack
+POST {{BASE_URL_V1}}/pack
+x-api-key: {{API_KEY}}
+aggregator: {{AGGREGATOR_ID}}
+
+{
+    "name": "siege",
+    "sendMonthlyReport": true,
+    "canCustomizeReport": true,
+    "sendExpenseReport": true,
+    "maxActiveCollaboratorPerMonth": 120,
+    "includedFieldInReport": "test"
+}
+
+
+
+### Query Pack
+GET {{BASE_URL_V1}}/pack?page=1&rows=100
+x-api-key: {{API_KEY}}
+aggregator: {{AGGREGATOR_ID}}
+
+### Query By Id Pack
+GET {{BASE_URL_V1}}/pack/{{ENTERPRISE_PACK_ID}}
+x-api-key: {{API_KEY}}
+aggregator: {{AGGREGATOR_ID}}
+
+### Update Pack
+PUT {{BASE_URL_V1}}/pack/{{ENTERPRISE_PACK_ID}}
+x-api-key: {{API_KEY}}
+aggregator: {{AGGREGATOR_ID}}
+
+{
+    "maxActiveCollaboratorPerMonth": 200
+}
+
+
+### Delete Pack
+DELETE {{BASE_URL_V1}}/pack/{{ENTERPRISE_PACK_ID}}
+x-api-key: {{API_KEY}}
+aggregator: {{AGGREGATOR_ID}}

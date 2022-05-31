@@ -6,7 +6,7 @@ aggregator: {{AGGREGATOR_ID}}
 {
     "name": "{{DEFAULT_AGGREGATOR_CODE}}",
     "code": "{{DEFAULT_AGGREGATOR_CODE}}",
-    "apiKey": "{{API_KEY}}-2",
+    "apiKey": "{{API_KEY}}",
     "providerTimeout": 5000,
     "active": true,
     "type": "default",

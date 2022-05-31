@@ -92,6 +92,11 @@ db-destroy:
 db-up:
 	docker run --name postgres-db -e POSTGRES_PASSWORD=postgres -p 5432:5432 -d postgres
 
+db-restore:
+	make db-destroy
+	make db-up
+	make db-migrate MIGRATE_VERSION=v1
+
 #Migrate the database schemas to use the command you should provide the MIGRATE_VERSION:
 #make db-migration MIGRATE_VERSION=v1
 db-migrate:

@@ -3,12 +3,12 @@ package aggregatorroutes
 import (
 	"context"
 	"fmt"
-	aggregatordto "github.com/Mahamadou828/tgs_with_golang/app/service/api/handlers/v1/aggregatorroutes/dto"
-	"github.com/Mahamadou828/tgs_with_golang/business/sys/validate"
 	"net/http"
 	"strconv"
 
 	aggCore "github.com/Mahamadou828/tgs_with_golang/business/core/v1/aggregator"
+	"github.com/Mahamadou828/tgs_with_golang/business/data/v1/dto"
+	"github.com/Mahamadou828/tgs_with_golang/business/sys/validate"
 	"github.com/Mahamadou828/tgs_with_golang/foundation/web"
 )
 
@@ -26,7 +26,7 @@ func (h Handler) Create(ctx context.Context, w http.ResponseWriter, r *http.Requ
 		)
 	}
 
-	var na aggregatordto.NewAggregator
+	var na dto.NewAggregator
 
 	if err := web.Decode(r, &na); err != nil {
 		return web.NewRequestError(
@@ -101,7 +101,7 @@ func (h Handler) Update(ctx context.Context, w http.ResponseWriter, r *http.Requ
 		return web.NewRequestError(err, http.StatusBadRequest)
 	}
 
-	var agg aggregatordto.UpdateAggregator
+	var agg dto.UpdateAggregator
 	if err := web.Decode(r, &agg); err != nil {
 		return web.NewRequestError(err, http.StatusBadRequest)
 	}

@@ -1,4 +1,4 @@
-package userdto
+package dto
 
 //NewUser contains the minimal needed information to create a new user
 type NewUser struct {

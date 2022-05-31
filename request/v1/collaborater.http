@@ -1,0 +1,102 @@
+### Create a new collaborator
+POST {{BASE_URL_V1}}/collaborator
+x-api-key: {{API_KEY}}
+aggregator: {{AGGREGATOR_ID}}
+content-type: "application/json"
+
+{
+    "email": "{{USER_EMAIL}}",
+    "phoneNumber": "{{USER_PHONE_NUMBER}}",
+    "name": "{{USER_NAME}}",
+    "isPhoneNumberVerified": true,
+    "isCGUAccepted": true,
+    "role": "USER",
+    "password": "{{USER_PASSWORD}}",
+    "enterpriseId": "{{ENTERPRISE_ID}}",
+    "teamId": "{{TEAM_ID}}"
+}
+
+### Query Collaborator
+GET {{BASE_URL_V1}}/collaborator?page=1&rows=10
+x-api-key: {{API_KEY}}
+aggregator: {{AGGREGATOR_ID}}
+content-type: "application/json"
+
+### Query Collaborator By ID
+GET {{BASE_URL_V1}}/collaborator/{{COLLAB_ID}}
+x-api-key: {{API_KEY}}
+aggregator: {{AGGREGATOR_ID}}
+content-type: "application/json"
+
+### Update collaborator
+PUT {{BASE_URL_V1}}/collaborator/{{COLLAB_ID}}
+x-api-key: {{API_KEY}}
+aggregator: {{AGGREGATOR_ID}}
+content-type: "application/json"
+
+{
+    "name": "Nicolas"
+}
+
+### Delete Collaborator
+DELETE {{BASE_URL_V1}}/collaborator/{{COLLAB_ID}}
+x-api-key: {{API_KEY}}
+aggregator: {{AGGREGATOR_ID}}
+content-type: "application/json"
+
+### Login Collaborator
+POST {{BASE_URL_V1}}/collaborator/login
+x-api-key: {{API_KEY}}
+aggregator: {{AGGREGATOR_ID}}
+content-type: "application/json"
+
+{
+    "email": "{{USER_EMAIL}}",
+    "password": "{{USER_PASSWORD}}"
+}
+
+### Refresh Token
+POST {{BASE_URL_V1}}/collaborator/token/refresh
+x-api-key: {{API_KEY}}
+aggregator: {{AGGREGATOR_ID}}
+content-type: "application/json"
+
+{
+  "refreshToken": "REFRESH_TOKEN",
+  "id": "{{COLLAB_ID}}"
+}
+
+### Verify Sms Code
+POST {{BASE_URL_V1}}/collaborator/code/verify
+x-api-key: {{API_KEY}}
+aggregator: {{AGGREGATOR_ID}}
+content-type: "application/json"
+
+{
+    "id": "{{COLLAB_ID}}",
+    "code": "923215"
+}
+
+### Resend Sms Code
+GET {{BASE_URL_V1}}/collaborator/code/resend/{{COLLAB_ID}}
+x-api-key: {{API_KEY}}
+aggregator: {{AGGREGATOR_ID}}
+content-type: "application/json"
+
+### Forgot Password
+PUT {{BASE_URL_V1}}/collaborator/code/resend/{{COLLAB_ID}}
+x-api-key: {{API_KEY}}
+aggregator: {{AGGREGATOR_ID}}
+content-type: "application/json"
+
+### Reset Password
+PUT {{BASE_URL_V1}}/collaborator/code/resend
+x-api-key: {{API_KEY}}
+aggregator: {{AGGREGATOR_ID}}
+content-type: "application/json"
+
+{
+    "id": "{{COLLAB_ID}}",
+    "code": "1234",
+    "newPassword": "{{USER_PASSWORD}}",
+}

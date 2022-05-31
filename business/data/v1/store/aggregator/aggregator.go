@@ -3,14 +3,15 @@ package aggregator
 import (
 	"context"
 	"fmt"
-	aggregatordto "github.com/Mahamadou828/tgs_with_golang/app/service/api/handlers/v1/aggregatorroutes/dto"
+	"time"
+
+	"github.com/Mahamadou828/tgs_with_golang/business/data/v1/dto"
 	"github.com/Mahamadou828/tgs_with_golang/business/sys/aws"
 	"github.com/Mahamadou828/tgs_with_golang/business/sys/database"
 	"github.com/Mahamadou828/tgs_with_golang/business/sys/validate"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 	"go.uber.org/zap"
-	"time"
 )
 
 type Store struct {
@@ -27,7 +28,7 @@ func NewStore(log *zap.SugaredLogger, db *sqlx.DB, aws *aws.AWS) Store {
 	}
 }
 
-func (s Store) Create(ctx context.Context, na aggregatordto.NewAggregator, now time.Time) (Aggregator, error) {
+func (s Store) Create(ctx context.Context, na dto.NewAggregator, now time.Time) (Aggregator, error) {
 	agr := Aggregator{
 		ID:              validate.GenerateID(),
 		Name:            na.Name,
@@ -117,10 +118,54 @@ func (s Store) QueryByID(ctx context.Context, id string) (Aggregator, error) {
 	}
 
 	const q = `
-	SELECT * FROM "public"."aggregator" AS a WHERE a.id = :id AND deleted_at IS NULL
+	SELECT id, 
+		name,
+		code, 
+		api_key, 
+		provider_timeout, 
+		active, 
+		type, 
+		payment_by_tgs, 
+		logo_url, 
+		updated_at, 
+		created_at, 
+		deleted_at
+	FROM "public"."aggregator" AS a WHERE a.id = :id AND deleted_at IS NULL
 `
 	if err := database.NamedQueryStruct(ctx, s.log, s.db, q, data, &agg); err != nil {
 		return agg, fmt.Errorf("aggregator %s not found", id)
+	}
+
+	return agg, nil
+}
+
+func (s Store) QueryByCode(ctx context.Context, code string) (Aggregator, error) {
+	var agg Aggregator
+
+	data := struct {
+		Code string `db:"code"`
+	}{
+		Code: code,
+	}
+
+	const q = `
+	SELECT 
+		id, 
+		name,
+		code, 
+		api_key, 
+		provider_timeout, 
+		active, 
+		type, 
+		payment_by_tgs, 
+		logo_url, 
+		updated_at, 
+		created_at, 
+		deleted_at
+	FROM "public"."aggregator" WHERE code = :code AND deleted_at IS NULL
+`
+	if err := database.NamedQueryStruct(ctx, s.log, s.db, q, data, &agg); err != nil {
+		return agg, fmt.Errorf("aggregator %s not found", code)
 	}
 
 	return agg, nil
@@ -137,10 +182,21 @@ func (s Store) Query(ctx context.Context, pageNumber, rowsPerPage int) ([]Aggreg
 
 	const q = `
 	SELECT 
-		* 
+		id, 
+		name,
+		code, 
+		api_key, 
+		provider_timeout, 
+		active, 
+		type, 
+		payment_by_tgs, 
+		logo_url, 
+		updated_at, 
+		created_at, 
+		deleted_at 
 	FROM 
 		"public"."aggregator" 
-	WHERE deleted_at IS NOT NULL
+	WHERE deleted_at IS NULL
 	ORDER BY 
 		id
 	OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY`

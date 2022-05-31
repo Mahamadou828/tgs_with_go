@@ -1,0 +1,44 @@
+### Create Team
+POST {{BASE_URL_V1}}/team
+x-api-key: {{API_KEY}}
+aggregator: {{AGGREGATOR_ID}}
+
+{
+    "name": "siege",
+    "description": "all collaborator that are admin",
+    "paymentMethod": "NDF",
+    "enterpriseId": "{{ENTERPRISE_ID}}",
+    "policyId": "{{POLICY_ID}}",
+    "invoicingEntityId": "{{INVOICING_ID}}"
+}
+
+### Query Team
+GET {{BASE_URL_V1}}/team?page=1&rows=100
+x-api-key: {{API_KEY}}
+aggregator: {{AGGREGATOR_ID}}
+
+### Query By Id Team
+GET {{BASE_URL_V1}}/team/{{TEAM_ID}}
+x-api-key: {{API_KEY}}
+aggregator: {{AGGREGATOR_ID}}
+
+### Query By Enterprise
+GET {{BASE_URL_V1}}/team/enterprise/{{ENTERPRISE_ID}}
+x-api-key: {{API_KEY}}
+aggregator: {{AGGREGATOR_ID}}
+
+
+### Update Team
+PUT {{BASE_URL_V1}}/team/{{TEAM_ID}}
+x-api-key: {{API_KEY}}
+aggregator: {{AGGREGATOR_ID}}
+
+{
+    "name": "station"
+}
+
+
+### DELETE Team
+DELETE {{BASE_URL_V1}}/team/{{TEAM_ID}}
+x-api-key: {{API_KEY}}
+aggregator: {{AGGREGATOR_ID}}

@@ -1,4 +1,4 @@
-package aggregatordto
+package dto
 
 type NewAggregator struct {
 	Name            string `validate:"required" json:"name"`

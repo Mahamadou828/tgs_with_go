@@ -1,0 +1,47 @@
+### Create Invoicing
+POST {{BASE_URL_V1}}/invoicing
+x-api-key: {{API_KEY}}
+aggregator: {{AGGREGATOR_ID}}
+
+{
+    "denomination": "samaketech",
+    "enterpriseId": "{{ENTERPRISE_ID}}",
+    "number": "FE500RE",
+    "vat": "FEVAT556022",
+    "street": "11 ya parkovaya",
+    "postalCode": "105077",
+    "town": "paris",
+    "country": "france"
+}
+
+### Query Invoicing
+GET {{BASE_URL_V1}}/invoicing?page=1&rows=100
+x-api-key: {{API_KEY}}
+aggregator: {{AGGREGATOR_ID}}
+
+### Query By Id Invoicing
+GET {{BASE_URL_V1}}/invoicing/{{INVOICING_ID}}
+x-api-key: {{API_KEY}}
+aggregator: {{AGGREGATOR_ID}}
+
+### Query By Enterprise Invoicing
+GET {{BASE_URL_V1}}/invoicing/enterprise/{{ENTERPRISE_ID}}
+x-api-key: {{API_KEY}}
+aggregator: {{AGGREGATOR_ID}}
+
+
+### Update Invoicing
+PUT {{BASE_URL_V1}}/invoicing/{{INVOICING_ID}}
+x-api-key: {{API_KEY}}
+aggregator: {{AGGREGATOR_ID}}
+
+{
+    "town": "sweden",
+    "country": "estonia"
+}
+
+
+### DELETE Invoicing
+DELETE {{BASE_URL_V1}}/invoicing/{{INVOICING_ID}}
+x-api-key: {{API_KEY}}
+aggregator: {{AGGREGATOR_ID}}
