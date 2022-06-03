@@ -3,7 +3,8 @@ package main
 import (
 	"fmt"
 	"github.com/aws/aws-cdk-go/awscdk/v2"
-	"github.com/aws/aws-cdk-go/awscdk/v2/awss3"
+	ec2 "github.com/aws/aws-cdk-go/awscdk/v2/awsec2"
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/constructs-go/constructs/v10"
 	"github.com/aws/jsii-runtime-go"
 )
@@ -20,8 +21,59 @@ func NewStack(scope constructs.Construct, id string, props *TgsStackProps) awscd
 	}
 	stack := awscdk.NewStack(scope, &id, &sprops)
 
-	// The code that defines your stack goes here
-	awss3.NewBucket(stack, jsii.String(fmt.Sprintf("testbucket-%s-%s", props.env, id)), nil)
+	//================================================================= VPC
+	//create a vpc
+	vpc := ec2.NewVpc(scope, &id, &ec2.VpcProps{VpcName: aws.String(fmt.Sprintf("%s-tgs", props.env))})
+
+	//=========================================== Private subnet config
+
+	//create a nat gateway
+	
+	//create a route table that associat the 0.0.0.0/0 traffic to the nat gateway
+
+	//create a private subnet
+	//associate the nat gateway with the private subnet
+
+	//============================================ Public subnet
+
+	//create an internet gateway
+	//create a route table that associate the 0.0.0.0/0 with the internet gateway
+	//create a public subnet
+	//associate the public subnet with the internet gateway
+
+	//================================================================= ECS
+	//Get the ecr repository
+	//@todo find a way to create it if does not exist and push the first image
+
+	//Create a cluster
+
+	//create a task definition
+
+	//Tell the ECS task to pull Docker image from previously created ECR
+
+	//declare scaling capability
+
+	//create a network load balancer for the cluster
+
+	//create a security group for the cluster allowing only the nlb to send traffic
+
+	//create a database inside the private subnet
+	//the database should be accessible only to the cluster app
+
+	//creating a cache
+
+	//create a cognito pool
+
+	//create the sqs queue
+
+	//create bucket invoice
+
+	//create the billing component
+
+	//create the lambda pre-authorizer
+
+	//create api gateway
+
 	return stack
 }
 
@@ -34,18 +86,18 @@ func main() {
 		},
 		"development",
 	})
-	NewStack(app, "TgsProductionStack", &TgsStackProps{
-		awscdk.StackProps{
-			Env: env(),
-		},
-		"production",
-	})
-	NewStack(app, "TgsStagingStack", &TgsStackProps{
-		awscdk.StackProps{
-			Env: env(),
-		},
-		"staging",
-	})
+	//NewStack(app, "TgsProductionStack", &TgsStackProps{
+	//	awscdk.StackProps{
+	//		Env: env(),
+	//	},
+	//	"production",
+	//})
+	//NewStack(app, "TgsStagingStack", &TgsStackProps{
+	//	awscdk.StackProps{
+	//		Env: env(),
+	//	},
+	//	"staging",
+	//})
 
 	app.Synth(nil)
 }

@@ -54,7 +54,7 @@ kind-up:
 		--image kindest/node:v1.23.0@sha256:49824ab1727c04e56a21a5d8372a402fcd32ea51ac96a2706a12af38934f81ac \
 		--name $(KIND_CLUSTER) \
 		--config config/k8s/kind/kind-config.yaml
-	kubectl config set-context --current --namespace=tgs-system
+	kubectl config set-context --current --namespace=staging
 
 kind-down:
 	kind delete cluster --name $(KIND_CLUSTER)
