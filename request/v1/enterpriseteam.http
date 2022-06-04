@@ -1,5 +1,5 @@
 ### Create Team
-POST {{BASE_URL_V1}}/team
+POST {{BASE_URL}}//{{VERSION}}/team
 x-api-key: {{API_KEY}}
 aggregator: {{AGGREGATOR_ID}}
 
@@ -13,23 +13,23 @@ aggregator: {{AGGREGATOR_ID}}
 }
 
 ### Query Team
-GET {{BASE_URL_V1}}/team?page=1&rows=100
+GET {{BASE_URL}}//{{VERSION}}/team?page=1&rows=100
 x-api-key: {{API_KEY}}
 aggregator: {{AGGREGATOR_ID}}
 
 ### Query By Id Team
-GET {{BASE_URL_V1}}/team/{{TEAM_ID}}
+GET {{BASE_URL}}//{{VERSION}}/team/{{TEAM_ID}}
 x-api-key: {{API_KEY}}
 aggregator: {{AGGREGATOR_ID}}
 
 ### Query By Enterprise
-GET {{BASE_URL_V1}}/team/enterprise/{{ENTERPRISE_ID}}
+GET {{BASE_URL}}//{{VERSION}}/team/enterprise/{{ENTERPRISE_ID}}
 x-api-key: {{API_KEY}}
 aggregator: {{AGGREGATOR_ID}}
 
 
 ### Update Team
-PUT {{BASE_URL_V1}}/team/{{TEAM_ID}}
+PUT {{BASE_URL}}//{{VERSION}}/team/{{TEAM_ID}}
 x-api-key: {{API_KEY}}
 aggregator: {{AGGREGATOR_ID}}
 
@@ -39,6 +39,6 @@ aggregator: {{AGGREGATOR_ID}}
 
 
 ### DELETE Team
-DELETE {{BASE_URL_V1}}/team/{{TEAM_ID}}
+DELETE {{BASE_URL}}//{{VERSION}}/team/{{TEAM_ID}}
 x-api-key: {{API_KEY}}
 aggregator: {{AGGREGATOR_ID}}

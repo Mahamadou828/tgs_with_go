@@ -1,5 +1,5 @@
 ### Create a new collaborator
-POST {{BASE_URL_V1}}/collaborator
+POST {{BASE_URL}}/{{VERSION}}/collaborator
 x-api-key: {{API_KEY}}
 aggregator: {{AGGREGATOR_ID}}
 content-type: "application/json"
@@ -17,19 +17,19 @@ content-type: "application/json"
 }
 
 ### Query Collaborator
-GET {{BASE_URL_V1}}/collaborator?page=1&rows=10
+GET {{BASE_URL}}/{{VERSION}}/collaborator?page=1&rows=10
 x-api-key: {{API_KEY}}
 aggregator: {{AGGREGATOR_ID}}
 content-type: "application/json"
 
 ### Query Collaborator By ID
-GET {{BASE_URL_V1}}/collaborator/{{COLLAB_ID}}
+GET {{BASE_URL}}/{{VERSION}}/collaborator/{{COLLAB_ID}}
 x-api-key: {{API_KEY}}
 aggregator: {{AGGREGATOR_ID}}
 content-type: "application/json"
 
 ### Update collaborator
-PUT {{BASE_URL_V1}}/collaborator/{{COLLAB_ID}}
+PUT {{BASE_URL}}/{{VERSION}}/collaborator/{{COLLAB_ID}}
 x-api-key: {{API_KEY}}
 aggregator: {{AGGREGATOR_ID}}
 content-type: "application/json"
@@ -39,13 +39,13 @@ content-type: "application/json"
 }
 
 ### Delete Collaborator
-DELETE {{BASE_URL_V1}}/collaborator/{{COLLAB_ID}}
+DELETE {{BASE_URL}}/{{VERSION}}/collaborator/{{COLLAB_ID}}
 x-api-key: {{API_KEY}}
 aggregator: {{AGGREGATOR_ID}}
 content-type: "application/json"
 
 ### Login Collaborator
-POST {{BASE_URL_V1}}/collaborator/login
+POST {{BASE_URL}}/{{VERSION}}/collaborator/login
 x-api-key: {{API_KEY}}
 aggregator: {{AGGREGATOR_ID}}
 content-type: "application/json"
@@ -56,7 +56,7 @@ content-type: "application/json"
 }
 
 ### Refresh Token
-POST {{BASE_URL_V1}}/collaborator/token/refresh
+POST {{BASE_URL}}/{{VERSION}}/collaborator/token/refresh
 x-api-key: {{API_KEY}}
 aggregator: {{AGGREGATOR_ID}}
 content-type: "application/json"
@@ -67,7 +67,7 @@ content-type: "application/json"
 }
 
 ### Verify Sms Code
-POST {{BASE_URL_V1}}/collaborator/code/verify
+POST {{BASE_URL}}/{{VERSION}}/collaborator/code/verify
 x-api-key: {{API_KEY}}
 aggregator: {{AGGREGATOR_ID}}
 content-type: "application/json"
@@ -78,19 +78,19 @@ content-type: "application/json"
 }
 
 ### Resend Sms Code
-GET {{BASE_URL_V1}}/collaborator/code/resend/{{COLLAB_ID}}
+GET {{BASE_URL}}/{{VERSION}}/collaborator/code/resend/{{COLLAB_ID}}
 x-api-key: {{API_KEY}}
 aggregator: {{AGGREGATOR_ID}}
 content-type: "application/json"
 
 ### Forgot Password
-PUT {{BASE_URL_V1}}/collaborator/code/resend/{{COLLAB_ID}}
+PUT {{BASE_URL}}/{{VERSION}}/collaborator/code/resend/{{COLLAB_ID}}
 x-api-key: {{API_KEY}}
 aggregator: {{AGGREGATOR_ID}}
 content-type: "application/json"
 
 ### Reset Password
-PUT {{BASE_URL_V1}}/collaborator/code/resend
+PUT {{BASE_URL}}/{{VERSION}}/collaborator/code/resend
 x-api-key: {{API_KEY}}
 aggregator: {{AGGREGATOR_ID}}
 content-type: "application/json"

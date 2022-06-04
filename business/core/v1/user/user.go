@@ -8,6 +8,7 @@ import (
 	"github.com/Mahamadou828/tgs_with_golang/business/data/v1/dto"
 	"github.com/Mahamadou828/tgs_with_golang/business/data/v1/store/aggregator"
 	"github.com/Mahamadou828/tgs_with_golang/business/data/v1/store/user"
+	"github.com/Mahamadou828/tgs_with_golang/business/service/v1/stripe"
 	"github.com/Mahamadou828/tgs_with_golang/business/sys/aws"
 	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"
@@ -20,15 +21,17 @@ type Core struct {
 	aws       *aws.AWS
 	userStore user.Store
 	aggStore  aggregator.Store
+	stripeKey string
 }
 
-func NewCore(log *zap.SugaredLogger, db *sqlx.DB, aws *aws.AWS) Core {
+func NewCore(log *zap.SugaredLogger, db *sqlx.DB, aws *aws.AWS, stripeKey string) Core {
 	return Core{
 		log:       log,
 		db:        db,
 		aws:       aws,
-		userStore: user.NewStore(log, db, aws),
+		userStore: user.NewStore(log, db),
 		aggStore:  aggregator.NewStore(log, db, aws),
+		stripeKey: stripeKey,
 	}
 }
 
@@ -134,7 +137,30 @@ func (c Core) Create(ctx context.Context, aggregatorCode string, nu dto.NewUser,
 		return user.User{}, err
 	}
 
-	usr, err := c.userStore.Create(ctx, agg, nu, now)
+	sub, err := c.aws.Cognito.CreateUser(aws.CognitoUser{
+		Email:       nu.Email,
+		PhoneNumber: nu.PhoneNumber,
+		Name:        nu.Name,
+		AggID:       agg.ID,
+		IsActive:    nu.IsPhoneNumberVerified,
+		Password:    nu.Password,
+	})
+	if err != nil {
+		return user.User{}, err
+	}
+
+	cusID, err := stripe.CreateUser(c.stripeKey, nu.Email, nu.PhoneNumber, nu.Name)
+	if err != nil {
+		return user.User{}, err
+	}
+
+	usr, err := c.userStore.Create(ctx, now, user.CreateUserParams{
+		Params:   nu,
+		StripeID: cusID,
+		ApiKey:   agg.ApiKey,
+		AggID:    agg.ID,
+		AwsID:    sub,
+	})
 
 	if err != nil {
 		return user.User{}, err

@@ -3,9 +3,7 @@ package user
 import (
 	"context"
 	"fmt"
-	userdto "github.com/Mahamadou828/tgs_with_golang/business/data/v1/dto"
-	"github.com/Mahamadou828/tgs_with_golang/business/data/v1/store/aggregator"
-	"github.com/Mahamadou828/tgs_with_golang/business/service/v1/stripe"
+	"github.com/Mahamadou828/tgs_with_golang/business/data/v1/dto"
 	"github.com/Mahamadou828/tgs_with_golang/business/sys/aws"
 	"github.com/Mahamadou828/tgs_with_golang/business/sys/database"
 	"github.com/Mahamadou828/tgs_with_golang/business/sys/validate"
@@ -21,51 +19,38 @@ type Store struct {
 	aws *aws.AWS
 }
 
-func NewStore(log *zap.SugaredLogger, db *sqlx.DB, aws *aws.AWS) Store {
+type CreateUserParams struct {
+	Params             dto.NewUser
+	StripeID           string
+	StripeClientSecret string
+	StripeIntentID     string
+	ApiKey             string
+	AggID              string
+	//AwsID is the aws cognito id
+	AwsID string
+}
+
+func NewStore(log *zap.SugaredLogger, db *sqlx.DB) Store {
 	return Store{
 		log: log,
 		db:  db,
-		aws: aws,
 	}
 }
 
-func (s Store) Create(ctx context.Context, agg aggregator.Aggregator, nu userdto.NewUser, now time.Time) (User, error) {
-	if err := validate.Check(nu); err != nil {
-		return User{}, err
-	}
-
-	stripeID, err := stripe.CreateUser(nu.Email, nu.PhoneNumber, nu.Name)
-
-	if err != nil {
-		return User{}, err
-	}
-
-	cognitoID, err := s.aws.Cognito.CreateUser(aws.CognitoUser{
-		Email:       nu.Email,
-		PhoneNumber: nu.PhoneNumber,
-		Name:        nu.Name,
-		AggID:       agg.ID,
-		IsActive:    nu.IsPhoneNumberVerified,
-		Password:    nu.Password,
-	})
-
-	if err != nil {
-		return User{}, err
-	}
-
+func (s Store) Create(ctx context.Context, now time.Time, p CreateUserParams) (User, error) {
 	usr := User{
 		ID:              validate.GenerateID(),
-		Email:           nu.Email,
-		PhoneNumber:     nu.PhoneNumber,
-		Name:            nu.Name,
-		StripeID:        stripeID,
-		ApiKey:          agg.ApiKey,
-		AggregatorID:    agg.ID,
-		Active:          nu.IsPhoneNumberVerified,
-		CognitoID:       cognitoID,
+		Email:           p.Params.Email,
+		PhoneNumber:     p.Params.PhoneNumber,
+		Name:            p.Params.Name,
+		StripeID:        p.StripeID,
+		ApiKey:          p.ApiKey,
+		AggregatorID:    p.AggID,
+		Active:          p.Params.IsPhoneNumberVerified,
+		CognitoID:       p.AwsID,
 		IsMonthlyActive: false,
-		IsCGUAccepted:   nu.IsCGUAccepted,
-		Role:            nu.Role,
+		IsCGUAccepted:   p.Params.IsCGUAccepted,
+		Role:            p.Params.Role,
 		UpdatedAt:       now,
 		CreatedAt:       now,
 	}
@@ -172,7 +157,7 @@ func (s Store) Query(ctx context.Context, pageNumber, rowsPerPage int) ([]User, 
 		email, 
 		phone_number, 
 		name, 
-		stripe_id, 
+		stripe_id,
 		api_key, 
 		aggregator_id, 
 		active, 
@@ -219,7 +204,7 @@ func (s Store) QueryByID(ctx context.Context, id string) (User, error) {
 		name, 
 		stripe_id, 
 		api_key, 
-		aggregator_id, 
+		aggregator_id,
 		active, 
 		cognito_id, 
 		is_monthly_active, 
@@ -256,7 +241,7 @@ func (s Store) QueryByEmailAndAggregator(ctx context.Context, email, aggr string
 		name, 
 		stripe_id, 
 		api_key, 
-		aggregator_id, 
+		aggregator_id,
 		active, 
 		cognito_id, 
 		is_monthly_active, 
@@ -276,15 +261,11 @@ func (s Store) QueryByEmailAndAggregator(ctx context.Context, email, aggr string
 	return u, nil
 }
 
-func (s Store) QueryByCognitoID(ctx context.Context, email, phoneNumber, aggregator string) (User, error) {
-	cognitoID, err := s.aws.Cognito.GenerateSub(email, phoneNumber, aggregator)
-	if err != nil {
-		return User{}, err
-	}
+func (s Store) QueryByCognitoID(ctx context.Context, sub string) (User, error) {
 	data := struct {
 		CognitoID string `db:"cognito_id"`
 	}{
-		CognitoID: cognitoID,
+		CognitoID: sub,
 	}
 
 	var u User
@@ -297,7 +278,7 @@ func (s Store) QueryByCognitoID(ctx context.Context, email, phoneNumber, aggrega
 		stripe_id, 
 		api_key, 
 		aggregator_id, 
-		active, 
+		active,
 		cognito_id, 
 		is_monthly_active, 
 		is_cgu_accepted, 
@@ -309,7 +290,7 @@ func (s Store) QueryByCognitoID(ctx context.Context, email, phoneNumber, aggrega
 `
 
 	if err := database.NamedQueryStruct(ctx, s.log, s.db, q, data, &u); err != nil {
-		return u, fmt.Errorf("user with sub %s not found", cognitoID)
+		return u, fmt.Errorf("user with sub %s not found", sub)
 	}
 
 	return u, nil

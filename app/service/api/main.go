@@ -117,6 +117,10 @@ func run(log *zap.SugaredLogger) error {
 			MaxOpenConns int    `conf:"default:0"`
 			DisableTLS   bool   `conf:"default:true"`
 		}
+		Stripe struct {
+			//the default key for stripe is the public find here
+			Key string `conf:"default:sk_test_51JBK0jCSGvJXXYWCsTYoiYekiLy6g4F4kBmMc3LoRpvgjnKi6Mi9YdgX2p82kcVvrng5OMzMwZU3PCJOdzDPbuWk00SDAhuDuY"`
+		}
 	}{
 		Version: config.Version{
 			Build: build,
@@ -203,6 +207,7 @@ func run(log *zap.SugaredLogger) error {
 		Service:    "api",
 		CorsOrigin: cfg.Web.CorsOrigin,
 		DB:         db,
+		StripeKey:  cfg.Stripe.Key,
 	})
 
 	// Construct a server to service the requests against the mux.

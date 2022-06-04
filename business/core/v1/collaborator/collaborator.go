@@ -8,6 +8,7 @@ import (
 	"github.com/Mahamadou828/tgs_with_golang/business/data/v1/store/collaborator"
 	"github.com/Mahamadou828/tgs_with_golang/business/data/v1/store/enterprisepolicy"
 	"github.com/Mahamadou828/tgs_with_golang/business/data/v1/store/enterpriseteam"
+	"github.com/Mahamadou828/tgs_with_golang/business/service/v1/stripe"
 	"github.com/Mahamadou828/tgs_with_golang/business/sys/aws"
 	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"
@@ -25,6 +26,7 @@ type Core struct {
 	aggregatorStore   aggregator.Store
 	policyStore       enterprisepolicy.Store
 	teamStore         enterpriseteam.Store
+	stripeKey         string
 }
 
 type Credentials struct {
@@ -34,7 +36,7 @@ type Credentials struct {
 	Collaborator collaborator.Collaborator `json:"collaborator"`
 }
 
-func NewCore(aws *aws.AWS, db *sqlx.DB, log *zap.SugaredLogger) Core {
+func NewCore(aws *aws.AWS, db *sqlx.DB, log *zap.SugaredLogger, stripeKey string) Core {
 	return Core{
 		aws:               aws,
 		db:                db,
@@ -43,6 +45,7 @@ func NewCore(aws *aws.AWS, db *sqlx.DB, log *zap.SugaredLogger) Core {
 		aggregatorStore:   aggregator.NewStore(log, db, aws),
 		policyStore:       enterprisepolicy.NewStore(db, log),
 		teamStore:         enterpriseteam.NewStore(db, log),
+		stripeKey:         stripeKey,
 	}
 }
 
@@ -112,13 +115,31 @@ func (c Core) Create(ctx context.Context, nco dto.NewCollaborator, now time.Time
 		return collaborator.Collaborator{}, err
 	}
 
-	co, err := c.collaboratorStore.Create(
-		ctx,
-		agg,
-		nco,
-		p.CollaboratorBudget,
-		now,
-	)
+	cu, err := c.aws.Cognito.CreateUser(aws.CognitoUser{
+		Email:       nco.Email,
+		PhoneNumber: nco.PhoneNumber,
+		Name:        nco.Name,
+		AggID:       agg.ID,
+		IsActive:    nco.IsPhoneNumberVerified,
+		Password:    nco.Password,
+	})
+	if err != nil {
+		return collaborator.Collaborator{}, err
+	}
+
+	cusID, err := stripe.CreateUser(c.stripeKey, nco.Email, nco.PhoneNumber, nco.Name)
+	if err != nil {
+		return collaborator.Collaborator{}, err
+	}
+
+	co, err := c.collaboratorStore.Create(ctx, now, collaborator.CreateCollaboratorParams{
+		Params:   nco,
+		ApiKey:   agg.ApiKey,
+		AggID:    agg.ID,
+		Budget:   p.CollaboratorBudget,
+		AwsID:    cu,
+		StripeID: cusID,
+	})
 
 	if err != nil {
 		return collaborator.Collaborator{}, err

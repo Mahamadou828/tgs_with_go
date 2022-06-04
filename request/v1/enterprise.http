@@ -1,5 +1,5 @@
 ### Create enterprise
-POST {{BASE_URL_V1}}/enterprise
+POST {{BASE_URL}}/{{VERSION}}/enterprise
 x-api-key: {{API_KEY}}
 aggregator: {{AGGREGATOR_ID}}
 
@@ -15,23 +15,23 @@ aggregator: {{AGGREGATOR_ID}}
 }
 
 ### Query enterprise
-GET {{BASE_URL_V1}}/enterprise?page=1&rows=100
+GET {{BASE_URL}}/{{VERSION}}/enterprise?page=1&rows=100
 x-api-key: {{API_KEY}}
 aggregator: {{AGGREGATOR_ID}}
 
 ### Query By Id enterprise
-GET {{BASE_URL_V1}}/enterprise/{{ENTERPRISE_ID}}
+GET {{BASE_URL}}/{{VERSION}}/enterprise/{{ENTERPRISE_ID}}
 x-api-key: {{API_KEY}}
 aggregator: {{AGGREGATOR_ID}}
 
 ### Query By Code
-GET {{BASE_URL_V1}}/enterprise/code/{{ENTERPRISE_CODE}}
+GET {{BASE_URL}}/{{VERSION}}/enterprise/code/{{ENTERPRISE_CODE}}
 x-api-key: {{API_KEY}}
 aggregator: {{AGGREGATOR_ID}}
 
 
 ### Update enterprise
-PUT {{BASE_URL_V1}}/enterprise/{{ENTERPRISE_ID}}
+PUT {{BASE_URL}}/{{VERSION}}/enterprise/{{ENTERPRISE_ID}}
 x-api-key: {{API_KEY}}
 aggregator: {{AGGREGATOR_ID}}
 
@@ -40,6 +40,6 @@ aggregator: {{AGGREGATOR_ID}}
 }
 
 ### DELETE enterprise
-DELETE {{BASE_URL_V1}}/enterprise/{{ENTERPRISE_ID}}
+DELETE {{BASE_URL}}/{{VERSION}}/enterprise/{{ENTERPRISE_ID}}
 x-api-key: {{API_KEY}}
 aggregator: {{AGGREGATOR_ID}}

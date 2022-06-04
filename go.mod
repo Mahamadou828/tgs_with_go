@@ -16,6 +16,7 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/jmoiron/sqlx v1.3.5
 	github.com/lib/pq v1.10.0
+	github.com/stripe/stripe-go/v72 v72.111.0
 	go.uber.org/automaxprocs v1.5.1
 	go.uber.org/zap v1.21.0
 )

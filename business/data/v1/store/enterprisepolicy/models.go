@@ -9,7 +9,7 @@ import (
 //A policy apply a set of rule to restrict the access
 //to some offer to a collaborator.
 //Currently, we support limitation by: hours
-//It's also determine the payment type used by the collaborator
+//It's also determine the paymentmethod type used by the collaborator
 type TeamPolicy struct {
 	ID                 string      `json:"id" db:"id"`
 	Name               string      `json:"name" db:"name"`

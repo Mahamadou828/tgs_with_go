@@ -1,5 +1,5 @@
 ### Create Team
-POST {{BASE_URL_V1}}/policy
+POST {{BASE_URL}}//{{VERSION}}/policy
 x-api-key: {{API_KEY}}
 aggregator: {{AGGREGATOR_ID}}
 
@@ -14,23 +14,23 @@ aggregator: {{AGGREGATOR_ID}}
 }
 
 ### Query Team
-GET {{BASE_URL_V1}}/policy?page=1&rows=100
+GET {{BASE_URL}}//{{VERSION}}/policy?page=1&rows=100
 x-api-key: {{API_KEY}}
 aggregator: {{AGGREGATOR_ID}}
 
 ### Query By Id Team
-GET {{BASE_URL_V1}}/policy/{{POLICY_ID}}
+GET {{BASE_URL}}//{{VERSION}}/policy/{{POLICY_ID}}
 x-api-key: {{API_KEY}}
 aggregator: {{AGGREGATOR_ID}}
 
 ### Query By Enterprise
-GET {{BASE_URL_V1}}/policy/enterprise/{{ENTERPRISE_ID}}
+GET {{BASE_URL}}//{{VERSION}}/policy/enterprise/{{ENTERPRISE_ID}}
 x-api-key: {{API_KEY}}
 aggregator: {{AGGREGATOR_ID}}
 
 
 ### Update Team
-PUT {{BASE_URL_V1}}/policy/{{POLICY_ID}}
+PUT {{BASE_URL}}//{{VERSION}}/policy/{{POLICY_ID}}
 x-api-key: {{API_KEY}}
 aggregator: {{AGGREGATOR_ID}}
 
@@ -40,6 +40,6 @@ aggregator: {{AGGREGATOR_ID}}
 
 
 ### DELETE Team
-DELETE {{BASE_URL_V1}}/policy/{{POLICY_ID}}
+DELETE {{BASE_URL}}//{{VERSION}}/policy/{{POLICY_ID}}
 x-api-key: {{API_KEY}}
 aggregator: {{AGGREGATOR_ID}}
