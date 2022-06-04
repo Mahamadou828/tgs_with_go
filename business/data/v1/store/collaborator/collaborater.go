@@ -5,8 +5,6 @@ import (
 	"time"
 
 	"github.com/Mahamadou828/tgs_with_golang/business/data/v1/dto"
-	"github.com/Mahamadou828/tgs_with_golang/business/data/v1/store/aggregator"
-	"github.com/Mahamadou828/tgs_with_golang/business/service/v1/stripe"
 	"github.com/Mahamadou828/tgs_with_golang/business/sys/aws"
 	"github.com/Mahamadou828/tgs_with_golang/business/sys/database"
 	"github.com/Mahamadou828/tgs_with_golang/business/sys/validate"
@@ -19,6 +17,16 @@ type Store struct {
 	log *zap.SugaredLogger
 	aws *aws.AWS
 	db  *sqlx.DB
+}
+
+type CreateCollaboratorParams struct {
+	Params   dto.NewCollaborator
+	ApiKey   string
+	AggID    string
+	Budget   int
+	StripeID string
+	//AwsID is the aws cognito sub
+	AwsID string
 }
 
 func NewStore(log *zap.SugaredLogger, db *sqlx.DB, aws *aws.AWS) Store {
@@ -218,47 +226,25 @@ func (s Store) QueryByEmail(ctx context.Context, agg, email string) (Collaborato
 	return collab, nil
 }
 
-//@torefacto
-func (s Store) Create(
-	ctx context.Context,
-	agg aggregator.Aggregator,
-	nco dto.NewCollaborator,
-	budget int,
-	now time.Time,
-) (Collaborator, error) {
-	stripeID, err := stripe.CreateUser(nco.Email, nco.PhoneNumber, nco.Name)
-	if err != nil {
-		return Collaborator{}, err
-	}
-	sub, err := s.aws.Cognito.CreateUser(aws.CognitoUser{
-		Email:       nco.Email,
-		PhoneNumber: nco.PhoneNumber,
-		Name:        nco.Name,
-		AggID:       agg.ID,
-		IsActive:    nco.IsPhoneNumberVerified,
-		Password:    nco.Password,
-	})
-	if err != nil {
-		return Collaborator{}, err
-	}
+func (s Store) Create(ctx context.Context, now time.Time, p CreateCollaboratorParams) (Collaborator, error) {
 	co := Collaborator{
 		ID:              validate.GenerateID(),
-		Email:           nco.Email,
-		PhoneNumber:     nco.PhoneNumber,
-		Name:            nco.Name,
-		StripeID:        stripeID,
-		ApiKey:          agg.ApiKey,
-		AggregatorID:    agg.ID,
-		EnterpriseID:    nco.EnterpriseID,
-		TeamID:          nco.TeamID,
-		Active:          nco.IsPhoneNumberVerified,
-		CognitoID:       sub,
+		Email:           p.Params.Email,
+		PhoneNumber:     p.Params.PhoneNumber,
+		Name:            p.Params.Name,
+		StripeID:        p.StripeID,
+		ApiKey:          p.ApiKey,
+		AggregatorID:    p.AggID,
+		EnterpriseID:    p.Params.EnterpriseID,
+		TeamID:          p.Params.TeamID,
+		Active:          p.Params.IsPhoneNumberVerified,
+		CognitoID:       p.AwsID,
 		IsMonthlyActive: false,
 		IsCGUAccepted:   false,
-		Role:            nco.Role,
+		Role:            p.Params.Role,
 		UpdatedAt:       now,
 		CreatedAt:       now,
-		Budget:          budget,
+		Budget:          p.Budget,
 		DeletedAt: pq.NullTime{
 			Time:  time.Time{},
 			Valid: false,

@@ -1,37 +1,39 @@
 package stripe
 
 import (
-	"errors"
 	"github.com/stripe/stripe-go/v72"
 	"github.com/stripe/stripe-go/v72/customer"
 	"github.com/stripe/stripe-go/v72/paymentintent"
 	"github.com/stripe/stripe-go/v72/paymentmethod"
-	"github.com/stripe/stripe-go/v72/refund"
+	"github.com/stripe/stripe-go/v72/setupintent"
 )
-
-var (
-	ErrPaymentAlreadyCancelled = errors.New("payment already canceled")
-	ErrPaymentAlreadyRefunded  = errors.New("payment already refunded")
-)
-
-type Stripe struct {
-}
 
 type PaymentMethod struct {
+	ID                   string
+	IsThreeDSecureNeeded bool
+	ThreeDSecureURL      string
+}
+
+type PaymentMethodParams struct {
 	Number      string
 	CVC         string
 	ExpireMonth string
 	ExpireYear  string
+	ReturnURL   string
+}
+
+type CreateChargeParams struct {
+	CusID     string
+	PmID      string
+	Amount    int64
+	ReturnURL string
+	Currency  string
 }
 
 type Payment struct {
 	Challenge bool
 	Status    stripe.PaymentIntentStatus
 	ReturnURL string
-}
-
-func New(strID string) Stripe {
-	return Stripe{}
 }
 
 //CreateUser creates a new stripe customer and return his id
@@ -61,7 +63,9 @@ func DeleteUser(strKey string, id string) error {
 	return nil
 }
 
-func CreatePaymentMethod(id string, pm PaymentMethod) (string, error) {
+func CreatePaymentMethod(strKey string, cusID string, pm PaymentMethodParams) (PaymentMethod, error) {
+	stripe.Key = strKey
+
 	params := &stripe.PaymentMethodParams{
 		Card: &stripe.PaymentMethodCardParams{
 			CVC:      stripe.String(pm.CVC),
@@ -69,26 +73,43 @@ func CreatePaymentMethod(id string, pm PaymentMethod) (string, error) {
 			ExpYear:  stripe.String(pm.ExpireYear),
 			Number:   stripe.String(pm.Number),
 		},
-		Customer: stripe.String(id),
+		Type: stripe.String("card"),
 	}
 
-	res, err := paymentmethod.New(params)
+	p, err := paymentmethod.New(params)
 	if err != nil {
-		return "", err
+		return PaymentMethod{}, err
 	}
-	return res.ID, nil
+
+	i, err := setupintent.New(&stripe.SetupIntentParams{
+		Customer:           stripe.String(cusID),
+		PaymentMethodTypes: []*string{stripe.String("card")},
+		Confirm:            stripe.Bool(true),
+		PaymentMethod:      stripe.String(p.ID),
+	})
+	if err != nil {
+		return PaymentMethod{}, err
+	}
+
+	if i.NextAction == nil {
+		return PaymentMethod{p.ID, false, ""}, nil
+	}
+
+	return PaymentMethod{p.ID, true, i.NextAction.RedirectToURL.URL}, nil
 }
 
-func CreateCharge(strKey string, cusID, pmID string, amount int64, returnURL string) (Payment, error) {
+func CreateCharge(strKey string, p CreateChargeParams) (Payment, error) {
 	stripe.Key = strKey
 
 	params := &stripe.PaymentIntentParams{
-		Amount:        stripe.Int64(amount),
+		Amount:        stripe.Int64(p.Amount),
 		Confirm:       stripe.Bool(true),
-		Currency:      stripe.String("eur"),
-		Customer:      stripe.String(cusID),
-		PaymentMethod: stripe.String(pmID),
-		ReturnURL:     stripe.String(returnURL),
+		Currency:      stripe.String(p.Currency),
+		Customer:      stripe.String(p.CusID),
+		PaymentMethod: stripe.String(p.PmID),
+		ReturnURL:     stripe.String(p.ReturnURL),
+		OffSession:    stripe.Bool(true),
+		CaptureMethod: stripe.String("manual"),
 	}
 
 	res, err := paymentintent.New(params)
@@ -103,17 +124,6 @@ func CreateCharge(strKey string, cusID, pmID string, amount int64, returnURL str
 	return Payment{false, res.Status, ""}, nil
 }
 
-func isPaymentValidate(strKey string, payID string) (bool, error) {
-	stripe.Key = strKey
-
-	pi, err := paymentintent.Get(payID, nil)
-	if err != nil {
-		return false, err
-	}
-
-	return pi.Status == stripe.PaymentIntentStatusSucceeded, nil
-}
-
 func CancelPayment(strKey string, id string) error {
 	stripe.Key = strKey
 
@@ -123,24 +133,13 @@ func CancelPayment(strKey string, id string) error {
 	return nil
 }
 
-func RefundUser(strKey string, piID string, amount int64) error {
+func CapturePayment(strKey string, ptID string, amount int64) error {
 	stripe.Key = strKey
 
-	pi, err := paymentintent.Get(piID, nil)
+	_, err := paymentintent.Capture(ptID, &stripe.PaymentIntentCaptureParams{
+		AmountToCapture: stripe.Int64(amount),
+	})
 	if err != nil {
-		return err
-	}
-
-	if pi.Status == stripe.PaymentIntentStatusCanceled {
-		return ErrPaymentAlreadyCancelled
-	}
-
-	params := &stripe.RefundParams{
-		Amount:        stripe.Int64(amount),
-		PaymentIntent: stripe.String(piID),
-	}
-
-	if _, err := refund.New(params); err != nil {
 		return err
 	}
 	return nil

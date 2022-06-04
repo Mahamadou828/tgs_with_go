@@ -1,0 +1,40 @@
+###Create Payment Method
+POST {{BASE_URL}}/{{VERSION}}/payment/method
+x-api-key: {{API_KEY}}
+aggregator: {{AGGREGATOR_ID}}
+content-type: "application/json"
+
+{
+    "number": "{{CREDIT_CARD_NUMBER}}",
+    "cvc": "{{CREDIT_CARD_CVC}}",
+    "expireMonth": "{{CREDIT_CARD_EXPIRE_MONTH}}",
+    "expireYear": "{{CREDIT_CARD_EXPIRE_YEAR}}",
+    "name": "{{CREDIT_CARD_NAME}}",
+    "isFavorite": true,
+    "userId": "{{USER_ID}}",
+    "type": "Visa",
+    "returnUrl": "https://google.com"
+}
+
+###Get all user payment methods
+GET {{BASE_URL}}/{{VERSION}}/payment/method/user/{{USER_ID}}?page=1&rows=100
+x-api-key: {{API_KEY}}
+aggregator: {{AGGREGATOR_ID}}
+content-type: "application/json"
+
+###Update payment method
+PUT {{BASE_URL}}/{{VERSION}}/payment/method
+x-api-key: {{API_KEY}}
+aggregator: {{AGGREGATOR_ID}}
+content-type: "application/json"
+
+{
+    "name": "{{CREDIT_CARD_NAME}}",
+    "isFavorite": true
+}
+
+###Delete payment method
+GET {{BASE_URL}}/{{VERSION}}/payment/method/{{PAYMENT_METHOD_ID}}
+x-api-key: {{API_KEY}}
+aggregator: {{AGGREGATOR_ID}}
+content-type: "application/json"

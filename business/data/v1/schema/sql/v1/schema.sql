@@ -276,7 +276,7 @@ CREATE TABLE "public"."user"
     stripe_id          text         NOT NULL,
     api_key            varchar(255) NOT NULL,
     active             boolean      NOT NULL,
-    budget             int          NOT NULL,
+    budget             int          NULL,
     cognito_id         text         NOT NULL,
     is_monthly_active  boolean      NOT NULL,
     is_cgu_accepted    boolean      NOT NULL,
@@ -371,7 +371,7 @@ CREATE TABLE "public".payment_method
     type                varchar(255) NOT NULL,
     is_favorite         boolean      NOT NULL,
     created_at          timestamp    NOT NULL,
-    updadted_at         timestamp    NOT NULL,
+    updated_at          timestamp    NOT NULL,
     deleted_at          timestamp    NULL,
     CONSTRAINT PK_209 PRIMARY KEY ("id"),
     CONSTRAINT FK_224 FOREIGN KEY (user_id) REFERENCES "public"."user" ("id")

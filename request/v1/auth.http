@@ -1,5 +1,5 @@
 ### Create a new user
-POST {{BASE_URL_V1}}/user
+POST {{BASE_URL}}/{{VERSION}}/user
 x-api-key: {{API_KEY}}
 aggregator: {{AGGREGATOR_ID}}
 content-type: "application/json"
@@ -15,19 +15,19 @@ content-type: "application/json"
 }
 
 ### Query User
-GET {{BASE_URL_V1}}/user?page=1&rows=10
+GET {{BASE_URL}}/{{VERSION}}/user?page=1&rows=10
 x-api-key: {{API_KEY}}
 aggregator: {{AGGREGATOR_ID}}
 content-type: "application/json"
 
 ### Query User By ID
-GET {{BASE_URL_V1}}/user/{{USER_ID}}
+GET {{BASE_URL}}/{{VERSION}}/user/{{USER_ID}}
 x-api-key: {{API_KEY}}
 aggregator: {{AGGREGATOR_ID}}
 content-type: "application/json"
 
 ### Update user
-PUT {{BASE_URL_V1}}/user/{{USER_ID}}
+PUT {{BASE_URL}}/{{VERSION}}/user/{{USER_ID}}
 x-api-key: {{API_KEY}}
 aggregator: {{AGGREGATOR_ID}}
 content-type: "application/json"
@@ -37,13 +37,13 @@ content-type: "application/json"
 }
 
 ### Delete User
-DELETE {{BASE_URL_V1}}/user/{{USER_ID}}
+DELETE {{BASE_URL}}/{{VERSION}}/user/{{USER_ID}}
 x-api-key: {{API_KEY}}
 aggregator: {{AGGREGATOR_ID}}
 content-type: "application/json"
 
 ### Login User
-POST {{BASE_URL_V1}}/user/login
+POST {{BASE_URL}}/{{VERSION}}/user/login
 x-api-key: {{API_KEY}}
 aggregator: {{AGGREGATOR_ID}}
 content-type: "application/json"
@@ -54,7 +54,7 @@ content-type: "application/json"
 }
 
 ### Refresh Token
-POST {{BASE_URL_V1}}/user/token/refresh
+POST {{BASE_URL}}/{{VERSION}}/user/token/refresh
 x-api-key: {{API_KEY}}
 aggregator: {{AGGREGATOR_ID}}
 content-type: "application/json"
@@ -65,7 +65,7 @@ content-type: "application/json"
 }
 
 ### Verify Sms Code
-POST {{BASE_URL_V1}}/user/code/verify
+POST {{BASE_URL}}/{{VERSION}}/user/code/verify
 x-api-key: {{API_KEY}}
 aggregator: {{AGGREGATOR_ID}}
 content-type: "application/json"
@@ -76,19 +76,19 @@ content-type: "application/json"
 }
 
 ### Resend Sms Code
-GET {{BASE_URL_V1}}/user/code/resend/{{USER_ID}}
+GET {{BASE_URL}}/{{VERSION}}/user/code/resend/{{USER_ID}}
 x-api-key: {{API_KEY}}
 aggregator: {{AGGREGATOR_ID}}
 content-type: "application/json"
 
 ### Forgot Password
-PUT {{BASE_URL_V1}}/user/code/resend/{{USER_ID}}
+PUT {{BASE_URL}}/{{VERSION}}/user/code/resend/{{USER_ID}}
 x-api-key: {{API_KEY}}
 aggregator: {{AGGREGATOR_ID}}
 content-type: "application/json"
 
 ### Reset Password
-PUT {{BASE_URL_V1}}/user/code/resend
+PUT {{BASE_URL}}/{{VERSION}}/user/code/resend
 x-api-key: {{API_KEY}}
 aggregator: {{AGGREGATOR_ID}}
 content-type: "application/json"

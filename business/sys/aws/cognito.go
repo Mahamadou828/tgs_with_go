@@ -52,7 +52,7 @@ func NewCognito(log *zap.SugaredLogger, sess *session.Session, clientID, userPoo
 //account active right away
 func (c *Cognito) CreateUser(u CognitoUser) (string, error) {
 	fmt.Println(u)
-	sub, err := c.GenerateSub(u.Email, u.PhoneNumber, u.AggID)
+	sub, err := c.generateSub(u.Email, u.PhoneNumber, u.AggID)
 
 	if err != nil {
 		return "", fmt.Errorf("error generating user sub: %v", err)
@@ -236,7 +236,7 @@ func (c *Cognito) updateUserAttribute(sub string, attr []*cognitoidentityprovide
 	return nil
 }
 
-func (c *Cognito) GenerateSub(email, phoneNumber, aggregator string) (string, error) {
+func (c *Cognito) generateSub(email, phoneNumber, aggregator string) (string, error) {
 	sub := email + phoneNumber + aggregator + c.seed
 	h := sha256.New()
 	h.Write([]byte(sub))

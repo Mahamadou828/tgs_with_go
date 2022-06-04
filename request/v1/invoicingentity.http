@@ -1,5 +1,5 @@
 ### Create Invoicing
-POST {{BASE_URL_V1}}/invoicing
+POST {{BASE_URL}}//{{VERSION}}/invoicing
 x-api-key: {{API_KEY}}
 aggregator: {{AGGREGATOR_ID}}
 
@@ -15,23 +15,23 @@ aggregator: {{AGGREGATOR_ID}}
 }
 
 ### Query Invoicing
-GET {{BASE_URL_V1}}/invoicing?page=1&rows=100
+GET {{BASE_URL}}//{{VERSION}}/invoicing?page=1&rows=100
 x-api-key: {{API_KEY}}
 aggregator: {{AGGREGATOR_ID}}
 
 ### Query By Id Invoicing
-GET {{BASE_URL_V1}}/invoicing/{{INVOICING_ID}}
+GET {{BASE_URL}}//{{VERSION}}/invoicing/{{INVOICING_ID}}
 x-api-key: {{API_KEY}}
 aggregator: {{AGGREGATOR_ID}}
 
 ### Query By Enterprise Invoicing
-GET {{BASE_URL_V1}}/invoicing/enterprise/{{ENTERPRISE_ID}}
+GET {{BASE_URL}}//{{VERSION}}/invoicing/enterprise/{{ENTERPRISE_ID}}
 x-api-key: {{API_KEY}}
 aggregator: {{AGGREGATOR_ID}}
 
 
 ### Update Invoicing
-PUT {{BASE_URL_V1}}/invoicing/{{INVOICING_ID}}
+PUT {{BASE_URL}}//{{VERSION}}/invoicing/{{INVOICING_ID}}
 x-api-key: {{API_KEY}}
 aggregator: {{AGGREGATOR_ID}}
 
@@ -42,6 +42,6 @@ aggregator: {{AGGREGATOR_ID}}
 
 
 ### DELETE Invoicing
-DELETE {{BASE_URL_V1}}/invoicing/{{INVOICING_ID}}
+DELETE {{BASE_URL}}//{{VERSION}}/invoicing/{{INVOICING_ID}}
 x-api-key: {{API_KEY}}
 aggregator: {{AGGREGATOR_ID}}

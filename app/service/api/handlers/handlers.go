@@ -4,9 +4,11 @@ package handlers
 import (
 	"expvar"
 	"github.com/Mahamadou828/tgs_with_golang/app/service/api/handlers/v1/enterprisepolicyroutes"
+	"github.com/Mahamadou828/tgs_with_golang/app/service/api/handlers/v1/paymentmethodroutes"
 	"github.com/Mahamadou828/tgs_with_golang/business/core/v1/enterprisepolicy"
 	"github.com/Mahamadou828/tgs_with_golang/business/core/v1/enterpriseteam"
 	"github.com/Mahamadou828/tgs_with_golang/business/core/v1/invoicingentity"
+	"github.com/Mahamadou828/tgs_with_golang/business/core/v1/paymentmethod"
 	"net/http"
 	"net/http/pprof"
 
@@ -56,14 +58,15 @@ func v1(app *web.App, cfg web.AppConfig) {
 		Env:    cfg.Env,
 	}
 
-	ugt := userroutes.Handler{User: user.NewCore(cfg.Log, cfg.DB, cfg.AWS)}
+	ugt := userroutes.Handler{User: user.NewCore(cfg.Log, cfg.DB, cfg.AWS, cfg.StripeKey)}
 	agt := aggregatorroutes.Handler{Agg: aggregator.NewCore(cfg.Log, cfg.DB, cfg.AWS)}
 	egt := enterpriseroutes.Handler{En: enterprise.NewCore(cfg.Log, cfg.DB)}
 	epgt := enterprisepackroutes.Handler{Pac: enterprisepack.NewCore(cfg.Log, cfg.DB)}
-	cgt := collaboratorroutes.Handler{Co: collaborator.NewCore(cfg.AWS, cfg.DB, cfg.Log)}
+	cgt := collaboratorroutes.Handler{Co: collaborator.NewCore(cfg.AWS, cfg.DB, cfg.Log, cfg.StripeKey)}
 	tgt := enterpriseteamroutes.Handler{TeCore: enterpriseteam.NewCore(cfg.DB, cfg.Log)}
 	tpt := enterprisepolicyroutes.Handler{PoCore: enterprisepolicy.NewCore(cfg.DB, cfg.Log)}
 	igt := invoicingroutes.Handler{InCore: invoicingentity.NewCore(cfg.Log, cfg.DB)}
+	pmgt := paymentmethodroutes.Handler{PmCore: paymentmethod.NewCore(cfg.Log, cfg.DB, cfg.StripeKey)}
 
 	//=========================== Test Route
 	app.Handle(http.MethodGet, "/test", trt.Test)
@@ -145,6 +148,12 @@ func v1(app *web.App, cfg web.AppConfig) {
 	app.Handle(http.MethodGet, "/invoicing", igt.Query)
 	app.Handle(http.MethodGet, "/invoicing/:id", igt.QueryByID)
 	app.Handle(http.MethodGet, "/invoicing/enterprise/:id", igt.QueryByEnterprise)
+
+	//=========================== Payment Method Route
+	app.Handle(http.MethodPost, "/payment/method", pmgt.Create)
+	app.Handle(http.MethodPut, "/payment/method/:id", pmgt.Update)
+	app.Handle(http.MethodDelete, "/payment/method/:id", pmgt.Delete)
+	app.Handle(http.MethodGet, "/payment/method/user/:id", pmgt.Query)
 
 }
 

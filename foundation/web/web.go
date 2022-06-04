@@ -30,6 +30,7 @@ type AppConfig struct {
 	Service    string
 	CorsOrigin string
 	DB         *sqlx.DB
+	StripeKey  string
 }
 
 // App is the entrypoint into our application and what configures our context

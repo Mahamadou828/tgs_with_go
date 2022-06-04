@@ -3,6 +3,7 @@ SHELL := /bin/bash
 KIND_CLUSTER := tgs-cluster
 ENV := development
 VERSION := 1.0
+DB_VERSION := v1
 AWS_ACCOUNT := formation
 
 #Vendor all the project dependencies.
@@ -84,6 +85,10 @@ kind-update-apply: tgs-api kind-load kind-apply
 expvarmon:
 	expvarmon -ports="3000" -vars="build,requests,gorountines,errors,panics,mem:memstats.Alloc"
 
+db-start: db-up db-migrate db-seed
+
+db-restart: db-destroy db-up db-migrate db-seed
+
 #Destroy the local postgres sql database
 db-destroy:
 	docker stop postgres-db || true && docker rm postgres-db || true
@@ -92,12 +97,12 @@ db-destroy:
 db-up:
 	docker run --name postgres-db -e POSTGRES_PASSWORD=postgres -p 5432:5432 -d postgres
 
-db-restore:
-	make db-destroy
-	make db-up
-	make db-migrate MIGRATE_VERSION=v1
-
 #Migrate the database schemas to use the command you should provide the MIGRATE_VERSION:
-#make db-migration MIGRATE_VERSION=v1
+#make db-migration DB_VERSION=v1
 db-migrate:
-	go run app/tools/admin/main.go --commands=migrate --version=$(MIGRATE_VERSION) --env=$(ENV) --awsaccount=$(AWS_ACCOUNT) | go run app/tools/logfmt/main.go
+	go run app/tools/admin/main.go --commands=migrate --version=$(DB_VERSION) --env=$(ENV) --awsaccount=$(AWS_ACCOUNT) | go run app/tools/logfmt/main.go
+
+#Seed the database with fake data:
+#make db-seed DB_VERSION=v1
+db-seed:
+	go run app/tools/admin/main.go --commands=seed --version=$(DB_VERSION) --env=$(ENV) --awsaccount=$(AWS_ACCOUNT) | go run app/tools/logfmt/main.go
