@@ -3,6 +3,7 @@ package handlers
 
 import (
 	"expvar"
+	"fmt"
 	"github.com/Mahamadou828/tgs_with_golang/app/service/api/handlers/v1/enterprisepolicyroutes"
 	"github.com/Mahamadou828/tgs_with_golang/app/service/api/handlers/v1/paymentmethodroutes"
 	"github.com/Mahamadou828/tgs_with_golang/business/core/v1/enterprisepolicy"
@@ -168,6 +169,16 @@ func DebugMux(build string, log *zap.SugaredLogger, db *sqlx.DB) *http.ServeMux 
 
 	mux.HandleFunc("/debug/readiness", handlers.Readiness)
 	mux.HandleFunc("/debug/liveliness", handlers.Liveliness)
+
+	return mux
+}
+
+func SimpleMux(env string) *http.ServeMux {
+	mux := DebugStandardLibraryMux()
+
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, "Hi there, I love Go in %s! %s ", env, r.URL.Path[1:])
+	})
 
 	return mux
 }

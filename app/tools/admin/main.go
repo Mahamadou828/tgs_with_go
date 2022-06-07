@@ -136,6 +136,7 @@ func run(log *zap.SugaredLogger) error {
 				Key:      scrCfg.Key,
 				Secrets:  scrCfg.Secrets,
 			})
+
 		case "uploadfile":
 			uplCfg := struct {
 				File   string `conf:"required"`
@@ -147,7 +148,7 @@ func run(log *zap.SugaredLogger) error {
 				return fmt.Errorf("can't start command %s because of missing configuration %w", command, err)
 			}
 
-			err = commands.Download(
+			err = commands.Upload(
 				aws.Config{
 					Account:             cfg.AwsAccount,
 					Service:             service,

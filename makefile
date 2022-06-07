@@ -89,6 +89,7 @@ db-start: db-up db-migrate db-seed
 
 db-restart: db-destroy db-up db-migrate db-seed
 
+#================================================================= Admin Command
 #Destroy the local postgres sql database
 db-destroy:
 	docker stop postgres-db || true && docker rm postgres-db || true
@@ -106,3 +107,7 @@ db-migrate:
 #make db-seed DB_VERSION=v1
 db-seed:
 	go run app/tools/admin/main.go --commands=seed --version=$(DB_VERSION) --env=$(ENV) --awsaccount=$(AWS_ACCOUNT) | go run app/tools/logfmt/main.go
+#Upload a s3 file
+#make s3-upload ENV=development FILE_PATH=FILE_PATH BUCKET_NAME=BUCKET_NAME BUCKET_KEY=BUCKET_KEY
+s3-upload:
+	go run app/tools/admin/main.go --commands=uploadfile --awsaccount=$(AWS_ACCOUNT) --version=$(VERSION) --env=$(ENV) --file=$(FILE_PATH) --bucket=$(BUCKET_NAME) --key=$(BUCKET_KEY)

@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
 	"go.uber.org/zap"
+	"strings"
 )
 
 // Ssm provide an api to interact with the
@@ -78,7 +79,9 @@ func (s *Ssm) ListSecrets(service, env string) (map[string]string, error) {
 			}
 		}
 
-		secrets[*result.Name] = *result.SecretString
+		//get rid of the env prefix from secret name
+		name := strings.Split(*result.Name, "-")[1]
+		secrets[name] = *result.SecretString
 	}
 
 	return secrets, nil
@@ -87,7 +90,7 @@ func (s *Ssm) ListSecrets(service, env string) (map[string]string, error) {
 func (s *Ssm) CreateSecret(name, value, service, env, desc string) error {
 	input := &secretsmanager.CreateSecretInput{
 		Description: aws.String(desc),
-		Name:        aws.String(name),
+		Name:        aws.String(env + "-" + name),
 		Tags: []*secretsmanager.Tag{
 			{
 				Key:   aws.String("service"),

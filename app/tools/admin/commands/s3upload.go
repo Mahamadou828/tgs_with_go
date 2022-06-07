@@ -8,8 +8,8 @@ import (
 	"os"
 )
 
-//Download take a local file and upload it to a s3 bucket
-func Download(cfg aws.Config, log *zap.SugaredLogger, file, bucket, key string) error {
+//Upload take a local file and upload it to a s3 bucket. For now we support only json files
+func Upload(cfg aws.Config, log *zap.SugaredLogger, file, bucket, key string) error {
 	sessAws, err := aws.New(log, cfg)
 	if err != nil {
 		return err

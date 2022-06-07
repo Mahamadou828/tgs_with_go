@@ -1,90 +1,476 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"github.com/Mahamadou828/tgs_with_golang/business/sys/aws"
+	"github.com/Mahamadou828/tgs_with_golang/foundation/logger"
 	"github.com/aws/aws-cdk-go/awscdk/v2"
+	scalingCapacity "github.com/aws/aws-cdk-go/awscdk/v2/awsapplicationautoscaling"
 	ec2 "github.com/aws/aws-cdk-go/awscdk/v2/awsec2"
-	"github.com/aws/aws-sdk-go/aws"
+	ecr "github.com/aws/aws-cdk-go/awscdk/v2/awsecr"
+	ecs "github.com/aws/aws-cdk-go/awscdk/v2/awsecs"
+	ecsPattern "github.com/aws/aws-cdk-go/awscdk/v2/awsecspatterns"
+	health "github.com/aws/aws-cdk-go/awscdk/v2/awselasticloadbalancingv2"
+	targets "github.com/aws/aws-cdk-go/awscdk/v2/awselasticloadbalancingv2targets"
+	iam "github.com/aws/aws-cdk-go/awscdk/v2/awsiam"
+	rds "github.com/aws/aws-cdk-go/awscdk/v2/awsrds"
+	s3 "github.com/aws/aws-cdk-go/awscdk/v2/awss3"
+	sqs "github.com/aws/aws-cdk-go/awscdk/v2/awssqs"
 	"github.com/aws/constructs-go/constructs/v10"
 	"github.com/aws/jsii-runtime-go"
+	"github.com/google/uuid"
+	"io/ioutil"
+	"os"
 )
 
 type TgsStackProps struct {
 	awscdk.StackProps
-	env string
+	env           string
+	service       string
+	repositoryARN string
+	capacity      struct {
+		memoryMiB float64
+		cpu       float64
+	}
+	sess *aws.AWS
 }
 
-func NewStack(scope constructs.Construct, id string, props *TgsStackProps) awscdk.Stack {
+type ApiKeys struct {
+	Value       string `json:"Value"`
+	Name        string `json:"Name"`
+	Description string `json:"Description"`
+	UsagePlan   string `json:"UsagePlan"`
+}
+
+type Methods struct {
+	Type              string `json:"Type"`
+	EnabledAuthorizer bool   `json:"EnabledAuthorizer"`
+	Path              string `json:"Path"`
+}
+
+type ApiRoutes struct {
+	ResourceName string    `json:"ResourceName"`
+	Methods      []Methods `json:"Methods"`
+}
+
+type UsagePlans struct {
+	Name        string `json:"Name"`
+	RateLimit   int    `json:"RateLimit"`
+	BurstLimit  int    `json:"BurstLimit"`
+	Description string `json:"Description"`
+}
+
+//ApiGatewaySpec regroup the set of route and api key to create along with the api gateway
+//To see file format read doc.go file
+type ApiGatewaySpec struct {
+	ApiKeys    []ApiKeys    `json:"ApiKeys"`
+	Routes     []ApiRoutes  `json:"Routes"`
+	UsagePlans []UsagePlans `json:"UsagePlans"`
+}
+
+func NewStack(scope constructs.Construct, id *string, props *TgsStackProps) awscdk.Stack {
 	var sprops awscdk.StackProps
 	if props != nil {
 		sprops = props.StackProps
 	}
-	stack := awscdk.NewStack(scope, &id, &sprops)
+	stack := awscdk.NewStack(scope, id, &sprops)
 
 	//================================================================= VPC
-	//create a vpc
-	vpc := ec2.NewVpc(scope, &id, &ec2.VpcProps{VpcName: aws.String(fmt.Sprintf("%s-tgs", props.env))})
-
-	//=========================================== Private subnet config
-
-	//create a nat gateway
-	
-	//create a route table that associat the 0.0.0.0/0 traffic to the nat gateway
-
-	//create a private subnet
-	//associate the nat gateway with the private subnet
-
-	//============================================ Public subnet
-
-	//create an internet gateway
-	//create a route table that associate the 0.0.0.0/0 with the internet gateway
-	//create a public subnet
-	//associate the public subnet with the internet gateway
+	//create a vpc with a public and a private subnet
+	vpc := ec2.NewVpc(stack, jsii.String(props.env+"vpc"), &ec2.VpcProps{
+		VpcName: jsii.String(fmt.Sprintf("%s-tgs", props.env)),
+		SubnetConfiguration: &[]*ec2.SubnetConfiguration{
+			{
+				Name:       jsii.String(props.env + "private-tgs"),
+				SubnetType: ec2.SubnetType_PRIVATE_WITH_NAT,
+				CidrMask:   jsii.Number(24),
+			},
+			{
+				Name:       jsii.String(props.env + "public-tgs"),
+				SubnetType: ec2.SubnetType_PUBLIC,
+				CidrMask:   jsii.Number(24),
+			},
+		},
+	})
 
 	//================================================================= ECS
 	//Get the ecr repository
 	//@todo find a way to create it if does not exist and push the first image
-
+	rep := ecr.Repository_FromRepositoryArn(stack, jsii.String(props.env+"Repository_FromRepositoryArn"), jsii.String(props.repositoryARN))
 	//Create a cluster
+	clu := ecs.NewCluster(stack, jsii.String(props.env+"NewCluster"), &ecs.ClusterProps{
+		ClusterName: jsii.String(fmt.Sprintf("%s-tgs", props.env)),
+		Vpc:         vpc,
+	})
+
+	//create role for ecs service
+	ia := iam.Role_FromRoleArn(
+		stack,
+		jsii.String(props.env+"Role_FromRoleArn"),
+		jsii.String("arn:aws:iam::685367675161:role/TGS_API_SERVICE"),
+		nil,
+	)
 
 	//create a task definition
+	task := ecs.NewFargateTaskDefinition(stack, jsii.String(props.env+"NewTaskDefinition"), &ecs.FargateTaskDefinitionProps{
+		TaskRole:       ia,
+		Cpu:            jsii.Number(props.capacity.cpu),
+		MemoryLimitMiB: jsii.Number(props.capacity.memoryMiB),
+	})
 
-	//Tell the ECS task to pull Docker image from previously created ECR
+	task.AddContainer(jsii.String(props.env+"tgs-api"), &ecs.ContainerDefinitionOptions{
+		//Tell the ECS task to pull Docker image from previously created ECR
+		Image:          ecs.ContainerImage_FromEcrRepository(rep, jsii.String("latest")),
+		Cpu:            jsii.Number(props.capacity.cpu),
+		MemoryLimitMiB: jsii.Number(props.capacity.memoryMiB),
+		PortMappings: &[]*ecs.PortMapping{
+			{ContainerPort: jsii.Number(3000), HostPort: jsii.Number(3000)},
+			{ContainerPort: jsii.Number(4000), HostPort: jsii.Number(4000)},
+		},
+	})
 
-	//declare scaling capability
+	//create new security groups
 
-	//create a network load balancer for the cluster
+	//create an application load balancer for the cluster
+	alb := ecsPattern.NewApplicationLoadBalancedFargateService(
+		stack,
+		jsii.String(props.env+"NewApplicationLoadBalancedFargateService"),
+		&ecsPattern.ApplicationLoadBalancedFargateServiceProps{
+			Cluster:            clu,
+			MinHealthyPercent:  jsii.Number(50),
+			MaxHealthyPercent:  jsii.Number(300),
+			PublicLoadBalancer: jsii.Bool(false),
+			ServiceName:        jsii.String(fmt.Sprintf("%s-tgs", props.env)),
+			Cpu:                jsii.Number(1024),
+			MemoryLimitMiB:     jsii.Number(2048),
+			TaskDefinition:     task,
+			DesiredCount:       jsii.Number(1),
+		})
 
-	//create a security group for the cluster allowing only the nlb to send traffic
+	//allow traffic to port 4000 for health checks
+	alb.LoadBalancer().Connections().AllowFromAnyIpv4(ec2.Port_Tcp(jsii.Number(4000)), jsii.String("allow inbound https"))
+	alb.LoadBalancer().Connections().AllowToAnyIpv4(ec2.Port_Tcp(jsii.Number(4000)), jsii.String("allow outbound https"))
+	alb.Service().Connections().AllowFromAnyIpv4(ec2.Port_Tcp(jsii.Number(4000)), jsii.String("allow inbound https"))
+	alb.Service().Connections().AllowToAnyIpv4(ec2.Port_Tcp(jsii.Number(4000)), jsii.String("allow outbound https"))
 
-	//create a database inside the private subnet
-	//the database should be accessible only to the cluster app
+	//configure health check
+	alb.TargetGroup().ConfigureHealthCheck(&health.HealthCheck{
+		Enabled: jsii.Bool(true),
+		Path:    jsii.String("/debug/liveliness"),
+		Port:    jsii.String("4000"),
+	})
+
+	//configure scaling policy
+	as := alb.Service().AutoScaleTaskCount(&scalingCapacity.EnableScalingProps{
+		MaxCapacity: jsii.Number(10),
+		MinCapacity: jsii.Number(1),
+	})
+
+	as.ScaleOnMemoryUtilization(
+		jsii.String(fmt.Sprintf("%s-ScaleOnMemoryUtilization", props.env)),
+		&ecs.MemoryUtilizationScalingProps{
+			TargetUtilizationPercent: jsii.Number(70),
+		},
+	)
+
+	//Create a network load balancer to forward request to alb
+	nlb := health.NewNetworkLoadBalancer(stack, jsii.String("Nlb"), &health.NetworkLoadBalancerProps{
+		Vpc:            vpc,
+		InternetFacing: jsii.Bool(false),
+	})
+
+	listener := nlb.AddListener(jsii.String("listener"), &health.BaseNetworkListenerProps{
+		Port: jsii.Number(80),
+	})
+
+	t := listener.AddTargets(jsii.String("Targets"), &health.AddNetworkTargetsProps{
+		Targets: &[]health.INetworkLoadBalancerTarget{
+			targets.NewAlbTarget(alb.LoadBalancer(), jsii.Number(80)),
+		},
+		Port:        jsii.Number(80),
+		HealthCheck: &health.HealthCheck{Protocol: health.Protocol_HTTP},
+	})
+
+	//see: https://github.com/aws/aws-cdk/issues/17208
+	t.Node().AddDependency(alb.Listener())
+
+	////================================================================= Database
+	////create a database inside the private subnet
+	rds.NewDatabaseInstance(stack, jsii.String(props.env+"database"), &rds.DatabaseInstanceProps{
+		Vpc:           vpc,
+		RemovalPolicy: awscdk.RemovalPolicy_DESTROY,
+		VpcSubnets: &ec2.SubnetSelection{
+			SubnetType: ec2.SubnetType_PRIVATE_WITH_NAT,
+		},
+		Engine: rds.DatabaseInstanceEngine_Postgres(&rds.PostgresInstanceEngineProps{
+			Version: rds.PostgresEngineVersion_VER_14_2(),
+		}),
+		DatabaseName: jsii.String(props.env + "database"),
+		InstanceType: ec2.InstanceType_Of(ec2.InstanceClass_BURSTABLE3, ec2.InstanceSize_SMALL),
+		Credentials: rds.Credentials_FromGeneratedSecret(jsii.String("syscdk"), &rds.CredentialsBaseOptions{
+			SecretName: jsii.String(props.env + "-dbpassword"),
+		}),
+	})
 
 	//creating a cache
 
+	//================================================================= Cognito
 	//create a cognito pool
+	c := cognito.NewUserPool(stack, jsii.String(props.env+"cognitopool"), &cognito.UserPoolProps{
+		UserPoolName: jsii.String(props.env + "-tgs-cognito"),
+		SignInAliases: &cognito.SignInAliases{
+			Username:          jsii.Bool(true),
+			PreferredUsername: jsii.Bool(true),
+		},
+		AutoVerify: &cognito.AutoVerifiedAttrs{
+			Phone: jsii.Bool(true),
+		},
+		StandardAttributes: &cognito.StandardAttributes{
+			Email: &cognito.StandardAttribute{
+				Required: jsii.Bool(true),
+				Mutable:  jsii.Bool(true),
+			},
+			PhoneNumber: &cognito.StandardAttribute{
+				Required: jsii.Bool(true),
+				Mutable:  jsii.Bool(true),
+			},
+			Fullname: &cognito.StandardAttribute{
+				Required: jsii.Bool(true),
+				Mutable:  jsii.Bool(true),
+			},
+		},
+		PasswordPolicy: &cognito.PasswordPolicy{
+			MinLength:        jsii.Number(12),
+			RequireLowercase: jsii.Bool(true),
+			RequireUppercase: jsii.Bool(true),
+			RequireDigits:    jsii.Bool(true),
+			RequireSymbols:   jsii.Bool(true),
+		},
+		CustomAttributes: &map[string]cognito.ICustomAttribute{
+			"isActive": cognito.NewStringAttribute(&cognito.StringAttributeProps{
+				MinLen:  jsii.Number(1),
+				MaxLen:  jsii.Number(256),
+				Mutable: jsii.Bool(true),
+			}),
+			"aggregator": cognito.NewStringAttribute(&cognito.StringAttributeProps{
+				MinLen:  jsii.Number(1),
+				MaxLen:  jsii.Number(256),
+				Mutable: jsii.Bool(false),
+			}),
+		},
+		AccountRecovery: cognito.AccountRecovery_PHONE_ONLY_WITHOUT_MFA,
+	})
 
-	//create the sqs queue
+	//Create a new App client
+	client := c.AddClient(jsii.String("tgs-api"), &cognito.UserPoolClientOptions{
+		AuthFlows: &cognito.AuthFlow{
+			AdminUserPassword: jsii.Bool(true),
+			Custom:            jsii.Bool(true),
+			UserPassword:      jsii.Bool(true),
+			UserSrp:           jsii.Bool(true),
+		},
+		GenerateSecret: jsii.Bool(false),
+	})
 
-	//create bucket invoice
-
-	//create the billing component
-
+	//send client app id and pool name to aws secrets manager
+	if err := props.sess.Ssm.CreateSecret("cognitouserpoolid", *c.UserPoolId(), props.service, props.env, "user pool id"); err != nil {
+		panic(err)
+	}
+	if err := props.sess.Ssm.CreateSecret("cognitoclientid", *client.UserPoolClientId(), props.service, props.env, "user pool id"); err != nil {
+		panic(err)
+	}
+	//generate a seed for the sign-in user preferred_username
+	//@todo generate a correct seed
+	seed := uuid.NewString()
+	if err := props.sess.Ssm.CreateSecret("cognitoseed", seed, props.service, props.env, "user pool id"); err != nil {
+		panic(err)
+	}
+	//@todo add lambda trigger for confirm signup
 	//create the lambda pre-authorizer
 
+	//================================================================= Queue
+	//create the sqs queue
+	queueName := props.env + "-tgs-queue"
+	sqs.NewQueue(stack, jsii.String(props.env+"-tgs-queue"), &sqs.QueueProps{
+		ContentBasedDeduplication: jsii.Bool(true),
+		DeliveryDelay:             awscdk.Duration_Seconds(jsii.Number(15)),
+		QueueName:                 jsii.String(queueName),
+		VisibilityTimeout:         awscdk.Duration_Hours(jsii.Number(12)),
+	})
+	if err := props.sess.Ssm.CreateSecret("sqsqueuename", queueName, props.service, props.env, "the name of the sqs queue"); err != nil {
+		panic(err)
+	}
+
+	//================================================================= S3
+	//create bucket invoice
+	bucket := s3.NewBucket(stack, jsii.String(props.env+"-tgs-invoices"), &s3.BucketProps{
+		Versioned: jsii.Bool(true),
+	})
+	err := props.sess.Ssm.CreateSecret(
+		"s3invoicesbucketname",
+		*bucket.BucketName(),
+		props.service,
+		props.env,
+		"name of the bucket that store all invoices",
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	//================================================================= Billing component
+	//create the billing component
+
+	//================================================================= API Gateway
+	//create a vpc link
+	link := apigateway.NewVpcLink(stack, jsii.String(props.env+"tgs-vpc-link"), &apigateway.VpcLinkProps{
+		Targets: &[]health.INetworkLoadBalancer{
+			nlb,
+		},
+	})
+
 	//create api gateway
+	api := apigateway.NewRestApi(stack, jsii.String(props.env+"-tgs"), &apigateway.RestApiProps{
+		//Enable Cors
+		DefaultCorsPreflightOptions: &apigateway.CorsOptions{
+			AllowOrigins: &[]*string{jsii.String("*")},
+			AllowHeaders: &[]*string{
+				jsii.String("Content-Type"),
+				jsii.String("Authorization"),
+				jsii.String("X-Amz-Date"),
+				jsii.String("X-Api-Key"),
+				jsii.String("x-api-key"),
+				jsii.String("X-Amz-Security-Token"),
+				jsii.String("aggregatorCode"),
+			},
+			AllowMethods: &[]*string{
+				jsii.String("POST"),
+				jsii.String("PUT"),
+				jsii.String("GET"),
+				jsii.String("OPTIONS"),
+				jsii.String("DELETE"),
+			},
+			StatusCode: jsii.Number(200),
+		},
+		Deploy: jsii.Bool(true),
+		DeployOptions: &apigateway.StageOptions{
+			StageName: jsii.String("main"),
+			//If needed you can specify stage variables here
+			Variables: nil,
+		},
+		RestApiName:       jsii.String(props.env + "-tgs"),
+		RetainDeployments: jsii.Bool(true),
+		Description:       jsii.String("an api gateway to access the tgs api in " + props.env),
+	})
+
+	//Download and parsing the api gateway spec from s3
+	file, err := os.Create("spec.json")
+	defer file.Close()
+	defer func() {
+		os.Remove("spec.json")
+	}()
+
+	_, err = props.sess.S3.Download(file, "tgs-api-gateway-spec", fmt.Sprintf("spec.%s", props.env))
+	if err != nil {
+		panic(err)
+	}
+	bytes, err := ioutil.ReadAll(file)
+	if err != nil {
+		panic(err)
+	}
+
+	var spec ApiGatewaySpec
+	if err := json.Unmarshal(bytes, &spec); err != nil {
+		panic(err)
+	}
+
+	//create the usage plans for the agw
+	var usagePlans map[string]apigateway.UsagePlan
+
+	for _, up := range spec.UsagePlans {
+		usagePlans[up.Name] = api.AddUsagePlan(jsii.String(up.Name), &apigateway.UsagePlanProps{
+			ApiStages:   nil,
+			Description: jsii.String(up.Description),
+			Name:        jsii.String(up.Name),
+			//@todo add later
+			//Quota:       nil,
+			//Throttle:    nil,
+		})
+	}
+
+	//create the api keys for the agw
+	for _, ak := range spec.ApiKeys {
+		v, ok := usagePlans[ak.UsagePlan]
+		if !ok {
+			panic(fmt.Errorf("specified usage plan for api key didn't exist"))
+		}
+
+		v.AddApiKey(
+			api.AddApiKey(jsii.String(ak.Value), &apigateway.ApiKeyOptions{
+				ApiKeyName:  jsii.String(ak.Name),
+				Description: jsii.String(ak.Description),
+				Value:       jsii.String(ak.Value),
+			}),
+			nil,
+		)
+	}
+
+	//create the route
+	for _, route := range spec.Routes {
+		resource := api.Root().AddResource(jsii.String(route.ResourceName), nil)
+
+		for _, method := range route.Methods {
+			resource.AddMethod(
+				jsii.String(method.Type),
+				apigateway.NewIntegration(&apigateway.IntegrationProps{
+					Type: apigateway.IntegrationType_HTTP_PROXY,
+					Options: &apigateway.IntegrationOptions{
+						ConnectionType: apigateway.ConnectionType_VPC_LINK,
+						VpcLink:        link,
+					},
+					IntegrationHttpMethod: jsii.String(method.Path),
+				}),
+				&apigateway.MethodOptions{
+					ApiKeyRequired: jsii.Bool(true),
+				},
+			)
+		}
+	}
 
 	return stack
 }
 
 func main() {
 	app := awscdk.NewApp(nil)
+	log, err := logger.New("TGS_CDK")
+	if err != nil {
+		log.Errorf("failed to create an logger")
+		panic(err)
+	}
 
-	NewStack(app, "TgsDevelopmentStack", &TgsStackProps{
+	sess, err := aws.New(log, aws.Config{
+		Account:             "formation",
+		Service:             "TGS_CDK",
+		Env:                 "local",
+		UnsafeIgnoreSecrets: true,
+	})
+	if err != nil {
+		log.Errorf("can't init an aws session")
+		panic(err)
+	}
+
+	NewStack(app, jsii.String("TgsDevelopmentStack"), &TgsStackProps{
 		awscdk.StackProps{
 			Env: env(),
 		},
 		"development",
+		"TGS_API",
+		"arn:aws:ecr:eu-west-1:685367675161:repository/tgs-api-development",
+		struct {
+			memoryMiB float64
+			cpu       float64
+		}{memoryMiB: 1024, cpu: 512},
+		sess,
 	})
 	//NewStack(app, "TgsProductionStack", &TgsStackProps{
 	//	awscdk.StackProps{
@@ -103,7 +489,7 @@ func main() {
 }
 
 // env determines the AWS environment (account+region) in which our stack is to
-// be deployed. For more information see: https://docs.aws.amazon.com/cdk/latest/guide/environments.html
+// be deployed. For more information see: https://docs.jsii.amazon.com/cdk/latest/guide/environments.html
 func env() *awscdk.Environment {
 	// If unspecified, this stack will be "environment-agnostic".
 	// Account/Region-dependent features and context lookups will not work, but a
@@ -112,21 +498,4 @@ func env() *awscdk.Environment {
 	return &awscdk.Environment{
 		Region: jsii.String("eu-west-1"),
 	}
-
-	// Uncomment if you know exactly what account and region you want to deploy
-	// the stack to. This is the recommendation for production stacks.
-	//---------------------------------------------------------------------------
-	// return &awscdk.Environment{
-	//  Account: jsii.String("123456789012"),
-	//  Region:  jsii.String("us-east-1"),
-	// }
-
-	// Uncomment to specialize this stack for the AWS Account and Region that are
-	// implied by the current CLI configuration. This is recommended for dev
-	// stacks.
-	//---------------------------------------------------------------------------
-	// return &awscdk.Environment{
-	//  Account: jsii.String(os.Getenv("CDK_DEFAULT_ACCOUNT")),
-	//  Region:  jsii.String(os.Getenv("CDK_DEFAULT_REGION")),
-	// }
 }

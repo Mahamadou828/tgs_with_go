@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"go.uber.org/zap"
-	"os"
 )
 
 type AWS struct {
@@ -34,8 +33,6 @@ type parser struct {
 }
 
 func New(logger *zap.SugaredLogger, config Config) (*AWS, error) {
-
-	_, err := os.OpenFile("/root/.aws/credentials", os.O_RDWR, 0755)
 
 	//Initiate a new aws session
 	sess, err := session.NewSessionWithOptions(session.Options{
