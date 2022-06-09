@@ -13,8 +13,6 @@ COPY . /service
 #Build the service binary
 WORKDIR /service/app/service/api
 RUN go build -ldflags "-X main.build=${BUILD_REF}" -ldflags "-X main.env=${ENV}"
-#@todo later we will have to build the admin binary
-#@todo Later here we will have to build the processor binary
 
 
 # Run the Go Binary in Alpine.

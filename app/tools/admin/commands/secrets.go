@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/Mahamadou828/tgs_with_golang/business/sys/aws"
 	awsToolkit "github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/s3"
 	"go.uber.org/zap"
 	"io/ioutil"
 	"os"
@@ -13,9 +12,9 @@ import (
 )
 
 const (
-	S3Src        = "s3file"
+	S3Src        = "s3"
 	CliSrc       = "cli"
-	LocalFileSrc = "localfile"
+	LocalFileSrc = "local"
 )
 
 type CreateSecretCfg struct {
@@ -51,10 +50,7 @@ func CreateSecret(cfg CreateSecretCfg) error {
 	switch cfg.SrcType {
 	case S3Src:
 		buffer := awsToolkit.NewWriteAtBuffer([]byte{})
-		_, err := sessAws.S3.DownloaderManager.Download(buffer, &s3.GetObjectInput{
-			Bucket: awsToolkit.String("tgs-with-go-secrets"),
-			Key:    awsToolkit.String("secrets-development-tgs-api"),
-		})
+		_, err := sessAws.S3.Download(buffer, cfg.Bucket, cfg.Key)
 		if err != nil {
 			return err
 		}

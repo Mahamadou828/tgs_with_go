@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
 	"go.uber.org/zap"
+	"strings"
 )
 
 // Ssm provide an api to interact with the
@@ -78,7 +79,9 @@ func (s *Ssm) ListSecrets(service, env string) (map[string]string, error) {
 			}
 		}
 
-		secrets[*result.Name] = *result.SecretString
+		//get rid of the env prefix from secret name
+		name := strings.Split(*result.Name, "-")[1]
+		secrets[name] = *result.SecretString
 	}
 
 	return secrets, nil
@@ -87,7 +90,7 @@ func (s *Ssm) ListSecrets(service, env string) (map[string]string, error) {
 func (s *Ssm) CreateSecret(name, value, service, env, desc string) error {
 	input := &secretsmanager.CreateSecretInput{
 		Description: aws.String(desc),
-		Name:        aws.String(name),
+		Name:        aws.String(env + "-" + name),
 		Tags: []*secretsmanager.Tag{
 			{
 				Key:   aws.String("service"),
@@ -133,6 +136,56 @@ func (s *Ssm) CreateSecret(name, value, service, env, desc string) error {
 			// Print the error, cast err to awserr.Error to get the Code and
 			// Message from an error.
 			return err
+		}
+	}
+
+	return nil
+}
+
+func (s *Ssm) UpdateOrCreateSecret(name, value, service, env, desc string) error {
+	secrets, err := s.ListSecrets(service, env)
+	if err != nil {
+		return err
+	}
+
+	_, ok := secrets[name]
+
+	if !ok {
+		return s.CreateSecret(name, value, service, env, desc)
+	}
+
+	input := &secretsmanager.UpdateSecretInput{
+		SecretId:     aws.String(env + "-" + name),
+		SecretString: aws.String(value),
+	}
+
+	_, err = s.svc.UpdateSecret(input)
+	if err != nil {
+		if aerr, ok := err.(awserr.Error); ok {
+			switch aerr.Code() {
+			case secretsmanager.ErrCodeInvalidParameterException:
+				return fmt.Errorf(secretsmanager.ErrCodeInvalidParameterException, aerr.Error())
+			case secretsmanager.ErrCodeInvalidRequestException:
+				return fmt.Errorf(secretsmanager.ErrCodeInvalidRequestException, aerr.Error())
+			case secretsmanager.ErrCodeLimitExceededException:
+				return fmt.Errorf(secretsmanager.ErrCodeLimitExceededException, aerr.Error())
+			case secretsmanager.ErrCodeEncryptionFailure:
+				return fmt.Errorf(secretsmanager.ErrCodeEncryptionFailure, aerr.Error())
+			case secretsmanager.ErrCodeResourceExistsException:
+				return fmt.Errorf(secretsmanager.ErrCodeResourceExistsException, aerr.Error())
+			case secretsmanager.ErrCodeResourceNotFoundException:
+				return fmt.Errorf(secretsmanager.ErrCodeResourceNotFoundException, aerr.Error())
+			case secretsmanager.ErrCodeMalformedPolicyDocumentException:
+				return fmt.Errorf(secretsmanager.ErrCodeMalformedPolicyDocumentException, aerr.Error())
+			case secretsmanager.ErrCodeInternalServiceError:
+				return fmt.Errorf(secretsmanager.ErrCodeInternalServiceError, aerr.Error())
+			case secretsmanager.ErrCodePreconditionNotMetException:
+				return fmt.Errorf(secretsmanager.ErrCodePreconditionNotMetException, aerr.Error())
+			case secretsmanager.ErrCodeDecryptionFailure:
+				return fmt.Errorf(secretsmanager.ErrCodeDecryptionFailure, aerr.Error())
+			default:
+				return fmt.Errorf(aerr.Error())
+			}
 		}
 	}
 

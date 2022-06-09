@@ -1,0 +1,1 @@
+{"apiKeys":[],"routes":[{"resourceName":"test","methods":[{"type":"GET","enabledAuthorizer":false,"path":"test"}]}],"usagePlans":[]}

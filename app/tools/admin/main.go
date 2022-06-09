@@ -52,7 +52,7 @@ func run(log *zap.SugaredLogger) error {
 
 	for _, command := range cfg.Commands {
 		switch command {
-		case "migrate":
+		case "db-migrate":
 			dbCfg := struct {
 				User         string `conf:"default:postgres"`
 				Password     string `conf:"default:postgres"`
@@ -79,7 +79,7 @@ func run(log *zap.SugaredLogger) error {
 				cfg.Version,
 				log,
 			)
-		case "seed":
+		case "db-seed":
 			dbCfg := struct {
 				User         string `conf:"default:postgres"`
 				Password     string `conf:"default:postgres"`
@@ -106,7 +106,7 @@ func run(log *zap.SugaredLogger) error {
 				cfg.Version,
 				log,
 			)
-		case "createsecret":
+		case "ssm-create-secret":
 			scrCfg := struct {
 				Filename string   `conf:"optional"`
 				Service  string   `conf:"required"`
@@ -136,7 +136,8 @@ func run(log *zap.SugaredLogger) error {
 				Key:      scrCfg.Key,
 				Secrets:  scrCfg.Secrets,
 			})
-		case "uploadfile":
+
+		case "s3-upload-file":
 			uplCfg := struct {
 				File   string `conf:"required"`
 				Bucket string `conf:"required"`
@@ -147,7 +148,7 @@ func run(log *zap.SugaredLogger) error {
 				return fmt.Errorf("can't start command %s because of missing configuration %w", command, err)
 			}
 
-			err = commands.Download(
+			err = commands.Upload(
 				aws.Config{
 					Account:             cfg.AwsAccount,
 					Service:             service,
@@ -158,6 +159,41 @@ func run(log *zap.SugaredLogger) error {
 				uplCfg.File,
 				uplCfg.Bucket,
 				uplCfg.Key,
+			)
+		case "agw-spec-create":
+			err = commands.CreateAgwSpec(
+				aws.Config{
+					Account:             cfg.AwsAccount,
+					Service:             service,
+					Env:                 cfg.Env,
+					UnsafeIgnoreSecrets: true,
+				},
+				log,
+				cfg.Env,
+			)
+		case "agw-spec-route-create":
+			rCfg := struct {
+				ResourceName      string `config:"required"`
+				Type              string `config:"required"`
+				EnabledAuthorizer bool   `config:"required"`
+				ResourcePath      string `config:"required"`
+			}{}
+
+			if _, err = config.Parse(&rCfg, service); err != nil {
+				return fmt.Errorf("can't start command %s because of missing configuration %w", command, err)
+			}
+
+			err = commands.CreateRouteInSpecOnly(
+				aws.Config{
+					Account:             cfg.AwsAccount,
+					Service:             service,
+					Env:                 cfg.Env,
+					UnsafeIgnoreSecrets: true,
+				},
+				log,
+				cfg.Env,
+				rCfg.ResourceName,
+				commands.Method{Type: rCfg.Type, EnabledAuthorizer: rCfg.EnabledAuthorizer, Path: rCfg.ResourcePath},
 			)
 		case "test":
 			fmt.Println("Test Command")

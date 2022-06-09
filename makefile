@@ -54,7 +54,7 @@ kind-up:
 		--image kindest/node:v1.23.0@sha256:49824ab1727c04e56a21a5d8372a402fcd32ea51ac96a2706a12af38934f81ac \
 		--name $(KIND_CLUSTER) \
 		--config config/k8s/kind/kind-config.yaml
-	kubectl config set-context --current --namespace=tgs-system
+	kubectl config set-context --current --namespace=staging
 
 kind-down:
 	kind delete cluster --name $(KIND_CLUSTER)
@@ -89,6 +89,7 @@ db-start: db-up db-migrate db-seed
 
 db-restart: db-destroy db-up db-migrate db-seed
 
+#================================================================= Admin Command
 #Destroy the local postgres sql database
 db-destroy:
 	docker stop postgres-db || true && docker rm postgres-db || true
@@ -106,3 +107,18 @@ db-migrate:
 #make db-seed DB_VERSION=v1
 db-seed:
 	go run app/tools/admin/main.go --commands=seed --version=$(DB_VERSION) --env=$(ENV) --awsaccount=$(AWS_ACCOUNT) | go run app/tools/logfmt/main.go
+#Upload a s3 file
+#make s3-upload ENV=development FILE_PATH=FILE_PATH BUCKET_NAME=BUCKET_NAME BUCKET_KEY=BUCKET_KEY
+s3-upload:
+	go run app/tools/admin/main.go --commands=s3-upload-file --aws-account=$(AWS_ACCOUNT) --version=$(VERSION) --env=$(ENV) --file=$(FILE_PATH) --bucket=$(BUCKET_NAME) --key=$(BUCKET_KEY)
+
+#Create Api Gateway spec
+#make agw-create-spec ENV=$(ENV) AWS_ACCOUNT=$(AWS_ACCOUNT) VERSION=$(VERSION)
+agw-spec-create:
+	go run app/tools/admin/main.go --commands=agw-spec-create --aws-account=$(AWS_ACCOUNT) --version=$(VERSION) --env=$(ENV)
+
+
+#Create a new agw route inside the spec
+#make agw-spec-route-create ENV=$(ENV) AWS_ACCOUNT=$(AWS_ACCOUNT) VERSION=$(VERSION) TYPE=$(TYPE) RESOURCE_NAME=$(RESOURCE_NAME) RESOURCE_PATH=$(RESOURCE_PATH) ENABLED_AUTHORIZER=$(ENABLED_AUTHORIZER)
+agw-spec-route-create:
+	go run app/tools/admin/main.go --commands=agw-spec-route-create --aws-account=$(AWS_ACCOUNT) --version=$(VERSION) --env=$(ENV) --type=$(TYPE) --resource-name=$(RESOURCE_NAME) --resource-path=$(RESOURCE_PATH) --enabled-authorizer=$(ENABLED_AUTHORIZER)
