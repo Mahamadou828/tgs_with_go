@@ -110,4 +110,15 @@ db-seed:
 #Upload a s3 file
 #make s3-upload ENV=development FILE_PATH=FILE_PATH BUCKET_NAME=BUCKET_NAME BUCKET_KEY=BUCKET_KEY
 s3-upload:
-	go run app/tools/admin/main.go --commands=uploadfile --awsaccount=$(AWS_ACCOUNT) --version=$(VERSION) --env=$(ENV) --file=$(FILE_PATH) --bucket=$(BUCKET_NAME) --key=$(BUCKET_KEY)
+	go run app/tools/admin/main.go --commands=s3-upload-file --aws-account=$(AWS_ACCOUNT) --version=$(VERSION) --env=$(ENV) --file=$(FILE_PATH) --bucket=$(BUCKET_NAME) --key=$(BUCKET_KEY)
+
+#Create Api Gateway spec
+#make agw-create-spec ENV=$(ENV) AWS_ACCOUNT=$(AWS_ACCOUNT) VERSION=$(VERSION)
+agw-spec-create:
+	go run app/tools/admin/main.go --commands=agw-spec-create --aws-account=$(AWS_ACCOUNT) --version=$(VERSION) --env=$(ENV)
+
+
+#Create a new agw route inside the spec
+#make agw-spec-route-create ENV=$(ENV) AWS_ACCOUNT=$(AWS_ACCOUNT) VERSION=$(VERSION) TYPE=$(TYPE) RESOURCE_NAME=$(RESOURCE_NAME) RESOURCE_PATH=$(RESOURCE_PATH) ENABLED_AUTHORIZER=$(ENABLED_AUTHORIZER)
+agw-spec-route-create:
+	go run app/tools/admin/main.go --commands=agw-spec-route-create --aws-account=$(AWS_ACCOUNT) --version=$(VERSION) --env=$(ENV) --type=$(TYPE) --resource-name=$(RESOURCE_NAME) --resource-path=$(RESOURCE_PATH) --enabled-authorizer=$(ENABLED_AUTHORIZER)

@@ -1,9 +1,11 @@
 package aws
 
 import (
-	"github.com/aws/aws-sdk-go/aws"
 	"io"
+	"strings"
 
+	"github.com/aws/aws-sdk-go/aws"
+	awsToolkit "github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
@@ -11,21 +13,21 @@ import (
 )
 
 type S3 struct {
-	DownloaderManager *s3manager.Downloader
-	UploaderManager   *s3manager.Uploader
+	downloaderManager *s3manager.Downloader
+	uploaderManager   *s3manager.Uploader
 	Log               *zap.SugaredLogger
 }
 
 func NewS3(log *zap.SugaredLogger, sess *session.Session) *S3 {
 	return &S3{
-		DownloaderManager: s3manager.NewDownloader(sess),
-		UploaderManager:   s3manager.NewUploader(sess),
+		downloaderManager: s3manager.NewDownloader(sess),
+		uploaderManager:   s3manager.NewUploader(sess),
 		Log:               log,
 	}
 }
 
 func (s S3) Download(w io.WriterAt, bucketName, key string) (int64, error) {
-	numBytes, err := s.DownloaderManager.Download(w, &s3.GetObjectInput{
+	numBytes, err := s.downloaderManager.Download(w, &s3.GetObjectInput{
 		Bucket: aws.String(bucketName),
 		Key:    aws.String(key),
 	})
@@ -34,4 +36,20 @@ func (s S3) Download(w io.WriterAt, bucketName, key string) (int64, error) {
 	}
 
 	return numBytes, nil
+}
+
+func (s S3) Upload(b []byte, bucketName, key, env, contentType string) error {
+	_, err := s.uploaderManager.Upload(&s3manager.UploadInput{
+		Body:        strings.NewReader(string(b)),
+		Bucket:      awsToolkit.String(bucketName),
+		ContentType: awsToolkit.String(contentType),
+		Key:         awsToolkit.String(key),
+		Metadata:    map[string]*string{"env": awsToolkit.String(env)},
+	})
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

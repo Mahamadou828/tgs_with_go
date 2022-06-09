@@ -64,27 +64,7 @@ func main() {
 
 	defer sentry.Flush(2 * time.Second)
 
-	//if err := run(log); err != nil {
-	//	panic(err)
-	//}
-
-	//@todo remove
-	debugMux := handlers.DebugMux(build, log, nil)
-
-	serverErrors := make(chan error, 1)
-
-	go func() {
-		if err := http.ListenAndServe("0.0.0.0:4000", debugMux); err != nil {
-			log.Errorw("shutdown debug router", "status", "debug router error", "error", err)
-		}
-	}()
-
-	go func() {
-		serverErrors <- http.ListenAndServe("0.0.0.0:3000", handlers.SimpleMux(env))
-	}()
-
-	select {
-	case err := <-serverErrors:
+	if err := run(log); err != nil {
 		panic(err)
 	}
 }

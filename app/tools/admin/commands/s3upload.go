@@ -1,11 +1,11 @@
 package commands
 
 import (
-	"github.com/Mahamadou828/tgs_with_golang/business/sys/aws"
-	awsToolkit "github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
-	"go.uber.org/zap"
+	"io/ioutil"
 	"os"
+
+	"github.com/Mahamadou828/tgs_with_golang/business/sys/aws"
+	"go.uber.org/zap"
 )
 
 //Upload take a local file and upload it to a s3 bucket. For now we support only json files
@@ -18,13 +18,11 @@ func Upload(cfg aws.Config, log *zap.SugaredLogger, file, bucket, key string) er
 	if err != nil {
 		return err
 	}
-	_, err = sessAws.S3.UploaderManager.Upload(&s3manager.UploadInput{
-		Body:        f,
-		Bucket:      awsToolkit.String(bucket),
-		ContentType: awsToolkit.String("application/json"),
-		Key:         awsToolkit.String(key),
-		Metadata:    map[string]*string{"env": awsToolkit.String(cfg.Env)},
-	})
+	b, err := ioutil.ReadAll(f)
+	if err != nil {
+		return err
+	}
+	err = sessAws.S3.Upload(b, bucket, key, cfg.Env, "application/json")
 
 	return err
 }

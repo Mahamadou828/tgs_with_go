@@ -6,7 +6,9 @@ import (
 	"github.com/Mahamadou828/tgs_with_golang/business/sys/aws"
 	"github.com/Mahamadou828/tgs_with_golang/foundation/logger"
 	"github.com/aws/aws-cdk-go/awscdk/v2"
+	apigateway "github.com/aws/aws-cdk-go/awscdk/v2/awsapigateway"
 	scalingCapacity "github.com/aws/aws-cdk-go/awscdk/v2/awsapplicationautoscaling"
+	cognito "github.com/aws/aws-cdk-go/awscdk/v2/awscognito"
 	ec2 "github.com/aws/aws-cdk-go/awscdk/v2/awsec2"
 	ecr "github.com/aws/aws-cdk-go/awscdk/v2/awsecr"
 	ecs "github.com/aws/aws-cdk-go/awscdk/v2/awsecs"
@@ -36,37 +38,38 @@ type TgsStackProps struct {
 	sess *aws.AWS
 }
 
-type ApiKeys struct {
-	Value       string `json:"Value"`
-	Name        string `json:"Name"`
-	Description string `json:"Description"`
-	UsagePlan   string `json:"UsagePlan"`
+type ApiKey struct {
+	Value       string `json:"value"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	UsagePlan   string `json:"usagePlan"`
+	GenerateKey bool   `json:"generateKey"`
 }
 
-type Methods struct {
-	Type              string `json:"Type"`
-	EnabledAuthorizer bool   `json:"EnabledAuthorizer"`
-	Path              string `json:"Path"`
+type Method struct {
+	Type              string `json:"type"`
+	EnabledAuthorizer bool   `json:"enabledAuthorizer"`
+	Path              string `json:"path"`
 }
 
-type ApiRoutes struct {
-	ResourceName string    `json:"ResourceName"`
-	Methods      []Methods `json:"Methods"`
+type ApiRoute struct {
+	ResourceName string   `json:"resourceName"`
+	Methods      []Method `json:"methods"`
 }
 
-type UsagePlans struct {
-	Name        string `json:"Name"`
-	RateLimit   int    `json:"RateLimit"`
-	BurstLimit  int    `json:"BurstLimit"`
-	Description string `json:"Description"`
+type UsagePlan struct {
+	Name        string `json:"name"`
+	RateLimit   int    `json:"rateLimit"`
+	BurstLimit  int    `json:"burstLimit"`
+	Description string `json:"description"`
 }
 
-//ApiGatewaySpec regroup the set of route and api key to create along with the api gateway
+//ApiSpecification regroup the set of route and api key to create along with the api gateway
 //To see file format read doc.go file
-type ApiGatewaySpec struct {
-	ApiKeys    []ApiKeys    `json:"ApiKeys"`
-	Routes     []ApiRoutes  `json:"Routes"`
-	UsagePlans []UsagePlans `json:"UsagePlans"`
+type ApiSpecification struct {
+	ApiKeys    []ApiKey    `json:"apiKeys"`
+	Routes     []ApiRoute  `json:"routes"`
+	UsagePlans []UsagePlan `json:"usagePlans"`
 }
 
 func NewStack(scope constructs.Construct, id *string, props *TgsStackProps) awscdk.Stack {
@@ -208,7 +211,7 @@ func NewStack(scope constructs.Construct, id *string, props *TgsStackProps) awsc
 		}),
 		DatabaseName: jsii.String(props.env + "database"),
 		InstanceType: ec2.InstanceType_Of(ec2.InstanceClass_BURSTABLE3, ec2.InstanceSize_SMALL),
-		Credentials: rds.Credentials_FromGeneratedSecret(jsii.String("syscdk"), &rds.CredentialsBaseOptions{
+		Credentials: rds.Credentials_FromGeneratedSecret(jsii.String(props.env), &rds.CredentialsBaseOptions{
 			SecretName: jsii.String(props.env + "-dbpassword"),
 		}),
 	})
@@ -274,16 +277,16 @@ func NewStack(scope constructs.Construct, id *string, props *TgsStackProps) awsc
 	})
 
 	//send client app id and pool name to aws secrets manager
-	if err := props.sess.Ssm.CreateSecret("cognitouserpoolid", *c.UserPoolId(), props.service, props.env, "user pool id"); err != nil {
+	if err := props.sess.Ssm.UpdateOrCreateSecret("cognitouserpoolid", *c.UserPoolId(), props.service, props.env, "user pool id"); err != nil {
 		panic(err)
 	}
-	if err := props.sess.Ssm.CreateSecret("cognitoclientid", *client.UserPoolClientId(), props.service, props.env, "user pool id"); err != nil {
+	if err := props.sess.Ssm.UpdateOrCreateSecret("cognitoclientid", *client.UserPoolClientId(), props.service, props.env, "user pool id"); err != nil {
 		panic(err)
 	}
 	//generate a seed for the sign-in user preferred_username
 	//@todo generate a correct seed
 	seed := uuid.NewString()
-	if err := props.sess.Ssm.CreateSecret("cognitoseed", seed, props.service, props.env, "user pool id"); err != nil {
+	if err := props.sess.Ssm.UpdateOrCreateSecret("cognitoseed", seed, props.service, props.env, "user pool id"); err != nil {
 		panic(err)
 	}
 	//@todo add lambda trigger for confirm signup
@@ -293,12 +296,11 @@ func NewStack(scope constructs.Construct, id *string, props *TgsStackProps) awsc
 	//create the sqs queue
 	queueName := props.env + "-tgs-queue"
 	sqs.NewQueue(stack, jsii.String(props.env+"-tgs-queue"), &sqs.QueueProps{
-		ContentBasedDeduplication: jsii.Bool(true),
-		DeliveryDelay:             awscdk.Duration_Seconds(jsii.Number(15)),
-		QueueName:                 jsii.String(queueName),
-		VisibilityTimeout:         awscdk.Duration_Hours(jsii.Number(12)),
+		DeliveryDelay:     awscdk.Duration_Seconds(jsii.Number(15)),
+		QueueName:         jsii.String(queueName),
+		VisibilityTimeout: awscdk.Duration_Hours(jsii.Number(12)),
 	})
-	if err := props.sess.Ssm.CreateSecret("sqsqueuename", queueName, props.service, props.env, "the name of the sqs queue"); err != nil {
+	if err := props.sess.Ssm.UpdateOrCreateSecret("sqsqueuename", queueName, props.service, props.env, "the name of the sqs queue"); err != nil {
 		panic(err)
 	}
 
@@ -307,12 +309,12 @@ func NewStack(scope constructs.Construct, id *string, props *TgsStackProps) awsc
 	bucket := s3.NewBucket(stack, jsii.String(props.env+"-tgs-invoices"), &s3.BucketProps{
 		Versioned: jsii.Bool(true),
 	})
-	err := props.sess.Ssm.CreateSecret(
+	err := props.sess.Ssm.UpdateOrCreateSecret(
 		"s3invoicesbucketname",
 		*bucket.BucketName(),
 		props.service,
 		props.env,
-		"name of the bucket that store all invoices",
+		"bucket that store all invoices",
 	)
 	if err != nil {
 		panic(err)
@@ -379,7 +381,7 @@ func NewStack(scope constructs.Construct, id *string, props *TgsStackProps) awsc
 		panic(err)
 	}
 
-	var spec ApiGatewaySpec
+	var spec ApiSpecification
 	if err := json.Unmarshal(bytes, &spec); err != nil {
 		panic(err)
 	}
@@ -428,12 +430,13 @@ func NewStack(scope constructs.Construct, id *string, props *TgsStackProps) awsc
 						ConnectionType: apigateway.ConnectionType_VPC_LINK,
 						VpcLink:        link,
 					},
-					IntegrationHttpMethod: jsii.String(method.Path),
+					IntegrationHttpMethod: jsii.String(method.Type),
 				}),
 				&apigateway.MethodOptions{
-					ApiKeyRequired: jsii.Bool(true),
+					ApiKeyRequired: jsii.Bool(false),
 				},
 			)
+
 		}
 	}
 

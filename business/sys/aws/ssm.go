@@ -141,3 +141,53 @@ func (s *Ssm) CreateSecret(name, value, service, env, desc string) error {
 
 	return nil
 }
+
+func (s *Ssm) UpdateOrCreateSecret(name, value, service, env, desc string) error {
+	secrets, err := s.ListSecrets(service, env)
+	if err != nil {
+		return err
+	}
+
+	_, ok := secrets[name]
+
+	if !ok {
+		return s.CreateSecret(name, value, service, env, desc)
+	}
+
+	input := &secretsmanager.UpdateSecretInput{
+		SecretId:     aws.String(env + "-" + name),
+		SecretString: aws.String(value),
+	}
+
+	_, err = s.svc.UpdateSecret(input)
+	if err != nil {
+		if aerr, ok := err.(awserr.Error); ok {
+			switch aerr.Code() {
+			case secretsmanager.ErrCodeInvalidParameterException:
+				return fmt.Errorf(secretsmanager.ErrCodeInvalidParameterException, aerr.Error())
+			case secretsmanager.ErrCodeInvalidRequestException:
+				return fmt.Errorf(secretsmanager.ErrCodeInvalidRequestException, aerr.Error())
+			case secretsmanager.ErrCodeLimitExceededException:
+				return fmt.Errorf(secretsmanager.ErrCodeLimitExceededException, aerr.Error())
+			case secretsmanager.ErrCodeEncryptionFailure:
+				return fmt.Errorf(secretsmanager.ErrCodeEncryptionFailure, aerr.Error())
+			case secretsmanager.ErrCodeResourceExistsException:
+				return fmt.Errorf(secretsmanager.ErrCodeResourceExistsException, aerr.Error())
+			case secretsmanager.ErrCodeResourceNotFoundException:
+				return fmt.Errorf(secretsmanager.ErrCodeResourceNotFoundException, aerr.Error())
+			case secretsmanager.ErrCodeMalformedPolicyDocumentException:
+				return fmt.Errorf(secretsmanager.ErrCodeMalformedPolicyDocumentException, aerr.Error())
+			case secretsmanager.ErrCodeInternalServiceError:
+				return fmt.Errorf(secretsmanager.ErrCodeInternalServiceError, aerr.Error())
+			case secretsmanager.ErrCodePreconditionNotMetException:
+				return fmt.Errorf(secretsmanager.ErrCodePreconditionNotMetException, aerr.Error())
+			case secretsmanager.ErrCodeDecryptionFailure:
+				return fmt.Errorf(secretsmanager.ErrCodeDecryptionFailure, aerr.Error())
+			default:
+				return fmt.Errorf(aerr.Error())
+			}
+		}
+	}
+
+	return nil
+}
