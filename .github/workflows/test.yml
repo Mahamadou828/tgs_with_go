@@ -1,16 +1,16 @@
-name: Go Tests
-
-on:
-  pull_request:
-    branches:
-      - dev
-      - staging
-      - main
-
+$ cat .github/workflows/test.yml
+on: [push, pull_request]
+name: Test
 jobs:
-  go_tests:
-    runs-on: ubuntu-latest
+  test:
+    strategy:
+      matrix:
+        go-version: [1.17.x, 1.18.x]
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v2
-      - name: Run tests
-        run: make tidy | go test ./...
+      - uses: actions/setup-go@v3
+        with:
+          go-version: ${{ matrix.go-version }}
+      - uses: actions/checkout@v3
+      - run: go test ./...
