@@ -99,3 +99,7 @@ http-client.private.env.json
 # CDK asset staging directory
 .cdk.staging
 cdk.out
+
+#ignoring infra output file
+infra.output.json
+spec.json

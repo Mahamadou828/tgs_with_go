@@ -81,7 +81,7 @@ func run(log *zap.SugaredLogger) error {
 
 	log.Info("startup", "GOMAXPROCS", runtime.GOMAXPROCS(0))
 
-	//===========================
+	//=========================== AWS
 	//Init a new aws session
 	sesAws, err := aws.New(log, aws.Config{
 		Account: "formation",

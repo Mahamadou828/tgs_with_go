@@ -6,7 +6,7 @@ import (
 	"github.com/Mahamadou828/tgs_with_golang/business/sys/aws"
 	"github.com/Mahamadou828/tgs_with_golang/foundation/logger"
 	"github.com/aws/aws-cdk-go/awscdk/v2"
-	apigateway "github.com/aws/aws-cdk-go/awscdk/v2/awsapigateway"
+	agw "github.com/aws/aws-cdk-go/awscdk/v2/awsapigateway"
 	scalingCapacity "github.com/aws/aws-cdk-go/awscdk/v2/awsapplicationautoscaling"
 	cognito "github.com/aws/aws-cdk-go/awscdk/v2/awscognito"
 	ec2 "github.com/aws/aws-cdk-go/awscdk/v2/awsec2"
@@ -70,6 +70,10 @@ type ApiSpecification struct {
 	ApiKeys    []ApiKey    `json:"apiKeys"`
 	Routes     []ApiRoute  `json:"routes"`
 	UsagePlans []UsagePlan `json:"usagePlans"`
+}
+
+func formatCfn(props *TgsStackProps, name string) string {
+	return fmt.Sprintf("%s-%s-%s", props.env, props.service, name)
 }
 
 func NewStack(scope constructs.Construct, id *string, props *TgsStackProps) awscdk.Stack {
@@ -216,12 +220,11 @@ func NewStack(scope constructs.Construct, id *string, props *TgsStackProps) awsc
 		}),
 	})
 
-	//creating a cache
-
 	//================================================================= Cognito
 	//create a cognito pool
 	c := cognito.NewUserPool(stack, jsii.String(props.env+"cognitopool"), &cognito.UserPoolProps{
-		UserPoolName: jsii.String(props.env + "-tgs-cognito"),
+		UserPoolName:  jsii.String(props.env + "-tgs-cognito"),
+		RemovalPolicy: awscdk.RemovalPolicy_DESTROY,
 		SignInAliases: &cognito.SignInAliases{
 			Username:          jsii.Bool(true),
 			PreferredUsername: jsii.Bool(true),
@@ -276,19 +279,25 @@ func NewStack(scope constructs.Construct, id *string, props *TgsStackProps) awsc
 		GenerateSecret: jsii.Bool(false),
 	})
 
-	//send client app id and pool name to aws secrets manager
-	if err := props.sess.Ssm.UpdateOrCreateSecret("cognitouserpoolid", *c.UserPoolId(), props.service, props.env, "user pool id"); err != nil {
-		panic(err)
-	}
-	if err := props.sess.Ssm.UpdateOrCreateSecret("cognitoclientid", *client.UserPoolClientId(), props.service, props.env, "user pool id"); err != nil {
-		panic(err)
-	}
+	awscdk.NewCfnOutput(stack, jsii.String("cognitouserpoolid"), &awscdk.CfnOutputProps{
+		Value:       c.UserPoolId(),
+		Description: jsii.String(formatCfn(props, "cognitouserpoolid")),
+	})
+
+	awscdk.NewCfnOutput(stack, jsii.String("cognitoclientid"), &awscdk.CfnOutputProps{
+		Value:       client.UserPoolClientId(),
+		Description: jsii.String(formatCfn(props, "cognitoclientid")),
+	})
+
 	//generate a seed for the sign-in user preferred_username
 	//@todo generate a correct seed
 	seed := uuid.NewString()
-	if err := props.sess.Ssm.UpdateOrCreateSecret("cognitoseed", seed, props.service, props.env, "user pool id"); err != nil {
-		panic(err)
-	}
+
+	awscdk.NewCfnOutput(stack, jsii.String("cognitoseed"), &awscdk.CfnOutputProps{
+		Value:       jsii.String(seed),
+		Description: jsii.String(formatCfn(props, "cognitoseed")),
+	})
+
 	//@todo add lambda trigger for confirm signup
 	//create the lambda pre-authorizer
 
@@ -300,6 +309,8 @@ func NewStack(scope constructs.Construct, id *string, props *TgsStackProps) awsc
 		QueueName:         jsii.String(queueName),
 		VisibilityTimeout: awscdk.Duration_Hours(jsii.Number(12)),
 	})
+
+	//Set the name of the queue inside aws ssm
 	if err := props.sess.Ssm.UpdateOrCreateSecret("sqsqueuename", queueName, props.service, props.env, "the name of the sqs queue"); err != nil {
 		panic(err)
 	}
@@ -309,32 +320,27 @@ func NewStack(scope constructs.Construct, id *string, props *TgsStackProps) awsc
 	bucket := s3.NewBucket(stack, jsii.String(props.env+"-tgs-invoices"), &s3.BucketProps{
 		Versioned: jsii.Bool(true),
 	})
-	err := props.sess.Ssm.UpdateOrCreateSecret(
-		"s3invoicesbucketname",
-		*bucket.BucketName(),
-		props.service,
-		props.env,
-		"bucket that store all invoices",
-	)
-	if err != nil {
-		panic(err)
-	}
+
+	awscdk.NewCfnOutput(stack, jsii.String("s3invoicesbucketname"), &awscdk.CfnOutputProps{
+		Value:       bucket.BucketName(),
+		Description: jsii.String(formatCfn(props, "s3invoicesbucketname")),
+	})
 
 	//================================================================= Billing component
 	//create the billing component
 
 	//================================================================= API Gateway
 	//create a vpc link
-	link := apigateway.NewVpcLink(stack, jsii.String(props.env+"tgs-vpc-link"), &apigateway.VpcLinkProps{
+	link := agw.NewVpcLink(stack, jsii.String(props.env+"tgs-vpc-link"), &agw.VpcLinkProps{
 		Targets: &[]health.INetworkLoadBalancer{
 			nlb,
 		},
 	})
 
 	//create api gateway
-	api := apigateway.NewRestApi(stack, jsii.String(props.env+"-tgs"), &apigateway.RestApiProps{
+	api := agw.NewRestApi(stack, jsii.String(props.env+"-tgs"), &agw.RestApiProps{
 		//Enable Cors
-		DefaultCorsPreflightOptions: &apigateway.CorsOptions{
+		DefaultCorsPreflightOptions: &agw.CorsOptions{
 			AllowOrigins: &[]*string{jsii.String("*")},
 			AllowHeaders: &[]*string{
 				jsii.String("Content-Type"),
@@ -355,7 +361,7 @@ func NewStack(scope constructs.Construct, id *string, props *TgsStackProps) awsc
 			StatusCode: jsii.Number(200),
 		},
 		Deploy: jsii.Bool(true),
-		DeployOptions: &apigateway.StageOptions{
+		DeployOptions: &agw.StageOptions{
 			StageName: jsii.String("main"),
 			//If needed you can specify stage variables here
 			Variables: nil,
@@ -368,9 +374,7 @@ func NewStack(scope constructs.Construct, id *string, props *TgsStackProps) awsc
 	//Download and parsing the api gateway spec from s3
 	file, err := os.Create("spec.json")
 	defer file.Close()
-	defer func() {
-		os.Remove("spec.json")
-	}()
+	defer os.Remove("spec.json")
 
 	_, err = props.sess.S3.Download(file, "tgs-api-gateway-spec", fmt.Sprintf("spec.%s", props.env))
 	if err != nil {
@@ -387,10 +391,10 @@ func NewStack(scope constructs.Construct, id *string, props *TgsStackProps) awsc
 	}
 
 	//create the usage plans for the agw
-	var usagePlans map[string]apigateway.UsagePlan
+	var usagePlans map[string]agw.UsagePlan
 
 	for _, up := range spec.UsagePlans {
-		usagePlans[up.Name] = api.AddUsagePlan(jsii.String(up.Name), &apigateway.UsagePlanProps{
+		usagePlans[up.Name] = api.AddUsagePlan(jsii.String(up.Name), &agw.UsagePlanProps{
 			ApiStages:   nil,
 			Description: jsii.String(up.Description),
 			Name:        jsii.String(up.Name),
@@ -408,7 +412,7 @@ func NewStack(scope constructs.Construct, id *string, props *TgsStackProps) awsc
 		}
 
 		v.AddApiKey(
-			api.AddApiKey(jsii.String(ak.Value), &apigateway.ApiKeyOptions{
+			api.AddApiKey(jsii.String(ak.Value), &agw.ApiKeyOptions{
 				ApiKeyName:  jsii.String(ak.Name),
 				Description: jsii.String(ak.Description),
 				Value:       jsii.String(ak.Value),
@@ -417,28 +421,25 @@ func NewStack(scope constructs.Construct, id *string, props *TgsStackProps) awsc
 		)
 	}
 
-	//create the route
-	for _, route := range spec.Routes {
-		resource := api.Root().AddResource(jsii.String(route.ResourceName), nil)
+	//create a proxy resource
+	proxyResource := api.Root().AddProxy(&agw.ProxyResourceOptions{
+		AnyMethod: jsii.Bool(false),
+	})
 
-		for _, method := range route.Methods {
-			resource.AddMethod(
-				jsii.String(method.Type),
-				apigateway.NewIntegration(&apigateway.IntegrationProps{
-					Type: apigateway.IntegrationType_HTTP_PROXY,
-					Options: &apigateway.IntegrationOptions{
-						ConnectionType: apigateway.ConnectionType_VPC_LINK,
-						VpcLink:        link,
-					},
-					IntegrationHttpMethod: jsii.String(method.Type),
-				}),
-				&apigateway.MethodOptions{
-					ApiKeyRequired: jsii.Bool(false),
-				},
-			)
-
-		}
-	}
+	proxyResource.AddMethod(
+		jsii.String("ANY"),
+		agw.NewIntegration(&agw.IntegrationProps{
+			Type: agw.IntegrationType_HTTP_PROXY,
+			Options: &agw.IntegrationOptions{
+				ConnectionType: agw.ConnectionType_VPC_LINK,
+				VpcLink:        link,
+			},
+			IntegrationHttpMethod: jsii.String("ANY"),
+		}),
+		&agw.MethodOptions{
+			ApiKeyRequired: jsii.Bool(true),
+		},
+	)
 
 	return stack
 }
