@@ -19,7 +19,7 @@ RUN go build -ldflags "-X main.build=${BUILD_REF}" -ldflags "-X main.env=${ENV}"
 FROM alpine:3.15
 ARG BUILD_DATE
 ARG BUILD_REF
-COPY --from=tgs_api --chown=sales:sales /service/app/service/api/api /service/api
+COPY --from=tgs_api /service/app/service/api/api /service/api
 WORKDIR /service
 CMD ["./api"]
 
