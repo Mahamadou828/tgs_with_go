@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"errors"
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -164,27 +165,27 @@ func (s *Ssm) UpdateOrCreateSecret(name, value, service, env, desc string) error
 		if aerr, ok := err.(awserr.Error); ok {
 			switch aerr.Code() {
 			case secretsmanager.ErrCodeInvalidParameterException:
-				return fmt.Errorf(secretsmanager.ErrCodeInvalidParameterException, aerr.Error())
+				return errors.New(secretsmanager.ErrCodeInvalidParameterException)
 			case secretsmanager.ErrCodeInvalidRequestException:
-				return fmt.Errorf(secretsmanager.ErrCodeInvalidRequestException, aerr.Error())
+				return errors.New(secretsmanager.ErrCodeInvalidRequestException)
 			case secretsmanager.ErrCodeLimitExceededException:
-				return fmt.Errorf(secretsmanager.ErrCodeLimitExceededException, aerr.Error())
+				return errors.New(secretsmanager.ErrCodeLimitExceededException)
 			case secretsmanager.ErrCodeEncryptionFailure:
-				return fmt.Errorf(secretsmanager.ErrCodeEncryptionFailure, aerr.Error())
+				return errors.New(secretsmanager.ErrCodeEncryptionFailure)
 			case secretsmanager.ErrCodeResourceExistsException:
-				return fmt.Errorf(secretsmanager.ErrCodeResourceExistsException, aerr.Error())
+				return errors.New(secretsmanager.ErrCodeResourceExistsException)
 			case secretsmanager.ErrCodeResourceNotFoundException:
-				return fmt.Errorf(secretsmanager.ErrCodeResourceNotFoundException, aerr.Error())
+				return errors.New(secretsmanager.ErrCodeResourceNotFoundException)
 			case secretsmanager.ErrCodeMalformedPolicyDocumentException:
-				return fmt.Errorf(secretsmanager.ErrCodeMalformedPolicyDocumentException, aerr.Error())
+				return errors.New(secretsmanager.ErrCodeMalformedPolicyDocumentException)
 			case secretsmanager.ErrCodeInternalServiceError:
-				return fmt.Errorf(secretsmanager.ErrCodeInternalServiceError, aerr.Error())
+				return errors.New(secretsmanager.ErrCodeInternalServiceError)
 			case secretsmanager.ErrCodePreconditionNotMetException:
-				return fmt.Errorf(secretsmanager.ErrCodePreconditionNotMetException, aerr.Error())
+				return errors.New(secretsmanager.ErrCodePreconditionNotMetException)
 			case secretsmanager.ErrCodeDecryptionFailure:
-				return fmt.Errorf(secretsmanager.ErrCodeDecryptionFailure, aerr.Error())
+				return errors.New(secretsmanager.ErrCodeDecryptionFailure)
 			default:
-				return fmt.Errorf(aerr.Error())
+				return errors.New(aerr.Error())
 			}
 		}
 	}
