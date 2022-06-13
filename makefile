@@ -122,3 +122,8 @@ agw-spec-create:
 #make agw-spec-route-create ENV=$(ENV) AWS_ACCOUNT=$(AWS_ACCOUNT) VERSION=$(VERSION) TYPE=$(TYPE) RESOURCE_NAME=$(RESOURCE_NAME) RESOURCE_PATH=$(RESOURCE_PATH) ENABLED_AUTHORIZER=$(ENABLED_AUTHORIZER)
 agw-spec-route-create:
 	go run app/tools/admin/main.go --commands=agw-spec-route-create --aws-account=$(AWS_ACCOUNT) --version=$(VERSION) --env=$(ENV) --type=$(TYPE) --resource-name=$(RESOURCE_NAME) --resource-path=$(RESOURCE_PATH) --enabled-authorizer=$(ENABLED_AUTHORIZER)
+
+#Update secrets on aws ssm base on the aws cdk cfn output
+#make cfn-parse FILE_PATH=$(FILE_PATH)
+cfn-parse:
+	go run app/tools/secretparser/main.go --file-path=$(FILE_PATH)  | go run app/tools/logfmt/main.go
