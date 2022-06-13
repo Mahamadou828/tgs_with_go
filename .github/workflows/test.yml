@@ -8,9 +8,15 @@ on:
       - main
 
 jobs:
+  installing:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install dependencies
+        run: make tidy
   go_tests:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - name: Run tests
-        run: go test ./... 
+        run: go test ./...
