@@ -61,13 +61,7 @@ jobs:
           # Build a docker container and
           # push it to ECR so that it can
           # be deployed to ECS.
-          docker build \
-          		-f config/docker/tgs-api.dockerfile \
-          		-t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG \
-          		--build-arg BUILD_REF=1.0 \
-          		--build-arg ENV=development \
-          		--build-arg BUILD_DATE=`date -u +"%Y-%m-%dT%H:%M:%SZ"` \
-          		.
+          docker build -f config/docker/tgs-api.dockerfile -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG --build-arg BUILD_REF=1.0 --build-arg ENV=development --build-arg BUILD_DATE=`date -u +"%Y-%m-%dT%H:%M:%SZ"`	.
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
 
