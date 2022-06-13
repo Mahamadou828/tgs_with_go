@@ -68,7 +68,7 @@ jobs:
       - name: Download task definition
         id: download-task-definition
         run: |
-          taskDefinitionIdentifier=`aws ecs list-task-definitions | grep -o 'V2StackTASKproduction20FEFB49.*:' | tr -d ':' | head -1`
+          taskDefinitionIdentifier=`aws ecs list-task-definitions | grep -o 'TgsDevelopmentStackdevelopmentNewTaskDefinition9D2FB70B.*:' | tr -d ':' | head -1`
           aws ecs describe-task-definition --task-definition $taskDefinitionIdentifier --query taskDefinition > task-definition.json
 
       - name: Fill in the new image ID in the Amazon ECS task definition
