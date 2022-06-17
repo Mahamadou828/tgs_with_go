@@ -65,7 +65,7 @@ func main() {
 	defer sentry.Flush(2 * time.Second)
 
 	if err := run(log); err != nil {
-		panic(err)
+		sentry.CaptureException(err)
 	}
 }
 
