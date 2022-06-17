@@ -126,7 +126,7 @@ func NewStack(scope constructs.Construct, id *string, props *TgsStackProps) awsc
 		MemoryLimitMiB: jsii.Number(props.capacity.memoryMiB),
 	})
 
-	task.AddContainer(jsii.String(props.env+"tgs-api"), &ecs.ContainerDefinitionOptions{
+	task.AddContainer(jsii.String(props.env+"-tgs-api"), &ecs.ContainerDefinitionOptions{
 		//Tell the ECS task to pull Docker image from previously created ECR
 		Image:          ecs.ContainerImage_FromEcrRepository(rep, jsii.String("latest")),
 		Cpu:            jsii.Number(props.capacity.cpu),

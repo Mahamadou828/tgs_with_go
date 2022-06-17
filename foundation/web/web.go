@@ -5,8 +5,6 @@ package web
 import (
 	"context"
 	"fmt"
-	"github.com/getsentry/sentry-go"
-	"github.com/jmoiron/sqlx"
 	"net/http"
 	"os"
 	"syscall"
@@ -14,7 +12,9 @@ import (
 
 	"github.com/Mahamadou828/tgs_with_golang/business/sys/aws"
 	"github.com/dimfeld/httptreemux"
+	"github.com/getsentry/sentry-go"
 	"github.com/google/uuid"
+	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"
 )
 
