@@ -208,7 +208,7 @@ func NewStack(scope constructs.Construct, id *string, props *TgsStackProps) awsc
 		Vpc:           vpc,
 		RemovalPolicy: awscdk.RemovalPolicy_DESTROY,
 		VpcSubnets: &ec2.SubnetSelection{
-			SubnetType: ec2.SubnetType_PRIVATE_WITH_NAT,
+			SubnetType: ec2.SubnetType_PUBLIC,
 		},
 		Engine: rds.DatabaseInstanceEngine_Postgres(&rds.PostgresInstanceEngineProps{
 			Version: rds.PostgresEngineVersion_VER_14_2(),
