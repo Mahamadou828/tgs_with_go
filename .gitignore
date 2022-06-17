@@ -102,4 +102,4 @@ cdk.out
 
 #ignoring infra output file
 infra.output.json
-spec.json
+spec.jsonf
