@@ -37,6 +37,7 @@ const service = "TGS_API"
 
 type Parser struct {
 	Secrets map[string]string
+	logger  *zap.SugaredLogger
 }
 
 func main() {
@@ -65,6 +66,7 @@ func main() {
 	defer sentry.Flush(2 * time.Second)
 
 	if err := run(log); err != nil {
+		log.Error(err)
 		sentry.CaptureException(err)
 	}
 }
@@ -109,13 +111,13 @@ func run(log *zap.SugaredLogger) error {
 			CorsOrigin      string        `conf:"default:*"`
 		}
 		DB struct {
-			User         string `conf:"default:postgres"`
-			Password     string `conf:"default:postgres"`
-			Host         string `conf:"default:0.0.0.0:5432"`
+			User         string `conf:"required,default:postgres"`
+			Password     string `conf:"required,default:postgres"`
+			Host         string `conf:"required,default:0.0.0.0:5432"`
 			Name         string `conf:"default:postgres"`
 			MaxIdleConns int    `conf:"default:0"`
 			MaxOpenConns int    `conf:"default:0"`
-			DisableTLS   bool   `conf:"default:true"`
+			DisableTLS   bool   `conf:"required,default:true"`
 		}
 		Stripe struct {
 			//the default key for stripe is the public find here
@@ -136,7 +138,7 @@ func run(log *zap.SugaredLogger) error {
 			return err
 		}
 
-		if help, err := config.Parse(&cfg, service, Parser{Secrets: secrets}); err != nil {
+		if help, err := config.Parse(&cfg, service, Parser{Secrets: secrets, logger: log}); err != nil {
 			if errors.Is(err, config.ErrHelpWanted) {
 				fmt.Println(help)
 			}
@@ -261,6 +263,7 @@ func (p Parser) Parse(field config.Field) error {
 	if !ok {
 		//And the secret is required we want to terminate the program
 		if field.Options.Required {
+			p.logger.Infow("require field not present in aws ssm", "name", field.Name)
 			return fmt.Errorf("require field %q not present in aws ssm", field.Name)
 		}
 		//If the secret is not required than we can use the default value

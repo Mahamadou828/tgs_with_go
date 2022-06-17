@@ -19,6 +19,11 @@ type CfnOutput struct {
 		S3Invoicesbucketname string `json:"s3invoicesbucketname"`
 		Cognitouserpoolid    string `json:"cognitouserpoolid"`
 		Cognitoseed          string `json:"cognitoseed"`
+		DbHost               string `json:"dbhost"`
+		DbUser               string `json:"dbuser"`
+		DisableTLS           string `json:"dbdisabletls"`
+		DbName               string `json:"dbname"`
+		DbPassword           string `json:"dbpassword"`
 	} `json:"TgsDevelopmentStack"`
 }
 
@@ -99,6 +104,47 @@ func main() {
 		"TGS_API",
 		"development",
 		"cognitoclientid",
+	)
+	log.Infow("updating dbhost secrets")
+	err = sess.Ssm.UpdateOrCreateSecret(
+		"dbhost",
+		cfnout.TgsDevelopmentStack.DbHost,
+		"TGS_API",
+		"development",
+		"dbhost",
+	)
+	log.Infow("updating dbuser secrets")
+	err = sess.Ssm.UpdateOrCreateSecret(
+		"dbuser",
+		cfnout.TgsDevelopmentStack.DbUser,
+		"TGS_API",
+		"development",
+		"dbuser",
+	)
+
+	log.Infow("updating dbdisabletls secrets")
+	err = sess.Ssm.UpdateOrCreateSecret(
+		"dbdisabletls",
+		cfnout.TgsDevelopmentStack.DisableTLS,
+		"TGS_API",
+		"development",
+		"dbdisabletls",
+	)
+	log.Infow("updating dbname secrets")
+	err = sess.Ssm.UpdateOrCreateSecret(
+		"dbname",
+		cfnout.TgsDevelopmentStack.DbName,
+		"TGS_API",
+		"development",
+		"dbname",
+	)
+	log.Infow("updating dbpassword secrets")
+	err = sess.Ssm.UpdateOrCreateSecret(
+		"dbpassword",
+		cfnout.TgsDevelopmentStack.DbPassword,
+		"TGS_API",
+		"development",
+		"dbpassword",
 	)
 
 	if err != nil {
