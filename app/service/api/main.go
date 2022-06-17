@@ -31,7 +31,7 @@ var build = "1.0"
 
 //The env represent the environment that the current program is running
 //for this specific program we have 3 stages: dev, staging, prod
-var env = "development"
+var env = "local"
 
 const service = "TGS_API"
 
@@ -129,7 +129,7 @@ func run(log *zap.SugaredLogger) error {
 		},
 	}
 
-	if env == "staging" || env == "production" {
+	if env == "staging" || env == "production" || env == "development" {
 		secrets, err := sesAws.Ssm.ListSecrets(service, env)
 
 		if err != nil {
@@ -144,7 +144,7 @@ func run(log *zap.SugaredLogger) error {
 		}
 	}
 
-	if env == "development" {
+	if env == "local" {
 		if help, err := config.Parse(&cfg, service); err != nil {
 			if errors.Is(err, config.ErrHelpWanted) {
 				fmt.Println(help)
