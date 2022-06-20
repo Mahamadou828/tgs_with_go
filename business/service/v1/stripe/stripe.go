@@ -30,7 +30,7 @@ type CreateChargeParams struct {
 	Currency  string
 }
 
-type Payment struct {
+type Charge struct {
 	Challenge bool
 	Status    stripe.PaymentIntentStatus
 	ReturnURL string
@@ -98,7 +98,7 @@ func CreatePaymentMethod(strKey string, cusID string, pm PaymentMethodParams) (P
 	return PaymentMethod{p.ID, true, i.NextAction.RedirectToURL.URL}, nil
 }
 
-func CreateCharge(strKey string, p CreateChargeParams) (Payment, error) {
+func CreateCharge(strKey string, p CreateChargeParams) (Charge, error) {
 	stripe.Key = strKey
 
 	params := &stripe.PaymentIntentParams{
@@ -114,17 +114,17 @@ func CreateCharge(strKey string, p CreateChargeParams) (Payment, error) {
 
 	res, err := paymentintent.New(params)
 	if err != nil {
-		return Payment{}, err
+		return Charge{}, err
 	}
 
 	if res.NextAction != nil {
-		return Payment{true, res.Status, res.NextAction.RedirectToURL.URL}, nil
+		return Charge{true, res.Status, res.NextAction.RedirectToURL.URL}, nil
 	}
 
-	return Payment{false, res.Status, ""}, nil
+	return Charge{false, res.Status, ""}, nil
 }
 
-func CancelPayment(strKey string, id string) error {
+func CancelCharge(strKey string, id string) error {
 	stripe.Key = strKey
 
 	if _, err := paymentintent.Cancel(id, nil); err != nil {
@@ -133,7 +133,7 @@ func CancelPayment(strKey string, id string) error {
 	return nil
 }
 
-func CapturePayment(strKey string, ptID string, amount int64) error {
+func CaptureCharge(strKey string, ptID string, amount int64) error {
 	stripe.Key = strKey
 
 	_, err := paymentintent.Capture(ptID, &stripe.PaymentIntentCaptureParams{

@@ -54,17 +54,13 @@ func (s Store) Query(ctx context.Context, pageNumber, rowsPerPage int) ([]Invoic
 		id
 	OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY`
 
-	var is []InvoicingEntity
+	ies := make([]InvoicingEntity, rowsPerPage)
 
-	if err := database.NamedQuerySlice[InvoicingEntity](ctx, s.log, s.db, q, data, &is); err != nil {
-		return []InvoicingEntity{}, err
+	if err := database.NamedQuerySlice[InvoicingEntity](ctx, s.log, s.db, q, data, &ies); err != nil {
+		return ies, err
 	}
 
-	if is == nil {
-		return []InvoicingEntity{}, nil
-	}
-
-	return is, nil
+	return ies, nil
 }
 
 func (s Store) QueryByID(ctx context.Context, id string) (InvoicingEntity, error) {

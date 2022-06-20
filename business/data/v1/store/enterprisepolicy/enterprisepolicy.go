@@ -78,14 +78,10 @@ func (s Store) Query(ctx context.Context, pageNumber, rowsPerPage int) ([]TeamPo
 		id
 	OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY`
 
-	var policy []TeamPolicy
+	policy := make([]TeamPolicy, rowsPerPage)
 
 	if err := database.NamedQuerySlice[TeamPolicy](ctx, s.log, s.db, q, data, &policy); err != nil {
 		return []TeamPolicy{}, err
-	}
-
-	if policy == nil {
-		return []TeamPolicy{}, nil
 	}
 
 	return policy, nil

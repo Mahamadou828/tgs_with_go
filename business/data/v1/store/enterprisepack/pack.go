@@ -51,14 +51,10 @@ func (s Store) Query(ctx context.Context, pageNumber, rowsPerPage int) ([]Enterp
 		id
 	OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY
 `
-	var packs []EnterprisePack
+	packs := make([]EnterprisePack, rowsPerPage)
 
 	if err := database.NamedQuerySlice[EnterprisePack](ctx, s.log, s.db, q, data, &packs); err != nil {
-		return []EnterprisePack{}, err
-	}
-
-	if packs == nil {
-		return []EnterprisePack{}, nil
+		return packs, err
 	}
 
 	return packs, nil

@@ -35,35 +35,33 @@ func NewCore(log *zap.SugaredLogger, db *sqlx.DB, aws *aws.AWS, stripeKey string
 	}
 }
 
-type Credentials struct {
+type Session struct {
 	Token        string    `json:"token"`
 	RefreshToken string    `json:"refreshToken"`
 	ExpiresIn    int64     `json:"expiresIn"`
 	User         user.User `json:"user"`
 }
 
-func (c Core) Login(ctx context.Context, aggregator string, payload dto.Login) (Credentials, error) {
+func (c Core) Login(ctx context.Context, aggregator string, payload dto.Login) (Session, error) {
 	u, err := c.userStore.QueryByEmailAndAggregator(ctx, payload.Email, aggregator)
 	if err != nil {
-		return Credentials{}, err
+		return Session{}, err
 	}
 	if !u.Active {
-		return Credentials{}, fmt.Errorf("user %s is not active", u.Email)
+		return Session{}, fmt.Errorf("user %s is not active", u.Email)
 	}
 
 	sess, err := c.aws.Cognito.AuthenticateUser(u.CognitoID, payload.Password)
 	if err != nil {
-		return Credentials{}, fmt.Errorf("can't authenticate user %s, reason: %v", u.Email, err)
+		return Session{}, fmt.Errorf("can't authenticate user %s, reason: %v", u.Email, err)
 	}
 
-	cred := Credentials{
+	return Session{
 		Token:        sess.Token,
 		RefreshToken: sess.RefreshToken,
 		ExpiresIn:    sess.ExpireIn,
 		User:         u,
-	}
-
-	return cred, nil
+	}, nil
 }
 
 func (c Core) ConfirmNewPassword(ctx context.Context, payload dto.ConfirmNewPassword) error {
@@ -108,26 +106,25 @@ func (c Core) ResendConfirmationCode(ctx context.Context, id string) error {
 	return c.aws.Cognito.ResendValidateCode(u.CognitoID)
 }
 
-func (c Core) RefreshToken(ctx context.Context, aggregator string, payload dto.RefreshToken) (Credentials, error) {
+func (c Core) RefreshToken(ctx context.Context, aggregator string, payload dto.RefreshToken) (Session, error) {
 	u, err := c.userStore.QueryByID(ctx, payload.ID)
 	if err != nil {
-		return Credentials{}, err
+		return Session{}, err
 	}
 	if u.AggregatorID != aggregator {
-		return Credentials{}, fmt.Errorf("invalid refresh token")
+		return Session{}, fmt.Errorf("invalid refresh token")
 	}
 
 	sess, err := c.aws.Cognito.RefreshToken(payload.RefreshToken)
 	if err != nil {
-		return Credentials{}, fmt.Errorf("session expired")
+		return Session{}, fmt.Errorf("session expired")
 	}
-	cred := Credentials{
+	return Session{
 		Token:        sess.Token,
 		RefreshToken: payload.RefreshToken,
 		ExpiresIn:    sess.ExpireIn,
 		User:         u,
-	}
-	return cred, nil
+	}, nil
 }
 
 func (c Core) Create(ctx context.Context, aggregatorCode string, nu dto.NewUser, now time.Time) (user.User, error) {

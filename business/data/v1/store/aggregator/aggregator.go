@@ -201,14 +201,14 @@ func (s Store) Query(ctx context.Context, pageNumber, rowsPerPage int) ([]Aggreg
 		id
 	OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY`
 
-	var aggrs []Aggregator
+	aggrs := make([]Aggregator, rowsPerPage)
 
 	if err := database.NamedQuerySlice[Aggregator](ctx, s.log, s.db, q, data, &aggrs); err != nil {
 		return []Aggregator{}, err
 	}
 
 	if aggrs == nil {
-		return []Aggregator{}, nil
+		return aggrs, nil
 	}
 
 	return aggrs, nil

@@ -149,14 +149,10 @@ func (s Store) Query(ctx context.Context, pageNumber, rowsPerPage int) ([]Team, 
 		id
 	OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY`
 
-	var teams []Team
+	teams := make([]Team, rowsPerPage)
 
 	if err := database.NamedQuerySlice[Team](ctx, s.log, s.db, q, data, &teams); err != nil {
-		return []Team{}, err
-	}
-
-	if teams == nil {
-		return []Team{}, nil
+		return teams, err
 	}
 
 	return teams, nil
