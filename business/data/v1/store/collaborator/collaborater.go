@@ -72,14 +72,10 @@ func (s Store) Query(ctx context.Context, pageNumber int, rows int) ([]Collabora
 		id 
 	OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY
 `
-	var collabs []Collaborator
+	collabs := make([]Collaborator, rows)
 
 	if err := database.NamedQuerySlice[Collaborator](ctx, s.log, s.db, q, data, &collabs); err != nil {
-		return []Collaborator{}, err
-	}
-
-	if collabs == nil {
-		return []Collaborator{}, nil
+		return collabs, err
 	}
 
 	return collabs, nil

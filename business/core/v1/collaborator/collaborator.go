@@ -29,7 +29,7 @@ type Core struct {
 	stripeKey         string
 }
 
-type Credentials struct {
+type Session struct {
 	Token        string                    `json:"token"`
 	RefreshToken string                    `json:"refreshToken"`
 	ExpiresIn    int64                     `json:"expiresIn"`
@@ -49,7 +49,7 @@ func NewCore(aws *aws.AWS, db *sqlx.DB, log *zap.SugaredLogger, stripeKey string
 	}
 }
 
-func (c Core) Login(ctx context.Context, payload dto.Login) (Credentials, error) {
+func (c Core) Login(ctx context.Context, payload dto.Login) (Session, error) {
 	agg, err := c.aggregatorStore.QueryByCode(ctx, aggregatorCode)
 	//if the tgs-corporate aggregator does not exist we should panic
 	//because we have an integrity issue
@@ -58,43 +58,41 @@ func (c Core) Login(ctx context.Context, payload dto.Login) (Credentials, error)
 	}
 	co, err := c.collaboratorStore.QueryByEmail(ctx, agg.ID, payload.Email)
 	if err != nil {
-		return Credentials{}, err
+		return Session{}, err
 	}
 	if !co.Active {
-		return Credentials{}, fmt.Errorf("user: %s is not active", payload.Email)
+		return Session{}, fmt.Errorf("user: %s is not active", payload.Email)
 	}
 
 	sess, err := c.aws.Cognito.AuthenticateUser(co.CognitoID, payload.Password)
 	if err != nil {
-		return Credentials{}, err
+		return Session{}, err
 	}
-	cred := Credentials{
+
+	return Session{
 		Token:        sess.Token,
 		RefreshToken: sess.RefreshToken,
 		ExpiresIn:    sess.ExpireIn,
 		Collaborator: co,
-	}
-
-	return cred, nil
+	}, nil
 }
 
-func (c Core) RefreshToken(ctx context.Context, payload dto.RefreshToken) (Credentials, error) {
+func (c Core) RefreshToken(ctx context.Context, payload dto.RefreshToken) (Session, error) {
 	co, err := c.collaboratorStore.QueryByID(ctx, payload.ID)
 	if err != nil {
-		return Credentials{}, err
+		return Session{}, err
 	}
 
 	sess, err := c.aws.Cognito.RefreshToken(payload.RefreshToken)
 	if err != nil {
-		return Credentials{}, err
+		return Session{}, err
 	}
-	cred := Credentials{
+	return Session{
 		Token:        sess.Token,
 		RefreshToken: sess.RefreshToken,
 		ExpiresIn:    sess.ExpireIn,
 		Collaborator: co,
-	}
-	return cred, nil
+	}, nil
 }
 
 func (c Core) Create(ctx context.Context, nco dto.NewCollaborator, now time.Time) (collaborator.Collaborator, error) {

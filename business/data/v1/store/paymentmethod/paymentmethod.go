@@ -84,13 +84,13 @@ func (s Store) Query(ctx context.Context, id string, pageNumber, rowsPerPage int
 			id
 		OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY`
 
-	var ps []PaymentMethod
+	pms := make([]PaymentMethod, rowsPerPage)
 
-	if err := database.NamedQuerySlice[PaymentMethod](ctx, s.log, s.db, q, data, &ps); err != nil {
-		return []PaymentMethod{}, err
+	if err := database.NamedQuerySlice[PaymentMethod](ctx, s.log, s.db, q, data, &pms); err != nil {
+		return pms, err
 	}
 
-	return ps, nil
+	return pms, nil
 }
 
 func (s Store) QueryByID(ctx context.Context, id string) (PaymentMethod, error) {

@@ -88,14 +88,10 @@ func (s Store) Query(ctx context.Context, pageNumber, rowsPerPage int) ([]Enterp
 		id
 	OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY`
 
-	var ents []Enterprise
+	ents := make([]Enterprise, rowsPerPage)
 
 	if err := database.NamedQuerySlice[Enterprise](ctx, s.log, s.db, q, data, &ents); err != nil {
-		return []Enterprise{}, err
-	}
-
-	if ents == nil {
-		return []Enterprise{}, nil
+		return ents, err
 	}
 
 	return ents, nil
