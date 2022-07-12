@@ -26,6 +26,42 @@ import (
 	"go.uber.org/zap"
 )
 
+//AppConfig is the set of all config values needed to the current service to work.
+//Please follow the guidance at doc.go for declaring config values.
+type AppConfig struct {
+	config.Version
+	Web struct {
+		DebugHost       string        `conf:"default:0.0.0.0:4000"`
+		ApiHost         string        `conf:"default:0.0.0.0:3000"`
+		ReadTimeout     time.Duration `conf:"default:5s"`
+		WriteTimeout    time.Duration `conf:"default:10s"`
+		IdleTimeout     time.Duration `conf:"default:120s"`
+		ShutdownTimeout time.Duration `conf:"default:20s"`
+		CorsOrigin      string        `conf:"default:*"`
+	}
+	DB struct {
+		User         string `conf:"default:postgres,ssm:RDS_DB_USER"`
+		Password     string `conf:"default:postgres,ssm:RDS_DB_PASSWORD"`
+		Host         string `conf:"default:0.0.0.0:5432,ssm:RDS_DB_HOST"`
+		Name         string `conf:"default:postgres,ssm:RDS_DB_NAME"`
+		MaxIdleConns int    `conf:"default:0"`
+		MaxOpenConns int    `conf:"default:0"`
+		DisableTLS   bool   `conf:"default:true"`
+		Sync         bool   `conf:"default:true"`
+	}
+	Stripe struct {
+		//the default key for stripe is the public find here
+		Key string `conf:"default:sk_test_51JBK0jCSGvJXXYWCsTYoiYekiLy6g4F4kBmMc3LoRpvgjnKi6Mi9YdgX2p82kcVvrng5OMzMwZU3PCJOdzDPbuWk00SDAhuDuY"`
+	}
+	Cognito struct {
+		UserPoolID string `conf:"default:userpool"`
+		ClientID   string `conf:"default:userpool"`
+		//Seed is used to generate unique sub that are used as username
+		//for cognito user
+		Seed string `conf:"default:userpool"`
+	}
+}
+
 //The build represent the current version of the api
 var build = "1.0"
 
@@ -33,12 +69,7 @@ var build = "1.0"
 //for this specific program we have 3 stages: dev, staging, prod
 var env = "local"
 
-const service = "TGS_API"
-
-type Parser struct {
-	Secrets map[string]string
-	logger  *zap.SugaredLogger
-}
+const service = "tgs-api"
 
 func main() {
 	log, err := logger.New("TGS_API")
@@ -83,47 +114,9 @@ func run(log *zap.SugaredLogger) error {
 
 	log.Info("startup", "GOMAXPROCS", runtime.GOMAXPROCS(0))
 
-	//=========================== AWS
-	//Init a new aws session
-	sesAws, err := aws.New(log, aws.Config{
-		Account: "formation",
-		Service: service,
-		Env:     env,
-	})
-	//
-	if err != nil {
-		return fmt.Errorf("can't init an aws session: %w", err)
-	}
-
-	log.Infow("startup", "status", "parsing config struct", "env", env)
-
 	//===========================
 	//Configuration
-	cfg := struct {
-		config.Version
-		Web struct {
-			DebugHost       string        `conf:"default:0.0.0.0:4000"`
-			ApiHost         string        `conf:"default:0.0.0.0:3000"`
-			ReadTimeout     time.Duration `conf:"default:5s"`
-			WriteTimeout    time.Duration `conf:"default:10s"`
-			IdleTimeout     time.Duration `conf:"default:120s"`
-			ShutdownTimeout time.Duration `conf:"default:20s"`
-			CorsOrigin      string        `conf:"default:*"`
-		}
-		DB struct {
-			User         string `conf:"required,default:postgres"`
-			Password     string `conf:"required,default:postgres"`
-			Host         string `conf:"required,default:0.0.0.0:5432"`
-			Name         string `conf:"default:postgres"`
-			MaxIdleConns int    `conf:"default:0"`
-			MaxOpenConns int    `conf:"default:0"`
-			DisableTLS   bool   `conf:"required,default:true"`
-		}
-		Stripe struct {
-			//the default key for stripe is the public find here
-			Key string `conf:"default:sk_test_51JBK0jCSGvJXXYWCsTYoiYekiLy6g4F4kBmMc3LoRpvgjnKi6Mi9YdgX2p82kcVvrng5OMzMwZU3PCJOdzDPbuWk00SDAhuDuY"`
-		}
-	}{
+	cfg := AppConfig{
 		Version: config.Version{
 			Build: build,
 			Desc:  "TGS api",
@@ -131,28 +124,56 @@ func run(log *zap.SugaredLogger) error {
 		},
 	}
 
-	if env == "staging" || env == "production" || env == "development" {
-		secrets, err := sesAws.Ssm.ListSecrets(service, env)
-
-		if err != nil {
-			return err
-		}
-
-		if help, err := config.Parse(&cfg, service, Parser{Secrets: secrets, logger: log}); err != nil {
-			if errors.Is(err, config.ErrHelpWanted) {
-				fmt.Println(help)
-			}
-			return err
-		}
+	//get all the ssm service secrets
+	log.Infow("ssm", "status", "retrieving all the secret for", "service", service, "env", env)
+	log.Infow("startup", "status", "parsing config struct", "env", env)
+	secrets, err := aws.GetSecretList(service, env)
+	if err != nil {
+		return fmt.Errorf("can't list secrets %v", err)
 	}
 
-	if env == "local" {
-		if help, err := config.Parse(&cfg, service); err != nil {
-			if errors.Is(err, config.ErrHelpWanted) {
-				fmt.Println(help)
+	//create a custom parser for the config package
+	parser := func(f config.Field, defaultValue string) error {
+		//get the secret value for the field
+		val, ok := secrets[f.Options.SSMName]
+
+		//if no secret was found for that field
+		if !ok {
+			if f.Options.Required {
+				log.Infow("require field not present in aws ssm", "name", f.Name)
+				return fmt.Errorf("require field %q not present in aws ssm", f.Name)
 			}
-			return err
+			return config.SetFieldValue(f, defaultValue)
 		}
+
+		return config.SetFieldValue(f, val)
+	}
+
+	//parse the app config
+	if help, err := config.Parse(&cfg, service, parser); err != nil {
+		if errors.Is(err, config.ErrHelpWanted) {
+			fmt.Println(help)
+		}
+		return err
+	}
+
+	//===========================
+	//AWS
+	//Init a new aws session
+	awsClient, err := aws.New(
+		log,
+		aws.Config{
+			Service: service,
+			Env:     env,
+			Cognito: struct {
+				UserPoolID string
+				ClientID   string
+				Seed       string
+			}(cfg.Cognito),
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("can't init an aws session: %w", err)
 	}
 
 	//===========================
@@ -204,7 +225,7 @@ func run(log *zap.SugaredLogger) error {
 		Shutdown:   shutdown,
 		Log:        log,
 		Build:      build,
-		AWS:        sesAws,
+		AWS:        awsClient,
 		Env:        env,
 		Service:    "api",
 		CorsOrigin: cfg.Web.CorsOrigin,
@@ -251,26 +272,4 @@ func run(log *zap.SugaredLogger) error {
 	}
 
 	return nil
-}
-
-func (p Parser) Parse(field config.Field) error {
-	//The value of the field is equal by default to the tag value
-	defaultVal := field.Options.DefaultVal
-
-	val, ok := p.Secrets[field.Name]
-
-	//If the secret was not found
-	if !ok {
-		//And the secret is required we want to terminate the program
-		if field.Options.Required {
-			p.logger.Infow("require field not present in aws ssm", "name", field.Name)
-			return fmt.Errorf("require field %q not present in aws ssm", field.Name)
-		}
-		//If the secret is not required than we can use the default value
-		if !field.Options.Required {
-			val = defaultVal
-		}
-	}
-
-	return config.SetFieldValue(field, val)
 }

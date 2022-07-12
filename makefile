@@ -1,10 +1,11 @@
 ##@todo when launching the api in other env than dev, the app can't connect to the aws service because we should mount the local .aws file to a volume inside the kluster
 SHELL := /bin/bash
 KIND_CLUSTER := tgs-cluster
-ENV := development
+ENV := local
 VERSION := 1.0
 DB_VERSION := v1
 AWS_ACCOUNT := formation
+SERVICE := tgs-api
 
 #Vendor all the project dependencies.
 tidy:
@@ -90,6 +91,9 @@ db-start: db-up db-migrate db-seed
 db-restart: db-destroy db-up db-migrate db-seed
 
 #================================================================= Admin Command
+#start admin cli:
+admin:
+	go run app/tools/admin/main.go
 #Destroy the local postgres sql database
 db-destroy:
 	docker stop postgres-db || true && docker rm postgres-db || true
@@ -101,29 +105,29 @@ db-up:
 #Migrate the database schemas to use the command you should provide the MIGRATE_VERSION:
 #make db-migration DB_VERSION=v1
 db-migrate:
-	go run app/tools/admin/main.go --commands=migrate --version=$(DB_VERSION) --env=$(ENV) --awsaccount=$(AWS_ACCOUNT) | go run app/tools/logfmt/main.go
+	go run app/tools/admin/main.go --command=3 --version=$(DB_VERSION) --service=$(SERVICE) --env=$(ENV) | go run app/tools/logfmt/main.go
 
 #Seed the database with fake data:
 #make db-seed DB_VERSION=v1
 db-seed:
-	go run app/tools/admin/main.go --commands=seed --version=$(DB_VERSION) --env=$(ENV) --awsaccount=$(AWS_ACCOUNT) | go run app/tools/logfmt/main.go
-#Upload a s3 file
-#make s3-upload ENV=development FILE_PATH=FILE_PATH BUCKET_NAME=BUCKET_NAME BUCKET_KEY=BUCKET_KEY
-s3-upload:
-	go run app/tools/admin/main.go --commands=s3-upload-file --aws-account=$(AWS_ACCOUNT) --version=$(VERSION) --env=$(ENV) --file=$(FILE_PATH) --bucket=$(BUCKET_NAME) --key=$(BUCKET_KEY)
-
-#Create Api Gateway spec
-#make agw-create-spec ENV=$(ENV) AWS_ACCOUNT=$(AWS_ACCOUNT) VERSION=$(VERSION)
-agw-spec-create:
-	go run app/tools/admin/main.go --commands=agw-spec-create --aws-account=$(AWS_ACCOUNT) --version=$(VERSION) --env=$(ENV)
-
-
-#Create a new agw route inside the spec
-#make agw-spec-route-create ENV=$(ENV) AWS_ACCOUNT=$(AWS_ACCOUNT) VERSION=$(VERSION) TYPE=$(TYPE) RESOURCE_NAME=$(RESOURCE_NAME) RESOURCE_PATH=$(RESOURCE_PATH) ENABLED_AUTHORIZER=$(ENABLED_AUTHORIZER)
-agw-spec-route-create:
-	go run app/tools/admin/main.go --commands=agw-spec-route-create --aws-account=$(AWS_ACCOUNT) --version=$(VERSION) --env=$(ENV) --type=$(TYPE) --resource-name=$(RESOURCE_NAME) --resource-path=$(RESOURCE_PATH) --enabled-authorizer=$(ENABLED_AUTHORIZER)
+	go run app/tools/admin/main.go --command=4 --version=$(DB_VERSION) --env=$(ENV) --service=$(SERVICE) | go run app/tools/logfmt/main.go
 
 #Update secrets on aws ssm base on the aws cdk cfn output
 #make cfn-parse FILE_PATH=$(FILE_PATH)
 cfn-parse:
 	go run app/tools/secretparser/main.go --file-path=$(FILE_PATH)  | go run app/tools/logfmt/main.go
+
+#================================================================= Infra
+cdk-deploy:
+	cdk deploy --all -O ./local/infra.spec.json
+	go run app/tools/cfnparser/main.go --file-path=local/infra.spec.json --service=$(SERVICE) | go run app/tools/logfmt/main.go
+	rm local/infra.spec.json
+
+
+cdk-destroy:
+	cdk destroy --all
+	rm local/infra.spec.json
+	make destroy-app-pool POOL_NAME=tgs-api/development
+
+destroy-app-pool:
+	aws secretsmanager delete-secret --secret-id $(POOL_NAME) --force-delete-without-recovery --region eu-west-1 --profile formation

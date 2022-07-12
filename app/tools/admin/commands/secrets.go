@@ -1,20 +1,9 @@
 package commands
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/Mahamadou828/tgs_with_golang/business/sys/aws"
-	awsToolkit "github.com/aws/aws-sdk-go/aws"
 	"go.uber.org/zap"
-	"io/ioutil"
-	"os"
-	"strings"
-)
-
-const (
-	S3Src        = "s3"
-	CliSrc       = "cli"
-	LocalFileSrc = "local"
 )
 
 type CreateSecretCfg struct {
@@ -35,67 +24,45 @@ type Secret struct {
 	Description string `json:"Description"`
 }
 
-//CreateSecret create new secret inside aws secret manager service.
+//SSMCreateSecret create new secret inside aws secret manager service.
 //It's possible to specify three secret src: s3 bucket file, local
 //file and cli param. The format of file should be json.
 //And the format of cli param should be --secrets=["secretname:secretvalue:secretdesc"]
-func CreateSecret(cfg CreateSecretCfg) error {
-	var secrets []Secret
-	sessAws, err := aws.New(cfg.Log, cfg.AwsConfig)
+func SSMCreateSecret(cl *aws.Client) error {
+	fmt.Println("Starting creating secret")
 
-	if err != nil {
-		return err
+	for {
+		var name, val string
+		fmt.Printf("enter the secret name: ")
+		if _, err := fmt.Scan(&name); err != nil {
+			return fmt.Errorf("invalid secret name: %v", err)
+		}
+		fmt.Printf("enter the secret value: ")
+		if _, err := fmt.Scan(&val); err != nil {
+			return fmt.Errorf("invalid secret value: %v", err)
+		}
+		fmt.Println("creating new secret")
+		if err := cl.SSM.CreateSecret(name, val); err != nil {
+			return fmt.Errorf("can't create secret: %v", err)
+		}
+
+		fmt.Println("secret created")
+		var choice string
+		fmt.Printf("Would you like to continue (y|n): ")
+		if _, err := fmt.Scan(&choice); err != nil {
+			return fmt.Errorf("failed to continue: %v", err)
+		}
+		if choice == "n" {
+			break
+		}
+
 	}
+	return nil
+}
 
-	switch cfg.SrcType {
-	case S3Src:
-		buffer := awsToolkit.NewWriteAtBuffer([]byte{})
-		_, err := sessAws.S3.Download(buffer, cfg.Bucket, cfg.Key)
-		if err != nil {
-			return err
-		}
-		buf := buffer.Bytes()
-		if len(buf) == 0 {
-			return fmt.Errorf("downloaded file is empty")
-		}
-		fmt.Println(string(buf))
-		if err := json.Unmarshal(buf, &secrets); err != nil {
-			return err
-		}
-	case CliSrc:
-		for _, secret := range cfg.Secrets {
-			parseSecret := strings.Split(secret, ":")
-			if len(parseSecret) != 3 {
-				return fmt.Errorf("secrets malformated: %v, secret should be in the following format: key:value:description", secret)
-			}
-			name, value, desc := parseSecret[0], parseSecret[1], parseSecret[2]
-			secrets = append(secrets, Secret{
-				Name:        name,
-				Value:       value,
-				Description: desc,
-			})
-		}
-	case LocalFileSrc:
-		jsonFile, err := os.Open(cfg.Filename)
-		if err != nil {
-			return err
-		}
-		buf, err := ioutil.ReadAll(jsonFile)
-		if err != nil {
-			return err
-		}
-		if err := json.Unmarshal(buf, &secrets); err != nil {
-			return err
-		}
-	default:
-		return fmt.Errorf("unknown source type %s", cfg.SrcType)
+func SSMCreatePool(cl *aws.Client) error {
+	if err := cl.SSM.CreatePool(); err != nil {
+		return fmt.Errorf("can't create pool: %v", err)
 	}
-
-	for _, secret := range secrets {
-		if err := sessAws.Ssm.CreateSecret(secret.Name, secret.Value, cfg.Service, cfg.Env, secret.Description); err != nil {
-			return err
-		}
-	}
-
 	return nil
 }

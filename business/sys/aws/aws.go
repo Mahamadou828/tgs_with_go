@@ -3,100 +3,73 @@ package aws
 
 import (
 	"fmt"
-	"github.com/Mahamadou828/tgs_with_golang/app/tools/config"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"go.uber.org/zap"
 )
 
-type AWS struct {
+//Client provides an api to interact with AWS services
+type Client struct {
 	logger  *zap.SugaredLogger
 	sess    *session.Session
-	Ssm     *Ssm
+	SSM     *SSM
 	Cognito *Cognito
 	S3      *S3
+	env     string
+	service string
+	account string
 }
 
 type Config struct {
-	Account string
 	Service string
 	Env     string
-	//UnsafeIgnoreSecrets skip secrets validation for other aws service
-	//this is an unsafe parameter because it can lead to malfunctioning of
-	//aws service due to bad configuration
-	UnsafeIgnoreSecrets bool
+	Cognito struct {
+		UserPoolID string
+		ClientID   string
+		//Seed is used to generate unique sub that are used as username
+		//for cognito user
+		Seed string
+	}
 }
 
-type parser struct {
-	Secrets   map[string]string
-	SkipCheck bool
-}
-
-func New(logger *zap.SugaredLogger, config Config) (*AWS, error) {
+func New(logger *zap.SugaredLogger, cfg Config) (*Client, error) {
 
 	//Initiate a new aws session
-	sess, err := session.NewSessionWithOptions(session.Options{
+	sess, err := createSess()
+	if err != nil {
+		return nil, fmt.Errorf("failed to initiate a new session: %v", err)
+	}
+
+	return &Client{
+		logger:  logger,
+		sess:    sess,
+		SSM:     NewSSM(sess, cfg.Service, cfg.Env),
+		Cognito: NewCognito(logger, sess, cfg.Cognito.ClientID, cfg.Cognito.UserPoolID, cfg.Cognito.Seed),
+		S3:      NewS3(logger, sess, cfg.Service, cfg.Env),
+		env:     cfg.Env,
+		service: cfg.Service,
+	}, nil
+}
+
+//GetSecretList allow to retrieve the secret for a given service in a given environment
+//without having to create a new aws client. This function is aimed to be used only for
+//configuration purposes.
+func GetSecretList(service, env string) (map[string]string, error) {
+	//Initiate a new aws session
+	sess, err := createSess()
+	if err != nil {
+		return nil, fmt.Errorf("failed to initiate a new session: %v", err)
+	}
+
+	return NewSSM(sess, service, env).ListSecrets()
+}
+
+func createSess() (*session.Session, error) {
+	return session.NewSessionWithOptions(session.Options{
 		Config: aws.Config{
 			Region:                        aws.String("eu-west-1"),
 			CredentialsChainVerboseErrors: aws.Bool(true),
 		},
-		Profile: config.Account,
+		Profile: "formation",
 	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	ssm := NewSsm(logger, sess)
-
-	cfg := struct {
-		Cognito struct {
-			UserPoolID string
-			ClientID   string
-			//Seed is used to generate unique sub that are used as username
-			//for cognito user
-			Seed string
-		}
-	}{}
-
-	if err := extractConfigFromSecrets(ssm, config.Service, config.Env, config.UnsafeIgnoreSecrets, &cfg); err != nil {
-		return nil, err
-	}
-
-	return &AWS{
-		logger:  logger,
-		sess:    sess,
-		Ssm:     NewSsm(logger, sess),
-		Cognito: NewCognito(logger, sess, cfg.Cognito.ClientID, cfg.Cognito.UserPoolID, cfg.Cognito.Seed),
-		S3:      NewS3(logger, sess),
-	}, nil
-}
-
-//extractConfigFromSecrets Use ssm to extract all config needed to
-//start other aws services ( cognito, s3 etc )
-func extractConfigFromSecrets(ssm *Ssm, service, env string, skipParserCheck bool, cfg any) error {
-	secrets, err := ssm.ListSecrets(service, env)
-
-	if err != nil {
-		return err
-	}
-
-	if _, err := config.Parse(cfg, service, parser{Secrets: secrets, SkipCheck: skipParserCheck}); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (p parser) Parse(field config.Field) error {
-	val, ok := p.Secrets[field.Name]
-
-	if !p.SkipCheck {
-		if !ok {
-			return fmt.Errorf("can't find configuration for aws service. Missing secrets for: %s", field.Name)
-		}
-
-	}
-
-	return config.SetFieldValue(field, val)
 }

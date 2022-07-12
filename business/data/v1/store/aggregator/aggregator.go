@@ -17,10 +17,10 @@ import (
 type Store struct {
 	log *zap.SugaredLogger
 	db  *sqlx.DB
-	aws *aws.AWS
+	aws *aws.Client
 }
 
-func NewStore(log *zap.SugaredLogger, db *sqlx.DB, aws *aws.AWS) Store {
+func NewStore(log *zap.SugaredLogger, db *sqlx.DB, aws *aws.Client) Store {
 	return Store{
 		log: log,
 		db:  db,

@@ -16,7 +16,7 @@ import (
 type Store struct {
 	log *zap.SugaredLogger
 	db  *sqlx.DB
-	aws *aws.AWS
+	aws *aws.Client
 }
 
 type CreateUserParams struct {

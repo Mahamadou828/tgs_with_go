@@ -15,7 +15,7 @@ import (
 
 type Store struct {
 	log *zap.SugaredLogger
-	aws *aws.AWS
+	aws *aws.Client
 	db  *sqlx.DB
 }
 
@@ -29,7 +29,7 @@ type CreateCollaboratorParams struct {
 	AwsID string
 }
 
-func NewStore(log *zap.SugaredLogger, db *sqlx.DB, aws *aws.AWS) Store {
+func NewStore(log *zap.SugaredLogger, db *sqlx.DB, aws *aws.Client) Store {
 	return Store{
 		log: log,
 		aws: aws,
