@@ -25,7 +25,7 @@ type AppConfig struct {
 	Shutdown   chan os.Signal
 	Log        *zap.SugaredLogger
 	Build      string
-	AWS        *aws.AWS
+	AWS        *aws.Client
 	Env        string
 	Service    string
 	CorsOrigin string
@@ -40,7 +40,7 @@ type App struct {
 	mux      *httptreemux.ContextMux
 	shutdown chan os.Signal
 	mw       []Middleware
-	AWS      *aws.AWS
+	AWS      *aws.Client
 	group    *httptreemux.ContextGroup
 }
 

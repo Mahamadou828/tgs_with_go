@@ -44,7 +44,7 @@ type Field struct {
 type FieldOptions struct {
 	Help          string
 	DefaultVal    string
-	EnvName       string
+	SSMName       string
 	FlagName      string
 	ShortFlagName rune
 	NoPrint       bool
@@ -63,12 +63,9 @@ type Tag struct {
 	name  string
 }
 
-//Parsers defines an interface for custom parsing functions
-type Parsers interface {
-	Parse(field Field) error
-}
+type CustomParser func(field Field, defaultValue string) error
 
-func Parse(cfg interface{}, prefix string, parsers ...Parsers) (string, error) {
+func Parse(cfg interface{}, prefix string, parser CustomParser) (string, error) {
 	v := reflect.ValueOf(cfg)
 	if v.Kind() != reflect.Ptr {
 		return "", ErrInvalidStruct
@@ -104,17 +101,6 @@ func Parse(cfg interface{}, prefix string, parsers ...Parsers) (string, error) {
 			return "", fmt.Errorf("can't set the value of field %s", field.Field.String())
 		}
 
-		if parsers != nil {
-			if len(parsers) > 0 {
-				for _, parser := range parsers {
-					if err := parser.Parse(field); err != nil {
-						return "", fmt.Errorf("custom parser error: %v", err)
-					}
-				}
-				continue
-			}
-		}
-
 		//The value of the field is equal by default to the tag value
 		value := field.Options.DefaultVal
 		//the env value overrides the default tag value
@@ -127,6 +113,14 @@ func Parse(cfg interface{}, prefix string, parsers ...Parsers) (string, error) {
 		osVal, ok := osArgs[field.Name]
 		if ok {
 			value = osVal
+		}
+
+		//if a parser was provided, we will call him and continue to the next field
+		if parser != nil {
+			if err := parser(field, value); err != nil {
+				return "", fmt.Errorf("custom parser error: %v", err)
+			}
+			continue
 		}
 
 		if value == "" && field.Options.Required {
@@ -488,8 +482,8 @@ func parseTag(tagStr string) (FieldOptions, error) {
 				f.ShortFlagName = []rune(tagPropVal)[0]
 			case "default":
 				f.DefaultVal = tagPropVal
-			case "env":
-				f.EnvName = tagPropVal
+			case "ssm":
+				f.SSMName = tagPropVal
 			case "flag":
 				f.FlagName = tagPropVal
 			case "help":

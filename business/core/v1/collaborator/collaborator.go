@@ -20,7 +20,7 @@ const aggregatorCode = "tgs-corporate"
 
 type Core struct {
 	collaboratorStore collaborator.Store
-	aws               *aws.AWS
+	aws               *aws.Client
 	db                *sqlx.DB
 	log               *zap.SugaredLogger
 	aggregatorStore   aggregator.Store
@@ -36,7 +36,7 @@ type Session struct {
 	Collaborator collaborator.Collaborator `json:"collaborator"`
 }
 
-func NewCore(aws *aws.AWS, db *sqlx.DB, log *zap.SugaredLogger, stripeKey string) Core {
+func NewCore(aws *aws.Client, db *sqlx.DB, log *zap.SugaredLogger, stripeKey string) Core {
 	return Core{
 		aws:               aws,
 		db:                db,

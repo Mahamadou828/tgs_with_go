@@ -18,13 +18,13 @@ import (
 type Core struct {
 	log       *zap.SugaredLogger
 	db        *sqlx.DB
-	aws       *aws.AWS
+	aws       *aws.Client
 	userStore user.Store
 	aggStore  aggregator.Store
 	stripeKey string
 }
 
-func NewCore(log *zap.SugaredLogger, db *sqlx.DB, aws *aws.AWS, stripeKey string) Core {
+func NewCore(log *zap.SugaredLogger, db *sqlx.DB, aws *aws.Client, stripeKey string) Core {
 	return Core{
 		log:       log,
 		db:        db,
