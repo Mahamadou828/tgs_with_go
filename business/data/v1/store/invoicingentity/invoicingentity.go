@@ -2,7 +2,6 @@ package invoicingentity
 
 import (
 	"context"
-	"github.com/Mahamadou828/tgs_with_golang/business/data/v1/dto"
 	"github.com/Mahamadou828/tgs_with_golang/business/sys/database"
 	"github.com/Mahamadou828/tgs_with_golang/business/sys/validate"
 	"github.com/jmoiron/sqlx"
@@ -133,7 +132,7 @@ func (s Store) QueryByEnterpriseID(ctx context.Context, id string) (InvoicingEnt
 	return i, nil
 }
 
-func (s Store) Create(ctx context.Context, ni dto.NewInvoicingEntity, now time.Time) (InvoicingEntity, error) {
+func (s Store) Create(ctx context.Context, ni NewInvoicingEntityDTO, now time.Time) (InvoicingEntity, error) {
 	i := InvoicingEntity{
 		ID:           validate.GenerateID(),
 		Denomination: ni.Denomination,

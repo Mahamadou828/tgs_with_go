@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Mahamadou828/tgs_with_golang/business/data/v1/dto"
 	"github.com/Mahamadou828/tgs_with_golang/business/sys/aws"
 	"github.com/Mahamadou828/tgs_with_golang/business/sys/database"
 	"github.com/Mahamadou828/tgs_with_golang/business/sys/validate"
@@ -28,7 +27,7 @@ func NewStore(log *zap.SugaredLogger, db *sqlx.DB, aws *aws.Client) Store {
 	}
 }
 
-func (s Store) Create(ctx context.Context, na dto.NewAggregator, now time.Time) (Aggregator, error) {
+func (s Store) Create(ctx context.Context, na NewAggregatorDTO, now time.Time) (Aggregator, error) {
 	agr := Aggregator{
 		ID:              validate.GenerateID(),
 		Name:            na.Name,

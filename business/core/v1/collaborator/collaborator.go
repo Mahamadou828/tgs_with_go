@@ -3,11 +3,11 @@ package collaborator
 import (
 	"context"
 	"fmt"
-	"github.com/Mahamadou828/tgs_with_golang/business/data/v1/dto"
 	"github.com/Mahamadou828/tgs_with_golang/business/data/v1/store/aggregator"
 	"github.com/Mahamadou828/tgs_with_golang/business/data/v1/store/collaborator"
 	"github.com/Mahamadou828/tgs_with_golang/business/data/v1/store/enterprisepolicy"
 	"github.com/Mahamadou828/tgs_with_golang/business/data/v1/store/enterpriseteam"
+	"github.com/Mahamadou828/tgs_with_golang/business/data/v1/store/user"
 	"github.com/Mahamadou828/tgs_with_golang/business/service/v1/stripe"
 	"github.com/Mahamadou828/tgs_with_golang/business/sys/aws"
 	"github.com/jmoiron/sqlx"
@@ -49,7 +49,7 @@ func NewCore(aws *aws.Client, db *sqlx.DB, log *zap.SugaredLogger, stripeKey str
 	}
 }
 
-func (c Core) Login(ctx context.Context, payload dto.Login) (Session, error) {
+func (c Core) Login(ctx context.Context, payload user.LoginDTO) (Session, error) {
 	agg, err := c.aggregatorStore.QueryByCode(ctx, aggregatorCode)
 	//if the tgs-corporate aggregator does not exist we should panic
 	//because we have an integrity issue
@@ -77,7 +77,7 @@ func (c Core) Login(ctx context.Context, payload dto.Login) (Session, error) {
 	}, nil
 }
 
-func (c Core) RefreshToken(ctx context.Context, payload dto.RefreshToken) (Session, error) {
+func (c Core) RefreshToken(ctx context.Context, payload user.RefreshTokenDTO) (Session, error) {
 	co, err := c.collaboratorStore.QueryByID(ctx, payload.ID)
 	if err != nil {
 		return Session{}, err
@@ -95,7 +95,7 @@ func (c Core) RefreshToken(ctx context.Context, payload dto.RefreshToken) (Sessi
 	}, nil
 }
 
-func (c Core) Create(ctx context.Context, nco dto.NewCollaborator, now time.Time) (collaborator.Collaborator, error) {
+func (c Core) Create(ctx context.Context, nco collaborator.NewCollaboratorDTO, now time.Time) (collaborator.Collaborator, error) {
 	agg, err := c.aggregatorStore.QueryByCode(ctx, aggregatorCode)
 	//if the tgs-corporate aggregator does not exist we should panic
 	//because we have an integrity issue
@@ -170,7 +170,7 @@ func (c Core) QueryByEnterprise(ctx context.Context, id string, pageNumber, rows
 	return cos, nil
 }
 
-func (c Core) Update(ctx context.Context, id string, uc dto.UpdateCollaborator, now time.Time) (collaborator.Collaborator, error) {
+func (c Core) Update(ctx context.Context, id string, uc collaborator.UpdateCollaboratorDTO, now time.Time) (collaborator.Collaborator, error) {
 	co, err := c.collaboratorStore.QueryByID(ctx, id)
 
 	if err != nil {
@@ -193,7 +193,7 @@ func (c Core) Update(ctx context.Context, id string, uc dto.UpdateCollaborator, 
 		co.IsMonthlyActive = *uc.IsMonthlyActive
 	}
 	if uc.Role != nil {
-		co.Role = *uc.Role
+		co.Role = uc.Role
 	}
 	if uc.IsCGUAccepted != nil {
 		co.IsCGUAccepted = *uc.IsCGUAccepted
@@ -217,7 +217,7 @@ func (c Core) Delete(ctx context.Context, id string, now time.Time) (collaborato
 	return co, nil
 }
 
-func (c Core) ConfirmNewPassword(ctx context.Context, payload dto.ConfirmNewPassword) error {
+func (c Core) ConfirmNewPassword(ctx context.Context, payload user.ConfirmNewPasswordDTO) error {
 	u, err := c.collaboratorStore.QueryByID(ctx, payload.ID)
 	if err != nil {
 		return err
@@ -239,7 +239,7 @@ func (c Core) ForgotPassword(ctx context.Context, id string) error {
 	return nil
 }
 
-func (c Core) VerifyConfirmationCode(ctx context.Context, payload dto.VerifyConfirmationCode) error {
+func (c Core) VerifyConfirmationCode(ctx context.Context, payload user.VerifyConfirmationCodeDTO) error {
 	u, err := c.collaboratorStore.QueryByID(ctx, payload.ID)
 	if err != nil {
 		return err

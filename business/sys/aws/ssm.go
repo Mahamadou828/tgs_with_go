@@ -36,33 +36,38 @@ func NewSSM(sess *session.Session, service, env string) *SSM {
 //and filter them based on the service pass and the build.
 func (s *SSM) ListSecrets() (map[string]string, error) {
 	var secrets map[string]string
-
 	result, err := s.svc.ListSecrets(
 		&secretsmanager.ListSecretsInput{
 			Filters: []*secretsmanager.Filter{
 				{
-					Key:    aws.String(secretsmanager.FilterNameStringTypeTagKey),
-					Values: []*string{aws.String("service"), aws.String("env")},
-				},
-				{
 					Key:    aws.String(secretsmanager.FilterNameStringTypeTagValue),
-					Values: []*string{aws.String(s.service), aws.String(s.env)},
+					Values: []*string{aws.String(s.env)},
 				},
 			},
 		},
 	)
-
 	if err != nil {
 		return nil, fmt.Errorf("can't get secrets for service %s in environment %s: %v", s.service, s.env, err)
 	}
-
 	if len(result.SecretList) == 0 {
 		return nil, fmt.Errorf("no pool found for service %s in environment %s", s.service, s.env)
 	}
 
+	var serviceSecret *secretsmanager.SecretListEntry
+	for _, r := range result.SecretList {
+		for _, t := range r.Tags {
+			if *t.Key == "service" && *t.Value == s.service {
+				serviceSecret = r
+			}
+		}
+	}
+	if serviceSecret == nil {
+		return nil, fmt.Errorf("can't get secrets for service %s in environment %s: %v", s.service, s.env, err)
+	}
+
 	secretVal, err := s.svc.GetSecretValue(
 		&secretsmanager.GetSecretValueInput{
-			SecretId: result.SecretList[0].Name,
+			SecretId: serviceSecret.Name,
 		},
 	)
 
@@ -252,6 +257,7 @@ func (s *SSM) CreateSecrets(sts []Secret) error {
 //its value will be updated.
 func (s *SSM) CreateSecret(name, value string) error {
 	secrets, err := s.ListSecrets()
+	fmt.Println(secrets)
 	if err != nil {
 		return err
 	}

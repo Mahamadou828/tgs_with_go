@@ -10,7 +10,7 @@ content-type: "application/json"
     "name": "{{USER_NAME}}",
     "isPhoneNumberVerified": true,
     "isCGUAccepted": true,
-    "role": "USER",
+    "role": ["USER"],
     "password": "{{USER_PASSWORD}}"
 }
 

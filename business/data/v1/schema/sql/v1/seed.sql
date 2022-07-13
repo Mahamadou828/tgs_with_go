@@ -52,11 +52,12 @@ INSERT INTO "public"."user"
 (id, aggregator_id, email, phone_number, name, stripe_id,
  api_key, active, cognito_id, is_monthly_active, is_cgu_accepted, role, created_at,
  updated_at, deleted_at, budget)
-VALUES ('7824b480-6342-4e28-8c48-7011bd051712', 'b128d272-3f64-4aa4-bcb3-5909cfb1dd05', 'opmadou@gmail.com',
-        '+33757130289', 'Mahamadou Samake', 'cus_LoWisF53KJsoa5', '80c084e7-8038-4c91-83a3-9ec8ff4315af', true,
-        '6286d251a91f5ad486de1a012202b8cbd70a6909963816b6a1b017ea20df8807', false, true, 'USER',
+VALUES ('7824b480-6342-4e28-8c48-7011bd051712', 'b128d272-3f64-4aa4-bcb3-5909cfb1dd05', 'samake@gmail.com',
+        '+33757130289', 'Mahamadou Samake', 'cus_M2sFyRWLUzPN4G', '80c084e7-8038-4c91-83a3-9ec8ff4315af', true,
+        '3a606223469261a78f68db53e6d0f5363f531dc5de49814125ff62ad07a82eb8', false, true, '{USER}',
         TIMESTAMP '2022-06-04 09:52:25.9773366', TIMESTAMP '2022-06-04 09:52:25.9773366',
         null, 0);
+
 
 INSERT INTO public.payment_method (id, name, user_id, display_credit_card, stripe_id, type, is_favorite, created_at,
                                    updated_at, deleted_at)

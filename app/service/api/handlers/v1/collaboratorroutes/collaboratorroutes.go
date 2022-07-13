@@ -4,7 +4,8 @@ import (
 	"context"
 	"fmt"
 	"github.com/Mahamadou828/tgs_with_golang/business/core/v1/collaborator"
-	"github.com/Mahamadou828/tgs_with_golang/business/data/v1/dto"
+	collaborator2 "github.com/Mahamadou828/tgs_with_golang/business/data/v1/store/collaborator"
+	"github.com/Mahamadou828/tgs_with_golang/business/data/v1/store/user"
 	"github.com/Mahamadou828/tgs_with_golang/business/sys/validate"
 	"github.com/Mahamadou828/tgs_with_golang/foundation/web"
 	"net/http"
@@ -70,7 +71,7 @@ func (h Handler) Create(ctx context.Context, w http.ResponseWriter, r *http.Requ
 		)
 	}
 
-	var nc dto.NewCollaborator
+	var nc collaborator2.NewCollaboratorDTO
 
 	if err := web.Decode(r, &nc); err != nil {
 		return web.NewRequestError(
@@ -113,7 +114,7 @@ func (h Handler) Delete(ctx context.Context, w http.ResponseWriter, r *http.Requ
 }
 
 func (h Handler) Login(ctx context.Context, w http.ResponseWriter, r *http.Request) *web.RequestError {
-	var login dto.Login
+	var login user.LoginDTO
 
 	if err := web.Decode(r, &login); err != nil {
 		return web.NewRequestError(err, http.StatusBadRequest)
@@ -144,7 +145,7 @@ func (h Handler) ResendConfirmationCode(ctx context.Context, w http.ResponseWrit
 }
 
 func (h Handler) VerifyConfirmationCode(ctx context.Context, w http.ResponseWriter, r *http.Request) *web.RequestError {
-	var payload dto.VerifyConfirmationCode
+	var payload user.VerifyConfirmationCodeDTO
 	if err := web.Decode(r, &payload); err != nil {
 		return web.NewRequestError(err, http.StatusBadRequest)
 	}
@@ -169,7 +170,7 @@ func (h Handler) ForgotPassword(ctx context.Context, w http.ResponseWriter, r *h
 }
 
 func (h Handler) ConfirmNewPassword(ctx context.Context, w http.ResponseWriter, r *http.Request) *web.RequestError {
-	var payload dto.ConfirmNewPassword
+	var payload user.ConfirmNewPasswordDTO
 	if err := web.Decode(r, &payload); err != nil {
 		return web.NewRequestError(err, http.StatusBadRequest)
 	}
@@ -183,7 +184,7 @@ func (h Handler) ConfirmNewPassword(ctx context.Context, w http.ResponseWriter, 
 }
 
 func (h Handler) RefreshToken(ctx context.Context, w http.ResponseWriter, r *http.Request) *web.RequestError {
-	var payload dto.RefreshToken
+	var payload user.RefreshTokenDTO
 
 	if err := web.Decode(r, &payload); err != nil {
 		return web.NewRequestError(err, http.StatusBadRequest)
@@ -215,7 +216,7 @@ func (h Handler) Update(ctx context.Context, w http.ResponseWriter, r *http.Requ
 		return web.NewRequestError(err, http.StatusBadRequest)
 	}
 
-	var ua dto.UpdateCollaborator
+	var ua collaborator2.UpdateCollaboratorDTO
 	if err := web.Decode(r, &ua); err != nil {
 		return web.NewRequestError(err, http.StatusBadRequest)
 	}

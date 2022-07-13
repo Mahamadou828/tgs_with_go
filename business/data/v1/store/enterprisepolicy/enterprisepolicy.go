@@ -2,7 +2,6 @@ package enterprisepolicy
 
 import (
 	"context"
-	"github.com/Mahamadou828/tgs_with_golang/business/data/v1/dto"
 	"github.com/Mahamadou828/tgs_with_golang/business/sys/database"
 	"github.com/Mahamadou828/tgs_with_golang/business/sys/validate"
 	"github.com/jmoiron/sqlx"
@@ -23,7 +22,7 @@ func NewStore(db *sqlx.DB, log *zap.SugaredLogger) Store {
 	}
 }
 
-func (s Store) Create(ctx context.Context, ntp dto.NewEnterprisePolicy, now time.Time) (TeamPolicy, error) {
+func (s Store) Create(ctx context.Context, ntp NewEnterprisePolicyDTO, now time.Time) (TeamPolicy, error) {
 	tp := TeamPolicy{
 		ID:                 validate.GenerateID(),
 		Name:               ntp.Name,

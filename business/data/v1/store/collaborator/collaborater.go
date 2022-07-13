@@ -4,7 +4,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/Mahamadou828/tgs_with_golang/business/data/v1/dto"
 	"github.com/Mahamadou828/tgs_with_golang/business/sys/aws"
 	"github.com/Mahamadou828/tgs_with_golang/business/sys/database"
 	"github.com/Mahamadou828/tgs_with_golang/business/sys/validate"
@@ -20,7 +19,7 @@ type Store struct {
 }
 
 type CreateCollaboratorParams struct {
-	Params   dto.NewCollaborator
+	Params   NewCollaboratorDTO
 	ApiKey   string
 	AggID    string
 	Budget   int
@@ -223,6 +222,10 @@ func (s Store) QueryByEmail(ctx context.Context, agg, email string) (Collaborato
 }
 
 func (s Store) Create(ctx context.Context, now time.Time, p CreateCollaboratorParams) (Collaborator, error) {
+	var role pq.StringArray
+	for _, r := range p.Params.Role {
+		role = append(role, r)
+	}
 	co := Collaborator{
 		ID:              validate.GenerateID(),
 		Email:           p.Params.Email,
@@ -299,7 +302,7 @@ func (s Store) Update(ctx context.Context, id string, co Collaborator, now time.
 		Active           bool        `db:"active"`
 		IsMonthlyActive  bool        `db:"is_monthly_active" json:"isMonthlyActive"`
 		IsCGUAccepted    bool        `db:"is_cgu_accepted" json:"isCGUAccepted"`
-		Role             string      `db:"role" json:"role"`
+		Role             []string    `db:"role" json:"role"`
 		EnterpriseTeamID string      `db:"enterprise_team_id"`
 		Budget           int         `db:"budget"`
 	}{

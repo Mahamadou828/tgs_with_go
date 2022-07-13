@@ -17,7 +17,7 @@ tidy:
 #make ENV="env" run-api
 #Be aware that the migration is run automatically so be careful when running another env than development
 run-api:
-	docker run --name postgres-db -e POSTGRES_PASSWORD=postgres -p 5432:5432 -d postgres || true
+	make db-restart
 	go run -ldflags "-X main.build=${VERSION}" -ldflags "-X main.env=${ENV}" app/service/api/main.go | go run app/tools/logfmt/main.go
 
 

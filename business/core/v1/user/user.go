@@ -5,7 +5,6 @@ package user
 import (
 	"context"
 	"fmt"
-	"github.com/Mahamadou828/tgs_with_golang/business/data/v1/dto"
 	"github.com/Mahamadou828/tgs_with_golang/business/data/v1/store/aggregator"
 	"github.com/Mahamadou828/tgs_with_golang/business/data/v1/store/user"
 	"github.com/Mahamadou828/tgs_with_golang/business/service/v1/stripe"
@@ -42,7 +41,7 @@ type Session struct {
 	User         user.User `json:"user"`
 }
 
-func (c Core) Login(ctx context.Context, aggregator string, payload dto.Login) (Session, error) {
+func (c Core) Login(ctx context.Context, aggregator string, payload user.LoginDTO) (Session, error) {
 	u, err := c.userStore.QueryByEmailAndAggregator(ctx, payload.Email, aggregator)
 	if err != nil {
 		return Session{}, err
@@ -64,7 +63,7 @@ func (c Core) Login(ctx context.Context, aggregator string, payload dto.Login) (
 	}, nil
 }
 
-func (c Core) ConfirmNewPassword(ctx context.Context, payload dto.ConfirmNewPassword) error {
+func (c Core) ConfirmNewPassword(ctx context.Context, payload user.ConfirmNewPasswordDTO) error {
 	u, err := c.userStore.QueryByID(ctx, payload.ID)
 	if err != nil {
 		return err
@@ -86,7 +85,7 @@ func (c Core) ForgotPassword(ctx context.Context, id string) error {
 	return nil
 }
 
-func (c Core) VerifyConfirmationCode(ctx context.Context, payload dto.VerifyConfirmationCode) error {
+func (c Core) VerifyConfirmationCode(ctx context.Context, payload user.VerifyConfirmationCodeDTO) error {
 	u, err := c.userStore.QueryByID(ctx, payload.ID)
 	if err != nil {
 		return err
@@ -106,7 +105,7 @@ func (c Core) ResendConfirmationCode(ctx context.Context, id string) error {
 	return c.aws.Cognito.ResendValidateCode(u.CognitoID)
 }
 
-func (c Core) RefreshToken(ctx context.Context, aggregator string, payload dto.RefreshToken) (Session, error) {
+func (c Core) RefreshToken(ctx context.Context, aggregator string, payload user.RefreshTokenDTO) (Session, error) {
 	u, err := c.userStore.QueryByID(ctx, payload.ID)
 	if err != nil {
 		return Session{}, err
@@ -127,7 +126,7 @@ func (c Core) RefreshToken(ctx context.Context, aggregator string, payload dto.R
 	}, nil
 }
 
-func (c Core) Create(ctx context.Context, aggregatorCode string, nu dto.NewUser, now time.Time) (user.User, error) {
+func (c Core) Create(ctx context.Context, aggregatorCode string, nu user.NewUserDTO, now time.Time) (user.User, error) {
 	agg, err := c.aggStore.QueryByID(ctx, aggregatorCode)
 
 	if err != nil {
@@ -186,7 +185,7 @@ func (c Core) QueryByID(ctx context.Context, id string) (user.User, error) {
 	return usr, nil
 }
 
-func (c Core) Update(ctx context.Context, id string, ua dto.UpdateUser, now time.Time) (user.User, error) {
+func (c Core) Update(ctx context.Context, id string, ua user.UpdateUserDTO, now time.Time) (user.User, error) {
 	usr, err := c.userStore.QueryByID(ctx, id)
 
 	if err != nil {
@@ -209,7 +208,7 @@ func (c Core) Update(ctx context.Context, id string, ua dto.UpdateUser, now time
 		usr.IsMonthlyActive = *ua.IsMonthlyActive
 	}
 	if ua.Role != nil {
-		usr.Role = *ua.Role
+		usr.Role = ua.Role
 	}
 	if ua.IsCGUAccepted != nil {
 		usr.IsCGUAccepted = *ua.IsCGUAccepted

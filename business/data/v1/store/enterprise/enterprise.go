@@ -4,7 +4,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/Mahamadou828/tgs_with_golang/business/data/v1/dto"
 	"github.com/Mahamadou828/tgs_with_golang/business/sys/database"
 	"github.com/Mahamadou828/tgs_with_golang/business/sys/validate"
 	"github.com/jmoiron/sqlx"
@@ -24,7 +23,7 @@ func NewStore(db *sqlx.DB, log *zap.SugaredLogger) Store {
 	}
 }
 
-func (s Store) Create(ctx context.Context, nent dto.NewEnterprise, now time.Time) (Enterprise, error) {
+func (s Store) Create(ctx context.Context, nent NewEnterpriseDTO, now time.Time) (Enterprise, error) {
 	en := Enterprise{
 		ID:                 validate.GenerateID(),
 		Code:               validate.GenerateEnterpriseCode(),

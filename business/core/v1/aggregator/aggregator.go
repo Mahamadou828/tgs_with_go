@@ -4,7 +4,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/Mahamadou828/tgs_with_golang/business/data/v1/dto"
 	"github.com/Mahamadou828/tgs_with_golang/business/data/v1/store/aggregator"
 	"github.com/Mahamadou828/tgs_with_golang/business/sys/aws"
 	"github.com/jmoiron/sqlx"
@@ -27,7 +26,7 @@ func NewCore(log *zap.SugaredLogger, db *sqlx.DB, aws *aws.Client) Core {
 	}
 }
 
-func (c Core) Create(ctx context.Context, na dto.NewAggregator, now time.Time) (aggregator.Aggregator, error) {
+func (c Core) Create(ctx context.Context, na aggregator.NewAggregatorDTO, now time.Time) (aggregator.Aggregator, error) {
 	agg, err := c.aggStore.Create(ctx, na, now)
 	if err != nil {
 		return aggregator.Aggregator{}, err
@@ -35,7 +34,7 @@ func (c Core) Create(ctx context.Context, na dto.NewAggregator, now time.Time) (
 	return agg, nil
 }
 
-func (c Core) Update(ctx context.Context, id string, ua dto.UpdateAggregator, now time.Time) (aggregator.Aggregator, error) {
+func (c Core) Update(ctx context.Context, id string, ua aggregator.UpdateAggregatorDTO, now time.Time) (aggregator.Aggregator, error) {
 	dbAgg, err := c.QueryByID(ctx, id)
 	if err != nil {
 		return aggregator.Aggregator{}, err

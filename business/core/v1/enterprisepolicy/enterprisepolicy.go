@@ -2,7 +2,6 @@ package enterprisepolicy
 
 import (
 	"context"
-	"github.com/Mahamadou828/tgs_with_golang/business/data/v1/dto"
 	"github.com/Mahamadou828/tgs_with_golang/business/data/v1/store/enterprise"
 	"github.com/Mahamadou828/tgs_with_golang/business/data/v1/store/enterprisepolicy"
 	"github.com/jmoiron/sqlx"
@@ -26,7 +25,7 @@ func NewCore(db *sqlx.DB, log *zap.SugaredLogger) Core {
 	}
 }
 
-func (c Core) Create(ctx context.Context, nt dto.NewEnterprisePolicy, now time.Time) (enterprisepolicy.TeamPolicy, error) {
+func (c Core) Create(ctx context.Context, nt enterprisepolicy.NewEnterprisePolicyDTO, now time.Time) (enterprisepolicy.TeamPolicy, error) {
 	//check if the invoicing entity, enterprise and the policy exist
 	if _, err := c.enterpriseStore.QueryByID(ctx, nt.EnterpriseID); err != nil {
 		return enterprisepolicy.TeamPolicy{}, err
@@ -63,7 +62,7 @@ func (c Core) QueryByEnterpriseID(ctx context.Context, id string) (enterprisepol
 	return t, nil
 }
 
-func (c Core) Update(ctx context.Context, id string, ut dto.UpdateEnterprisePolicy, now time.Time) (enterprisepolicy.TeamPolicy, error) {
+func (c Core) Update(ctx context.Context, id string, ut enterprisepolicy.UpdateEnterprisePolicyDTO, now time.Time) (enterprisepolicy.TeamPolicy, error) {
 	t, err := c.policyStore.QueryByID(ctx, id)
 	if err != nil {
 		return enterprisepolicy.TeamPolicy{}, err
