@@ -4,7 +4,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/Mahamadou828/tgs_with_golang/business/data/v1/dto"
 	"github.com/Mahamadou828/tgs_with_golang/business/sys/database"
 	"github.com/Mahamadou828/tgs_with_golang/business/sys/validate"
 	"github.com/jmoiron/sqlx"
@@ -61,7 +60,7 @@ func (s Store) Query(ctx context.Context, pageNumber, rowsPerPage int) ([]Enterp
 
 }
 
-func (s Store) Create(ctx context.Context, np dto.NewPack, now time.Time) (EnterprisePack, error) {
+func (s Store) Create(ctx context.Context, np NewPackDTO, now time.Time) (EnterprisePack, error) {
 	pack := EnterprisePack{
 		ID:                            validate.GenerateID(),
 		Name:                          np.Name,

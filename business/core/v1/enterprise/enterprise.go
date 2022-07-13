@@ -4,7 +4,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/Mahamadou828/tgs_with_golang/business/data/v1/dto"
 	"github.com/Mahamadou828/tgs_with_golang/business/data/v1/store/enterprise"
 	"github.com/Mahamadou828/tgs_with_golang/business/data/v1/store/enterprisepack"
 	"github.com/jmoiron/sqlx"
@@ -27,7 +26,7 @@ func NewCore(log *zap.SugaredLogger, db *sqlx.DB) Core {
 	}
 }
 
-func (c Core) Create(ctx context.Context, ne dto.NewEnterprise, now time.Time) (enterprise.Enterprise, error) {
+func (c Core) Create(ctx context.Context, ne enterprise.NewEnterpriseDTO, now time.Time) (enterprise.Enterprise, error) {
 	if _, err := c.packStore.QueryByID(ctx, ne.PackID); err != nil {
 		return enterprise.Enterprise{}, err
 	}
@@ -64,7 +63,7 @@ func (c Core) QueryByCode(ctx context.Context, code string) (enterprise.Enterpri
 	return ent, nil
 }
 
-func (c Core) Update(ctx context.Context, id string, ue dto.UpdateEnterprise, now time.Time) (enterprise.Enterprise, error) {
+func (c Core) Update(ctx context.Context, id string, ue enterprise.UpdateEnterpriseDTO, now time.Time) (enterprise.Enterprise, error) {
 	ent, err := c.enterpriseStore.QueryByID(ctx, id)
 	if err != nil {
 		return enterprise.Enterprise{}, err

@@ -3,7 +3,7 @@ package enterprisepackroutes
 import (
 	"context"
 	"fmt"
-	"github.com/Mahamadou828/tgs_with_golang/business/data/v1/dto"
+	"github.com/Mahamadou828/tgs_with_golang/business/data/v1/store/enterprisepack"
 	"github.com/Mahamadou828/tgs_with_golang/business/sys/validate"
 	"net/http"
 	"strconv"
@@ -77,7 +77,7 @@ func (h Handler) Create(ctx context.Context, w http.ResponseWriter, r *http.Requ
 		)
 	}
 
-	var eu dto.NewPack
+	var eu enterprisepack.NewPackDTO
 
 	if err := web.Decode(r, &eu); err != nil {
 		return web.NewRequestError(err, http.StatusBadRequest)
@@ -107,7 +107,7 @@ func (h Handler) Update(ctx context.Context, w http.ResponseWriter, r *http.Requ
 		)
 	}
 
-	var eu dto.UpdatePack
+	var eu enterprisepack.UpdatePackDTO
 
 	if err := web.Decode(r, &eu); err != nil {
 		return web.NewRequestError(err, http.StatusBadRequest)

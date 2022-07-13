@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/Mahamadou828/tgs_with_golang/business/core/v1/enterpriseteam"
-	"github.com/Mahamadou828/tgs_with_golang/business/data/v1/dto"
+	enterpriseteam2 "github.com/Mahamadou828/tgs_with_golang/business/data/v1/store/enterpriseteam"
 	"github.com/Mahamadou828/tgs_with_golang/business/sys/validate"
 	"github.com/Mahamadou828/tgs_with_golang/foundation/web"
 	"net/http"
@@ -90,7 +90,7 @@ func (h Handler) Create(ctx context.Context, w http.ResponseWriter, r *http.Requ
 		)
 	}
 
-	var eu dto.NewTeam
+	var eu enterpriseteam2.NewTeamDTO
 
 	if err := web.Decode(r, &eu); err != nil {
 		return web.NewRequestError(err, http.StatusBadRequest)
@@ -120,7 +120,7 @@ func (h Handler) Update(ctx context.Context, w http.ResponseWriter, r *http.Requ
 		)
 	}
 
-	var tu dto.UpdateTeam
+	var tu enterpriseteam2.UpdateTeamDTO
 
 	if err := web.Decode(r, &tu); err != nil {
 		return web.NewRequestError(err, http.StatusBadRequest)

@@ -2,7 +2,6 @@ package enterprisepack
 
 import (
 	"context"
-	"github.com/Mahamadou828/tgs_with_golang/business/data/v1/dto"
 	"github.com/Mahamadou828/tgs_with_golang/business/data/v1/store/enterprisepack"
 	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"
@@ -23,7 +22,7 @@ func NewCore(log *zap.SugaredLogger, db *sqlx.DB) Core {
 	}
 }
 
-func (c Core) Create(ctx context.Context, np dto.NewPack, now time.Time) (enterprisepack.EnterprisePack, error) {
+func (c Core) Create(ctx context.Context, np enterprisepack.NewPackDTO, now time.Time) (enterprisepack.EnterprisePack, error) {
 	p, err := c.packStore.Create(ctx, np, now)
 	if err != nil {
 		return enterprisepack.EnterprisePack{}, err
@@ -47,7 +46,7 @@ func (c Core) QueryByID(ctx context.Context, id string) (enterprisepack.Enterpri
 	return p, nil
 }
 
-func (c Core) Update(ctx context.Context, id string, up dto.UpdatePack, now time.Time) (enterprisepack.EnterprisePack, error) {
+func (c Core) Update(ctx context.Context, id string, up enterprisepack.UpdatePackDTO, now time.Time) (enterprisepack.EnterprisePack, error) {
 	p, err := c.packStore.QueryByID(ctx, id)
 	if err != nil {
 		return enterprisepack.EnterprisePack{}, err

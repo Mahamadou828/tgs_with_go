@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Mahamadou828/tgs_with_golang/business/data/v1/dto"
 	"github.com/Mahamadou828/tgs_with_golang/business/sys/database"
 	"github.com/Mahamadou828/tgs_with_golang/business/sys/validate"
 	"github.com/jmoiron/sqlx"
@@ -26,7 +25,7 @@ func NewStore(log *zap.SugaredLogger, db *sqlx.DB) Store {
 	}
 }
 
-func (s Store) Create(ctx context.Context, stripeID string, npm dto.NewPaymentMethod, now time.Time) (PaymentMethod, error) {
+func (s Store) Create(ctx context.Context, stripeID string, npm NewPaymentMethodDTO, now time.Time) (PaymentMethod, error) {
 	p := PaymentMethod{
 		ID:                validate.GenerateID(),
 		Name:              npm.Name,

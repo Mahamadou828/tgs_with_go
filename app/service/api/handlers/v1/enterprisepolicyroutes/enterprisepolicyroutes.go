@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 	"github.com/Mahamadou828/tgs_with_golang/business/core/v1/enterprisepolicy"
+	enterprisepolicy2 "github.com/Mahamadou828/tgs_with_golang/business/data/v1/store/enterprisepolicy"
 	"net/http"
 	"strconv"
 
-	"github.com/Mahamadou828/tgs_with_golang/business/data/v1/dto"
 	"github.com/Mahamadou828/tgs_with_golang/business/sys/validate"
 	"github.com/Mahamadou828/tgs_with_golang/foundation/web"
 )
@@ -88,7 +88,7 @@ func (h Handler) Create(ctx context.Context, w http.ResponseWriter, r *http.Requ
 		)
 	}
 
-	var eu dto.NewEnterprisePolicy
+	var eu enterprisepolicy2.NewEnterprisePolicyDTO
 
 	if err := web.Decode(r, &eu); err != nil {
 		return web.NewRequestError(err, http.StatusBadRequest)
@@ -118,7 +118,7 @@ func (h Handler) Update(ctx context.Context, w http.ResponseWriter, r *http.Requ
 		)
 	}
 
-	var eu dto.UpdateEnterprisePolicy
+	var eu enterprisepolicy2.UpdateEnterprisePolicyDTO
 
 	if err := web.Decode(r, &eu); err != nil {
 		return web.NewRequestError(err, http.StatusBadRequest)

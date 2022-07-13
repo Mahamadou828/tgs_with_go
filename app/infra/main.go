@@ -198,7 +198,7 @@ func NewStack(scope constructs.Construct, id *string, log *zap.SugaredLogger, pr
 	//================================================================= Cognito
 	//create a cognito pool
 	c := cognito.NewUserPool(stack, jsii.String(props.env+"cognitopool"), &cognito.UserPoolProps{
-		UserPoolName:  jsii.String(props.env + "-tgs-cognito"),
+		UserPoolName:  jsii.String(fmt.Sprintf("%s/%s", props.service, props.env)),
 		RemovalPolicy: awscdk.RemovalPolicy_DESTROY,
 		SignInAliases: &cognito.SignInAliases{
 			Username:          jsii.Bool(true),

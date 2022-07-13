@@ -2,7 +2,6 @@ package enterpriseteam
 
 import (
 	"context"
-	"github.com/Mahamadou828/tgs_with_golang/business/data/v1/dto"
 	"github.com/Mahamadou828/tgs_with_golang/business/data/v1/store/enterprise"
 	"github.com/Mahamadou828/tgs_with_golang/business/data/v1/store/enterprisepolicy"
 	"github.com/Mahamadou828/tgs_with_golang/business/data/v1/store/enterpriseteam"
@@ -32,7 +31,7 @@ func NewCore(db *sqlx.DB, log *zap.SugaredLogger) Core {
 	}
 }
 
-func (c Core) Create(ctx context.Context, nt dto.NewTeam, now time.Time) (enterpriseteam.Team, error) {
+func (c Core) Create(ctx context.Context, nt enterpriseteam.NewTeamDTO, now time.Time) (enterpriseteam.Team, error) {
 	//check if the invoicing entity, enterprise and the policy exist
 	if _, err := c.invoicingStore.QueryByID(ctx, nt.InvoicingEntityID); err != nil {
 		return enterpriseteam.Team{}, err
@@ -75,7 +74,7 @@ func (c Core) QueryByEnterpriseID(ctx context.Context, id string) (enterprisetea
 	return t, nil
 }
 
-func (c Core) Update(ctx context.Context, id string, ut dto.UpdateTeam, now time.Time) (enterpriseteam.Team, error) {
+func (c Core) Update(ctx context.Context, id string, ut enterpriseteam.UpdateTeamDTO, now time.Time) (enterpriseteam.Team, error) {
 	t, err := c.teamStore.QueryByID(ctx, id)
 	if err != nil {
 		return enterpriseteam.Team{}, err

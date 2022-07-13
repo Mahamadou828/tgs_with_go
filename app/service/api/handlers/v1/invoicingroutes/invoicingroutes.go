@@ -3,11 +3,11 @@ package invoicingroutes
 import (
 	"context"
 	"fmt"
+	invoicingentity2 "github.com/Mahamadou828/tgs_with_golang/business/data/v1/store/invoicingentity"
 	"net/http"
 	"strconv"
 
 	"github.com/Mahamadou828/tgs_with_golang/business/core/v1/invoicingentity"
-	"github.com/Mahamadou828/tgs_with_golang/business/data/v1/dto"
 	"github.com/Mahamadou828/tgs_with_golang/business/sys/validate"
 	"github.com/Mahamadou828/tgs_with_golang/foundation/web"
 )
@@ -88,7 +88,7 @@ func (h Handler) Create(ctx context.Context, w http.ResponseWriter, r *http.Requ
 		)
 	}
 
-	var eu dto.NewInvoicingEntity
+	var eu invoicingentity2.NewInvoicingEntityDTO
 
 	if err := web.Decode(r, &eu); err != nil {
 		return web.NewRequestError(err, http.StatusBadRequest)
@@ -118,7 +118,7 @@ func (h Handler) Update(ctx context.Context, w http.ResponseWriter, r *http.Requ
 		)
 	}
 
-	var eu dto.UpdateInvoicingEntity
+	var eu invoicingentity2.UpdateInvoicingEntityDTO
 
 	if err := web.Decode(r, &eu); err != nil {
 		return web.NewRequestError(err, http.StatusBadRequest)

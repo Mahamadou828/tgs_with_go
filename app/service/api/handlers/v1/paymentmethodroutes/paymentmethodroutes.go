@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/Mahamadou828/tgs_with_golang/business/core/v1/paymentmethod"
-	"github.com/Mahamadou828/tgs_with_golang/business/data/v1/dto"
+	paymentmethod2 "github.com/Mahamadou828/tgs_with_golang/business/data/v1/store/paymentmethod"
 	"github.com/Mahamadou828/tgs_with_golang/business/sys/validate"
 	"github.com/Mahamadou828/tgs_with_golang/foundation/web"
 	"net/http"
@@ -62,7 +62,7 @@ func (h Handler) Create(ctx context.Context, w http.ResponseWriter, r *http.Requ
 		)
 	}
 
-	var data dto.NewPaymentMethod
+	var data paymentmethod2.NewPaymentMethodDTO
 	if err := web.Decode(r, &data); err != nil {
 		return web.NewRequestError(err, http.StatusBadRequest)
 	}
@@ -92,7 +92,7 @@ func (h Handler) Update(ctx context.Context, w http.ResponseWriter, r *http.Requ
 		return web.NewRequestError(err, http.StatusBadRequest)
 	}
 
-	var upm dto.UpdatePaymentMethod
+	var upm paymentmethod2.UpdatePaymentMethodDTO
 	if err := web.Decode(r, &upm); err != nil {
 		return web.NewRequestError(err, http.StatusBadRequest)
 	}

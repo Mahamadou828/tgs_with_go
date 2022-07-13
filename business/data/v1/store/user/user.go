@@ -3,7 +3,6 @@ package user
 import (
 	"context"
 	"fmt"
-	"github.com/Mahamadou828/tgs_with_golang/business/data/v1/dto"
 	"github.com/Mahamadou828/tgs_with_golang/business/sys/aws"
 	"github.com/Mahamadou828/tgs_with_golang/business/sys/database"
 	"github.com/Mahamadou828/tgs_with_golang/business/sys/validate"
@@ -20,7 +19,7 @@ type Store struct {
 }
 
 type CreateUserParams struct {
-	Params             dto.NewUser
+	Params             NewUserDTO
 	StripeID           string
 	StripeClientSecret string
 	StripeIntentID     string
@@ -38,6 +37,10 @@ func NewStore(log *zap.SugaredLogger, db *sqlx.DB) Store {
 }
 
 func (s Store) Create(ctx context.Context, now time.Time, p CreateUserParams) (User, error) {
+	var role pq.StringArray
+	for _, r := range p.Params.Role {
+		role = append(role, r)
+	}
 	usr := User{
 		ID:              validate.GenerateID(),
 		Email:           p.Params.Email,
@@ -50,7 +53,7 @@ func (s Store) Create(ctx context.Context, now time.Time, p CreateUserParams) (U
 		CognitoID:       p.AwsID,
 		IsMonthlyActive: false,
 		IsCGUAccepted:   p.Params.IsCGUAccepted,
-		Role:            p.Params.Role,
+		Role:            role,
 		UpdatedAt:       now,
 		CreatedAt:       now,
 	}
@@ -70,16 +73,17 @@ func (s Store) Create(ctx context.Context, now time.Time, p CreateUserParams) (U
 }
 
 func (s Store) Update(ctx context.Context, id string, u User, now time.Time) error {
+
 	data := struct {
-		UpdatedAt       time.Time `db:"updated_at"`
-		ID              string    `db:"id"`
-		Email           string    `db:"email"`
-		PhoneNumber     string    `db:"phone_number"`
-		Name            string    `db:"name"`
-		Active          bool      `db:"active"`
-		IsMonthlyActive bool      `db:"is_monthly_active" json:"isMonthlyActive"`
-		IsCGUAccepted   bool      `db:"is_cgu_accepted" json:"isCGUAccepted"`
-		Role            string    `db:"role" json:"role"`
+		UpdatedAt       time.Time      `db:"updated_at"`
+		ID              string         `db:"id"`
+		Email           string         `db:"email"`
+		PhoneNumber     string         `db:"phone_number"`
+		Name            string         `db:"name"`
+		Active          bool           `db:"active"`
+		IsMonthlyActive bool           `db:"is_monthly_active" json:"isMonthlyActive"`
+		IsCGUAccepted   bool           `db:"is_cgu_accepted" json:"isCGUAccepted"`
+		Role            pq.StringArray `db:"role" json:"role"`
 	}{
 		UpdatedAt:       now,
 		ID:              id,

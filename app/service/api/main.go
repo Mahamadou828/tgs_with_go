@@ -51,14 +51,14 @@ type AppConfig struct {
 	}
 	Stripe struct {
 		//the default key for stripe is the public find here
-		Key string `conf:"default:sk_test_51JBK0jCSGvJXXYWCsTYoiYekiLy6g4F4kBmMc3LoRpvgjnKi6Mi9YdgX2p82kcVvrng5OMzMwZU3PCJOdzDPbuWk00SDAhuDuY"`
+		Key string `conf:"ssm:STRIPE_KEY"`
 	}
 	Cognito struct {
-		UserPoolID string `conf:"default:userpool"`
-		ClientID   string `conf:"default:userpool"`
+		UserPoolID string `conf:"required,ssm:COGNITO_USER_POOL_ID"`
+		ClientID   string `conf:"required,ssm:COGNITO_CLIENT_POOL_ID"`
 		//Seed is used to generate unique sub that are used as username
 		//for cognito user
-		Seed string `conf:"default:userpool"`
+		Seed string `conf:"required,ssm:COGNITO_SEED"`
 	}
 }
 
